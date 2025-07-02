@@ -1,8 +1,8 @@
-# Vuka-Unzwe-WebApp
+# TeaCup-WebApp
 
-# Vuka Unzwe – AI-Powered News Agent for the Global South
+# TeaCup – AI-Powered News Agent for the Global South
 
-**Vuka Unzwe** (_“Wake Up and Hear”_) is a personalized, AI-powered news platform designed for developing countries (Zimbabwe for now) where access to reliable and credible news is limited. It delivers high-quality news on politics, weather, crime, sports, and more—summarized, narrated, and tailored to the user.
+**TeaCup** is a personalized, AI-powered news platform designed for developing countries (Zimbabwe for now) where access to reliable and credible news is limited. It delivers high-quality news on politics, weather, crime, sports, and more—summarized, narrated, and tailored to the user.
 
 ---
 
