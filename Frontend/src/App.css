@@ -1,0 +1,4 @@
+/* Additional styling for layout if needed */
+.hidden-scrollbar::-webkit-scrollbar {
+  display: none;
+}

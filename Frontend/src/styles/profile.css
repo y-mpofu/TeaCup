@@ -1,0 +1,184 @@
+/* Profile component styles */
+.profile-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Profile button (the clickable avatar) */
+.profile-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 50%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+/* Profile avatar (the circular image/initial) */
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Small avatar for dropdown */
+.profile-avatar-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+/* Initial text inside avatar */
+.profile-initial {
+  user-select: none; /* Prevent text selection */
+}
+
+/* Dropdown menu container */
+.profile-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: #1f1f1f;
+  border: 1px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  min-width: 250px;
+  overflow: hidden;
+  z-index: 1000;
+  animation: slideDown 0.2s ease-out;
+}
+
+/* Slide down animation for dropdown */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* User info section at top of dropdown */
+.profile-info {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #2a2a2a;
+}
+
+/* User details (name and email) */
+.profile-details {
+  flex: 1;
+  min-width: 0; /* Allow text to wrap */
+}
+
+.profile-name {
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-email {
+  color: #888;
+  font-size: 12px;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Divider line */
+.dropdown-divider {
+  margin: 0;
+  border: none;
+  border-top: 1px solid #333;
+}
+
+/* Menu container */
+.dropdown-menu {
+  padding: 8px 0;
+}
+
+/* Individual menu items */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: #ccc;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background: #333;
+  color: white;
+}
+
+/* Icons in dropdown items */
+.dropdown-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+/* Special styling for logout item */
+.logout-item {
+  color: #ff6b6b;
+}
+
+.logout-item:hover {
+  background: rgba(255, 107, 107, 0.1);
+  color: #ff6b6b;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .profile-dropdown {
+    min-width: 200px;
+    right: -10px; /* Adjust position on smaller screens */
+  }
+  
+  .profile-info {
+    padding: 12px;
+  }
+  
+  .dropdown-item {
+    padding: 10px 12px;
+  }
+}

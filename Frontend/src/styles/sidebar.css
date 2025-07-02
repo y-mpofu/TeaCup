@@ -1,0 +1,435 @@
+src/styles/cards.css 
+/* General card components and enhanced sidebar navigation styles */
+
+/* === GENERAL CARD STYLES === */
+
+/* Base card styling for reusable components */
+.card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  border-color: #555;
+}
+
+/* Card headers */
+.card-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #333;
+}
+
+.card-title {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.card-subtitle {
+  color: #888;
+  font-size: 0.9rem;
+  margin: 0.25rem 0 0 0;
+}
+
+/* Card content area */
+.card-content {
+  color: #ccc;
+  line-height: 1.6;
+}
+
+.card-content p {
+  margin: 0 0 1rem 0;
+}
+
+.card-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Card footer */
+.card-footer {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* === ENHANCED SIDEBAR NAVIGATION STYLES === */
+
+/* Main sidebar container */
+.sidebar {
+  width: 280px;
+  background: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
+  padding: 1.5rem 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  border-right: 1px solid #222;
+  height: 100vh;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Collapsed sidebar state */
+.sidebar.collapsed {
+  width: 90px;
+}
+
+/* Sidebar header with brand and toggle */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.sidebar-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+  color: white;
+  margin: 0;
+}
+
+.sidebar.collapsed .sidebar-brand {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Toggle button */
+.sidebar-toggle {
+  background: none;
+  border: 1px solid #333;
+  color: #ccc;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.sidebar-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: #555;
+}
+
+/* Navigation container */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0 1rem;
+}
+
+/* Navigation links */
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #ccc;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  padding: 0.75rem 0.75rem;
+  border-radius: 8px;
+  position: relative;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.nav-link:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.05);
+  transform: translateX(4px);
+}
+
+.nav-link.active {
+  background-color: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+  border-left: 3px solid #667eea;
+  margin-left: -3px;
+}
+
+.nav-link.active:hover {
+  color: #8b9bef;
+  background-color: rgba(102, 126, 234, 0.3);
+}
+
+/* Navigation icons */
+.nav-icon {
+  flex-shrink: 0;
+  padding: 5px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Navigation text */
+.nav-text {
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar.collapsed .nav-text {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Collapsed state adjustments - UPDATED */
+.sidebar.collapsed .nav-link {
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  margin: 0.125rem 0.75rem;
+  position: relative;
+  min-width: 44px;
+  border-radius: 8px;
+}
+
+/* Tooltip for collapsed state */
+.sidebar.collapsed .nav-link {
+  position: relative;
+}
+
+.sidebar.collapsed .nav-link::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 0.5rem);
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #2a2a2a;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1000;
+  border: 1px solid #444;
+  /* box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3); */
+}
+
+.sidebar.collapsed .nav-link:hover::after {
+  opacity: 1;
+}
+
+/* Sidebar sections */
+.sidebar-section {
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  color: #888;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.75rem 0;
+  padding: 0 1.75rem;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar.collapsed .section-title {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Sidebar divider */
+.sidebar-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #333, transparent);
+  margin: 1.5rem 1rem;
+}
+
+/* Bottom section */
+.sidebar-bottom {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+/* === CATEGORY CARD STYLES === */
+
+/* Special cards for news categories */
+.category-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  text-align: center;
+  cursor: pointer;
+}
+
+.category-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.category-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.category-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.category-count {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin-top: 0.25rem;
+}
+
+/* === INFO CARD STYLES === */
+
+/* Cards for displaying information */
+.info-card {
+  background: #1a1a1a;
+  border-left: 4px solid #667eea;
+}
+
+.info-card .card-title {
+  color: #667eea;
+}
+
+/* === WARNING/ERROR CARD STYLES === */
+
+.warning-card {
+  background: rgba(255, 193, 7, 0.1);
+  border-left: 4px solid #ffc107;
+}
+
+.warning-card .card-title {
+  color: #ffc107;
+}
+
+.error-card {
+  background: rgba(220, 53, 69, 0.1);
+  border-left: 4px solid #dc3545;
+}
+
+.error-card .card-title {
+  color: #dc3545;
+}
+
+.success-card {
+  background: rgba(40, 167, 69, 0.1);
+  border-left: 4px solid #28a745;
+}
+
+.success-card .card-title {
+  color: #28a745;
+}
+
+/* === RESPONSIVE DESIGN === */
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 260px;
+  }
+  
+  .sidebar.collapsed {
+    width: 80px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .sidebar.collapsed {
+    width: 280px;
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.collapsed.open {
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100vw;
+  }
+  
+  .sidebar-header {
+    padding: 0 1rem;
+  }
+  
+  .sidebar-nav {
+    padding: 0 1rem;
+  }
+  
+  .section-title {
+    padding: 0 1.5rem;
+  }
+}
+
+/* === ACCESSIBILITY === */
+
+/* Focus styles */
+.nav-link:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.sidebar-toggle:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .sidebar {
+    border-right-color: white;
+  }
+  
+  .nav-link {
+    border: 1px solid transparent;
+  }
+  
+  .nav-link:hover,
+  .nav-link.active {
+    border-color: white;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .nav-link,
+  .sidebar-toggle {
+    transition: none;
+  }
+}
