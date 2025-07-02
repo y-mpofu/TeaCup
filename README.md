@@ -1,122 +1,165 @@
-# TeaCup-WebApp
+# TeaCup
+**High Quality Tea Served Hot**
 
-# TeaCup – AI-Powered News Agent for the Global South
+TeaCup is your personal AI-powered news companion that serves up the hottest, most relevant news stories tailored just for you. Like a perfectly brewed cup of tea, we deliver news that's fresh, warming, and exactly what you need to start your day right.
 
-**TeaCup** is a personalized, AI-powered news platform designed for developing countries (Zimbabwe for now) where access to reliable and credible news is limited. It delivers high-quality news on politics, weather, crime, sports, and more—summarized, narrated, and tailored to the user.
-
----
-
-## Project Vision
-
-To empower communities in the Global South with **authentic, localized, and accessible news**, using natural language processing, text-to-speech, and smart curation.
+*Currently steeping in Zimbabwe, expanding globally.*
 
 ---
 
-## Tech Stack
+## Why TeaCup?
 
-### Frontend
+Just like tea brings people together and energizes communities, TeaCup connects you to the stories that matter most. We believe everyone deserves access to reliable, engaging news that fits their taste - whether you prefer it strong and bold or light and informative.
 
-- **React** (JavaScript, HTML, CSS)
-- Optional: TailwindCSS / Material UI for styling
-
-### Backend
-
-- **FastAPI** (Python)
-- **Firebase** (Authentication & Realtime Database)
-
-### AI & Data Pipeline
-
-- **GPT-3.5 Turbo**: Summarization & keyword extraction
-- **Google/Bing News API**: Real-time news fetching
-- **BeautifulSoup**: News scraping from local sources
-- (Optional) **TTS API**: ElevenLabs / Google TTS / Coqui
+**Our Promise**: No bitter aftertaste from fake news, just pure, authentic stories served at the perfect temperature.
 
 ---
 
-## Core Features
+## What's Brewing
 
-- **Smart News Curation**:
+### **Smart News Curation**
+- Location-based stories that matter to your community
+- Personalized by your interests and reading habits
+- Daily "Morning Brew" - essential news to start your day
 
-  - By location and interest
-  - Includes “must-know” daily briefings
+### **AI-Powered Audio Experience**
+- News narrated in multiple languages (English, Shona, Ndebele)
+- Podcast-style delivery perfect for your commute
+- Adjustable pace and tone preferences
 
-- **AI-Powered Narration**:
-- Multilingual news podcast output (English, Shona, Ndebele)
+### **Trust & Authenticity**
+- Built-in source verification
+- Clear flagging of questionable content
+- Transparency about news origins
 
-- **Fake News Detection**:
-- Early version flags low-reputation sources
-
-- **News Categories**:
-- Politics, Weather, Crime, Sports, Local Trends, Health
-
----
-
-## MVP Goals
-
-- [ ] Build initial web scraper (BeautifulSoup)
-- [ ] Integrate GPT-3.5 summarization
-- [ ] Design basic React UI
-- [ ] Add Firebase auth
-- [ ] Add TTS narration
-- [ ] Basic personalization (category-based)
-- [ ] Fake news warning (rule-based)
+### **Categories We Serve**
+- **Politics** - The decisions shaping your world
+- **Weather** - Stay prepared, stay safe
+- **Community** - Local stories that connect us
+- **Sports** - Victories and highlights
+- **Health** - Wellness tips and updates
+- **Trends** - What's buzzing in your area
 
 ---
 
-## Folder Structure (Planned)
+## The Tech Behind Your Cup
 
+### Frontend (The Beautiful Interface)
+```
+React with TypeScript - Modern, fast, reliable
+TailwindCSS - Clean, responsive design
+```
+*Think of this as your tea cup - elegant, functional, comfortable to hold*
 
-# React + TypeScript + Vite
+### Backend (The Brewing Process)
+```
+FastAPI (Python) - Handles all the heavy lifting
+Firebase - Secure user accounts and real-time updates
+```
+*This is our tea kettle - powerful, efficient, always ready*
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### AI Engine (The Tea Master)
+```
+GPT-3.5 Turbo - Intelligent summarization and insights
+Google/Bing News APIs - Fresh content from reliable sources
+BeautifulSoup - Local news harvesting
+Text-to-Speech - Multiple provider options for quality audio
+```
+*Our master tea blender - knows exactly how to mix the perfect cup*
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Brewing Schedule (Development Roadmap)
 
-## Expanding the ESLint configuration
+### First Steep (MVP)
+- [ ] **News Harvesting System** - Web scraping for local sources
+- [ ] **AI Summarization** - GPT integration for story condensing
+- [ ] **User Interface** - Clean, intuitive React frontend
+- [ ] **User Accounts** - Firebase authentication system
+- [ ] **Audio Narration** - Text-to-speech implementation
+- [ ] **Basic Personalization** - Category-based preferences
+- [ ] **Source Verification** - Basic credibility checking
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Full Roast (Future Features)
+- Advanced AI personalization
+- Community discussion features
+- Offline reading capabilities
+- Push notifications for breaking news
+- Multi-device synchronization
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+---
+
+## Project Structure
+
+```
+TeaCup/
+├── frontend/                 # React TypeScript application
+│   ├── src/
+│   │   ├── components/      # Reusable UI components
+│   │   ├── pages/           # Main application screens
+│   │   ├── hooks/           # Custom React hooks
+│   │   ├── services/        # API communication
+│   │   └── types/           # TypeScript definitions
+│   └── public/              # Static assets
+├── backend/                 # FastAPI Python server
+│   ├── app/
+│   │   ├── routers/         # API endpoints
+│   │   ├── services/        # Business logic
+│   │   ├── models/          # Data structures
+│   │   └── utils/           # Helper functions
+│   └── tests/               # Backend testing
+└── docs/                    # Documentation and guides
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Getting Started (Setting Up Your Tea Station)
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+### Prerequisites
+- Node.js 18+ (for the frontend)
+- Python 3.9+ (for the backend)
+- A good internet connection (for fresh news)
+
+### Quick Setup
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/teacup
+
+# Install frontend dependencies
+cd teacup/frontend
+npm install
+
+# Install backend dependencies
+cd ../backend
+pip install -r requirements.txt
+
+# Start brewing (development mode)
+npm run dev  # Frontend
+python main.py  # Backend
 ```
+
+---
+
+## Contributing to TeaCup
+
+We welcome contributors who share our passion for accessible, reliable news! Whether you're fixing bugs, adding features, or improving documentation - every contribution helps brew a better experience.
+
+**How to Contribute:**
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## Technical Configuration
+
+This project uses **React + TypeScript + Vite** for lightning-fast development and optimal performance.
+
+### Available Vite Plugins
+- `@vitejs/plugin-react` - Uses Babel for Fast Refresh
+- `@vitejs/plugin-react-swc` - Uses SWC for even faster refresh
+
+### ESLint Configuration for Production
+For production
