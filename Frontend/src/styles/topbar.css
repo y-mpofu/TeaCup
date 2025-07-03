@@ -1,15 +1,17 @@
 /* Top header bar styles */
 .topbar {
   
-  background-color: rgba(36, 188, 47, 0.165);
+  background-color: rgb(219, 110, 1);
   padding: 0.5rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 100px;
 }
 
 .topbar input {
   width: 50%;
+  align-items: center;
   padding: 0.5rem;
   border: none;
   border-radius: 6px;
@@ -23,5 +25,6 @@
 
 .topbar input:focus {
   outline: none;
+  align-items: center;
   background-color: #444;
 }

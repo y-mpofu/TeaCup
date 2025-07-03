@@ -18,7 +18,7 @@ export default function ViewProfile() {
             <span className="large-initial">JD</span>
           </div>
           <button className="change-picture-btn">
-            📷 Change Picture
+            Change Picture
           </button>
         </div>
 

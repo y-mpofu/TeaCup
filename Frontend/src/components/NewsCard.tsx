@@ -105,20 +105,6 @@ export default function NewsCard({
           </button>
         </div>
 
-        {/* Large play button overlay */}
-        <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <button 
-            className="play-button-large"
-            onClick={handlePlayClick}
-          >
-            {isPlaying ? (
-              <Pause size={32} className="text-white" />
-            ) : (
-              <Play size={32} className="text-white ml-1" />
-            )}
-          </button>
-        </div>
-
         {/* Content */}
         <div className="relative z-10 p-6 h-full flex flex-col justify-end">
           <div className="mb-4">
