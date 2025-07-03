@@ -12,21 +12,19 @@ p {
 }
 .news-card-hero {
   height: 350px;
-  background-image: url('./public/mthulimasimba.webp');
+  background: linear-gradient(135deg, var(--card-bg-start), var(--card-bg-end));
   border-radius: 16px;
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
   border-left-width: 6px;
-  margin-bottom: 2rem;
   width: 100%;
   min-width: 100%;
 }
 
 .news-card-hero:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(234, 232, 237, 0.4);
 }
 
 /* Large play button for hero cards */
@@ -260,15 +258,12 @@ p {
 /* === TRUE HORIZONTAL SCROLLING LAYOUTS === */
 
 /* Hero section with featured story */
-.hero-section {
-  margin-bottom: 3rem;
-}
 
 /* Horizontal scrolling container */
 .news-scroll-container {
-  background: linear-gradient(45deg, grey, black);
+  background: linear-gradient(black);
   position: relative;
-  margin-bottom: 2rem;
+  padding-left: 300rem 0; /* Padding for visual space */
   overflow: hidden; /* Hide overflow to contain scroll shadows */
 }
 
@@ -360,9 +355,8 @@ p {
 }
 
 .section-header-spotify {
-  background: linear-gradient(45deg, black, grey);
+  background: linear-gradient( black);
   height: 100px;
-  margin-bottom: 1.5rem;
   padding-bottom: 0.5rem;
 }
 
@@ -562,7 +556,10 @@ p {
 
 /* Section styles */
 .news-section {
-  margin-bottom: 3rem;
+  padding: 1.5rem;
+  background: #121212;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .section-header {
@@ -641,7 +638,7 @@ p {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(10, 10, 10, 1) 100%);
+  background: white;
   min-height: 100vh;
 }
 

@@ -17,6 +17,10 @@ import {
   entertainmentNews,
   educationNews
 } from '../data/additionalNews'
+import { 
+  // ... your existing icons
+  Coffee,  // Add this to your existing import 
+} from 'lucide-react'
 
 // Define the Story interface to match what's expected by App.tsx
 interface Story {
@@ -89,13 +93,20 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
 
   return (
     <div className="main-body-container">
+      <section className="breaking-news-header">
+        <h1 className="breaking-news-title">
+          <Coffee size={32} className="breaking-news-icon" />
+          Hot Spills
+        </h1>
+        <p className="breaking-news-subtitle">Stay updated with the latest developments</p>
+      </section>
       {/* Hero section with breaking news */}
       {breakingNews.length > 0 && (
         <NewsSection
           title=" Breaking News"
           subtitle="Latest urgent updates and developing stories"
           articles={breakingNews}
-          maxArticles={4}
+          maxArticles={10}
           onReadStory={handleReadStory}
           onSaveStory={handleSaveStory}
           onPlayAudio={handlePlayAudio}

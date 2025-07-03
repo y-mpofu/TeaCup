@@ -70,7 +70,26 @@ export const localTrends: NewsArticle[] = [
     readTime: '3 min read'
   }
 ]
-
+// Weather News
+export const weatherNews: NewsArticle[] = [
+  {
+    id: 'weather-1',
+    title: 'Rainy Season Expected to Start Early This Year',
+    summary: 'Meteorological department predicts above-normal rainfall starting next month, good news for agriculture.',
+    category: 'Weather',
+    timestamp: '1 hour ago',
+    readTime: '2 min read',
+    isBreaking: true
+  },
+  {
+    id: 'weather-2',
+    title: 'Heat Wave Warning Issued for Masvingo Province',
+    summary: 'Temperatures expected to reach 38°C this week. Health officials advise staying hydrated and avoiding sun exposure.',
+    category: 'Weather',
+    timestamp: '3 hours ago',
+    readTime: '2 min read'
+  }
+]
 // Sample sports news
 export const sportsNews: NewsArticle[] = [
   {
@@ -88,7 +107,9 @@ export const sportsNews: NewsArticle[] = [
     summary: 'The Harare Premier Cricket League reaches its climax with the championship finals scheduled for Saturday at Harare Sports Club.',
     category: 'Sports',
     timestamp: '2 hours ago',
-    readTime: '3 min read'
+    readTime: '3 min read',
+    isBreaking: true
+    
   }
 ]
 
@@ -118,7 +139,8 @@ export const getAllNews = (): NewsArticle[] => {
     ...politicalNews,
     ...localTrends, 
     ...sportsNews,
-    ...healthNews
+    ...healthNews,
+    ...weatherNews
   ]
 }
 
