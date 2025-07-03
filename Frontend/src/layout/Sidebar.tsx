@@ -227,8 +227,13 @@ export default function Sidebar() {
       {/* Sidebar header with TeaCup brand */}
       <div className="sidebar-header">
         <div className="brand-container">
-          <Coffee size={24} className="brand-icon" />
-          <h1 className="sidebar-brand">TeaCup</h1>
+            <img 
+              src="./TeaCup_Logo.png"
+              className="section-icon"
+              width={100}
+              height={100}
+            />
+          
         </div>
       </div>
 
