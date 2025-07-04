@@ -1,9 +1,7 @@
 /* src/styles/cards.css */
-/* Updated sidebar styles to match TeaCup design - darker theme with better spacing */
+/* Fixed sidebar styles with proper icon alignment when collapsed */
 
 /* === GENERAL CARD STYLES === */
-/* Keeping the existing card styles as they were working fine */
-
 .card {
   background: #1a1a1a;
   border: 1px solid #333;
@@ -60,23 +58,23 @@
   align-items: center;
 }
 
-/* === UPDATED TEACUP SIDEBAR STYLES === */
+/* === TEACUP SIDEBAR STYLES === */
 
-/* Main sidebar container - darker background to match TeaCup design */
+/* Main sidebar container */
 .sidebar {
-  width: 240px; /* Slightly narrower than before */
-  background: #1a1a1a; /* Darker solid background instead of gradient */
+  width: 240px;
+  background: #1a1a1a;
   padding: 1.5rem 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow-y: auto; /* CHANGED: Enable vertical scrolling */
-  overflow-x: hidden; /* CHANGED: Prevent horizontal scrolling */
-  border-right: 1px solid #2a2a2a; /* Slightly lighter border */
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-right: 1px solid #2a2a2a;
   height: 100vh;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  box-shadow: none; /* Remove any box shadow */
+  box-shadow: none;
 }
 
 /* Custom scrollbar for sidebar */
@@ -99,19 +97,19 @@
 
 /* Collapsed sidebar state */
 .sidebar.collapsed {
-  width: 100px;
+  width: 80px;
 }
 
-/* Updated sidebar header to accommodate brand icon */
+/* Sidebar header */
 .sidebar-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   padding: 0 1.5rem;
   margin-bottom: 2rem;
 }
 
-/* Brand container to hold icon and text */
+/* Brand container */
 .brand-container {
   display: flex;
   align-items: center;
@@ -120,13 +118,13 @@
 }
 
 .brand-icon {
-  color: #667eea; /* Brand color for the coffee icon */
+  color: #667eea;
   flex-shrink: 0;
 }
 
 .sidebar-brand {
-  font-size: 1.375rem; /* Slightly smaller than before */
-  font-weight: 700; /* Bolder font weight */
+  font-size: 1.375rem;
+  font-weight: 700;
   white-space: nowrap;
   transition: opacity 0.2s ease;
   color: white;
@@ -138,7 +136,7 @@
   pointer-events: none;
 }
 
-/* Toggle button - keeping the same functionality */
+/* Toggle button */
 .sidebar-toggle {
   background: none;
   border: 1px solid #333;
@@ -153,6 +151,7 @@
   width: 36px;
   height: 36px;
   flex-shrink: 0;
+  margin: 0 auto 0.5rem auto; /* Center the toggle button */
 }
 
 .sidebar-toggle:hover {
@@ -161,44 +160,56 @@
   border-color: #555;
 }
 
-/* Navigation container - FIXED ALIGNMENT */
+/* Navigation container */
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem; /* Consistent spacing between nav items */
-  padding: 0 1rem; /* Consistent padding for all nav containers */
+  gap: 0.25rem;
+  padding: 0 1rem;
 }
 
-/* Navigation links - updated for better TeaCup look and PROPER ALIGNMENT */
+/* Main navigation section */
+.sidebar > .sidebar-nav {
+  margin-bottom: 2rem; /* Add bottom margin to main nav to separate from sections */
+}
+
+/* FIXED: Navigation links with proper alignment */
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 1rem; /* Consistent gap between icon and text */
-  color: #999; /* Lighter default color */
+  gap: 1rem;
+  color: #999;
   text-decoration: none;
   transition: all 0.2s ease;
-  padding: 1rem; /* Consistent padding for all nav links */
+  padding: 1rem;
   border-radius: 8px;
   position: relative;
   font-weight: 500;
-  font-size: 0.9rem; /* Slightly smaller font */
-  margin: 0; /* Remove margins for better alignment */
-  min-height: 48px; /* Consistent height for all nav items */
-  box-sizing: border-box; /* Include padding in height calculation */
+  font-size: 0.9rem;
+  margin: 0;
+  min-height: 48px;
+  box-sizing: border-box;
+}
+
+/* Direct icon styling (no wrapper spans) */
+.nav-link > svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
 }
 
 .nav-link:hover {
   color: white;
-  background-color: rgba(255, 255, 255, 0.08); /* More subtle hover */
-  transform: none; /* Remove the slide animation for cleaner look */
+  background-color: rgba(255, 255, 255, 0.08);
+  transform: none;
 }
 
 .nav-link.active {
-  background-color: rgba(102, 126, 234, 0.15); /* More subtle active state */
-  color: #8b9bef; /* Lighter active color */
+  background-color: rgba(102, 126, 234, 0.15);
+  color: #8b9bef;
   border-left: 3px solid #667eea;
-  margin-left: -3px; /* Compensate for border */
-  padding-left: calc(1rem + 3px); /* Adjust padding to maintain alignment */
+  margin-left: -3px;
+  padding-left: calc(1rem + 3px);
 }
 
 .nav-link.active:hover {
@@ -206,21 +217,20 @@
   background-color: rgba(102, 126, 234, 0.2);
 }
 
-/* Navigation icons - FIXED SIZE AND ALIGNMENT */
-.nav-icon {
+/* Navigation icons - Direct SVG styling */
+.nav-link > svg {
   flex-shrink: 0;
   width: 20px;
   height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
+
+/* Remove the old nav-icon class styling since we're not using spans */
 
 /* Navigation text */
 .nav-text {
   white-space: nowrap;
   transition: opacity 0.2s ease;
-  flex: 1; /* Take remaining space */
+  flex: 1;
 }
 
 .sidebar.collapsed .nav-text {
@@ -228,39 +238,55 @@
   pointer-events: none;
 }
 
-/* Collapsed state adjustments - IMPROVED CENTERING */
+/* FIXED: Collapsed state with perfect icon centering */
 .sidebar.collapsed .nav-link {
   justify-content: center;
-  padding-left: 50; /* Adjust padding for collapsed state */
-  margin: 0.25rem 0.5rem; /* Center the links better */
-  position: fixed;
+  padding: 0.75rem;
+  margin: 0.25rem 0.5rem;
+  position: relative;
   align-items: center;
-  min-width: 48px; /* Maintain minimum click area */
+  min-width: 48px;
   border-radius: 8px;
+  /* Ensure direct SVG icons are perfectly centered */
+  display: flex;
+  flex-direction: row;
+}
+
+/* Hide text in collapsed state but keep SVG icons visible */
+.sidebar.collapsed .nav-link > svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
 }
 
 .sidebar.collapsed .nav-link.active {
-   /* Reset margin for collapsed active state */
-  padding-left: 50px; /* Reset padding for collapsed state */
-  border-left: none; /* Remove left border in collapsed state */
-  border: 2px solid #667eea; /* Use full border for collapsed active state */
+  margin: 0.25rem 0.5rem; /* Keep consistent margins */
+  padding: 0.75rem;
+  border-left: none;
+  border: 2px solid #667eea;
+  justify-content: center; /* Center the icon */
 }
 
-/* Tooltip for collapsed state - keeping the same functionality */
-.sidebar.collapsed .nav-link {
-  position: relative;
+/* FIXED: Collapsed nav container */
+.sidebar.collapsed .sidebar-nav {
+  padding: 0 0.5rem; /* Adjust padding for collapsed state */
 }
 
+/* FIXED: Collapsed section nav */
+.sidebar.collapsed .sidebar-section .sidebar-nav {
+  padding: 0 0.5rem;
+}
+
+/* Tooltip for collapsed state */
 .sidebar.collapsed .nav-link::after {
   content: attr(data-tooltip);
-  position: fixed;
-  align-items: center;
+  position: absolute;
   left: calc(100% + 0.75rem);
   top: 50%;
   transform: translateY(-50%);
   background-color: #2a2a2a;
   color: white;
-  padding-left: 50px;
+  padding: 0.5rem 0.75rem;
   border-radius: 6px;
   font-size: 0.8rem;
   white-space: nowrap;
@@ -275,26 +301,36 @@
   opacity: 1;
 }
 
-/* Updated sidebar sections with better spacing and alignment */
+/* Sidebar sections */
 .sidebar-section {
-  margin-bottom: 1.5rem; /* Consistent spacing between sections */
-  margin-top: 2rem; /* Space from previous section */
+  margin-bottom: 1.5rem;
+  margin-top: 2rem;
 }
 
 .sidebar-section:first-of-type {
-  margin-top: 2rem; /* Extra space for first section */
+  margin-top: 2rem; /* Ensure first section has proper spacing */
 }
 
-/* Section titles - updated styling for TeaCup design */
+/* Ensure nav items within sections have proper spacing */
+.sidebar-section .sidebar-nav {
+  margin-top: 0;
+}
+
+.sidebar-section .sidebar-nav .nav-link:first-child {
+  margin-top: 0; /* Remove any extra margin from first nav item */
+}
+
+/* Section titles */
 .section-title {
-  color: #666; /* Darker gray for section titles */
-  font-size: 0.7rem; /* Smaller font size */
-  font-weight: 700; /* Bolder font weight */
+  color: #666;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em; /* More letter spacing */
+  letter-spacing: 0.1em;
   margin: 0 0 1rem 0;
-  padding: 0 1rem; /* Match nav-link padding */
+  padding: 0 1rem;
   transition: opacity 0.2s ease;
+  line-height: 1.2; /* Add line height for better spacing */
 }
 
 .sidebar.collapsed .section-title {
@@ -304,26 +340,33 @@
 
 /* Ensure all nav sections have consistent styling */
 .sidebar-section .sidebar-nav {
-  padding: 0 1rem; /* Consistent padding with main nav */
+  padding: 0 1rem;
+  margin-top: 0; /* Ensure no extra margin */
 }
 
-/* All nav-link styles will be inherited from the main .nav-link rules above */
-/* This ensures consistent alignment across all sections */
+/* Add specific spacing for nav links in sections */
+.sidebar-section .nav-link {
+  margin-top: 0;
+  margin-bottom: 0;
+}
 
-/* Sidebar divider - remove as it's not in the TeaCup design */
+/* Ensure first nav link in each section has proper spacing */
+.sidebar-section .nav-link:first-child {
+  margin-top: 0;
+}
+
+/* Hide dividers */
 .sidebar-divider {
-  display: none; /* Hide dividers for cleaner look */
+  display: none;
 }
 
 /* Remove bottom section special styling */
 .sidebar-bottom {
   margin-top: auto;
-  padding-top: 0; /* Remove extra padding */
+  padding-top: 0;
 }
 
 /* === CATEGORY CARD STYLES === */
-/* Keeping existing card styles */
-
 .category-card {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
@@ -356,7 +399,6 @@
 }
 
 /* === INFO CARD STYLES === */
-
 .info-card {
   background: #1a1a1a;
   border-left: 4px solid #667eea;
@@ -367,7 +409,6 @@
 }
 
 /* === WARNING/ERROR CARD STYLES === */
-
 .warning-card {
   background: rgba(255, 193, 7, 0.1);
   border-left: 4px solid #ffc107;
@@ -396,61 +437,122 @@
 }
 
 /* === RESPONSIVE DESIGN === */
-
 @media (max-width: 1024px) {
   .sidebar {
     width: 220px;
   }
-  
+
   .sidebar.collapsed {
     width: 70px;
   }
 }
 
 @media (max-width: 768px) {
+  /* Force collapsed state on tablets and smaller */
   .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
+    width: 80px;
+  }
+
+  .sidebar .nav-text {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sidebar .section-title {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sidebar .brand-container {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* FIXED: Mobile icon alignment */
+  .sidebar .nav-link {
+    justify-content: center;
+    padding: 0.75rem;
+    margin: 0.25rem 0.5rem;
+    position: relative;
+    align-items: center;
+    min-width: 48px;
+    border-radius: 8px;
+    display: flex;
+  }
+
+  .sidebar .nav-link.active {
+    margin: 0.25rem 0.5rem;
+    padding: 0.75rem;
+    border-left: none;
+    border: 2px solid #667eea;
+    justify-content: center;
+  }
+
+  .sidebar .nav-link::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 0.75rem);
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #2a2a2a;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
     z-index: 1000;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    border: 1px solid #444;
   }
-  
-  .sidebar.open {
-    transform: translateX(0);
+
+  .sidebar .nav-link:hover::after {
+    opacity: 1;
   }
-  
-  .sidebar.collapsed {
-    width: 240px;
-    transform: translateX(-100%);
+
+  .sidebar-header {
+    justify-content: center;
+    padding: 0 0.5rem;
   }
-  
-  .sidebar.collapsed.open {
-    transform: translateX(0);
+
+  .sidebar-nav {
+    padding: 0 0.5rem;
+  }
+
+  .sidebar-section .sidebar-nav {
+    padding: 0 0.5rem;
   }
 }
 
 @media (max-width: 480px) {
+  /* Keep icon-only sidebar on mobile */
   .sidebar {
-    width: 100vw;
+    width: 70px;
   }
-  
-  .sidebar-header {
-    padding: 0 1rem;
+
+  .sidebar .nav-link {
+    margin: 0.25rem 0.25rem;
+    padding: 0.65rem;
+    justify-content: center;
   }
-  
+
+  .sidebar .nav-link.active {
+    margin: 0.25rem 0.25rem;
+    padding: 0.65rem;
+    justify-content: center;
+  }
+
   .sidebar-nav {
-    padding: 0 1rem;
+    padding: 0 0.25rem;
   }
-  
-  .section-title {
-    padding: 0 1.5rem;
+
+  .sidebar-section .sidebar-nav {
+    padding: 0 0.25rem;
   }
 }
 
 /* === ACCESSIBILITY === */
-
 .nav-link:focus {
   outline: 2px solid #667eea;
   outline-offset: 2px;
@@ -465,11 +567,11 @@
   .sidebar {
     border-right-color: white;
   }
-  
+
   .nav-link {
     border: 1px solid transparent;
   }
-  
+
   .nav-link:hover,
   .nav-link.active {
     border-color: white;

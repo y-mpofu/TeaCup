@@ -2,23 +2,24 @@
 /* Main CSS entry point for Vuka Unzwe news application */
 
 /* Import all component and page styles */
-@import './styles/global.css';
-@import './styles/layout.css';
-@import './styles/newscard.css';
-@import './styles/bottombar.css';
-@import './styles/cards.css';
-@import './styles/pages.css';
-@import './styles/profile.css';
-@import './styles/sidebar.css';
-@import './styles/topbar.css';
+@import "./styles/global.css";
+@import "./styles/layout.css";
+@import "./styles/newscard.css";
+@import "./styles/bottombar.css";
+@import "./styles/cards.css";
+@import "./styles/pages.css";
+@import "./styles/profile.css";
+/* @import './styles/sidebar.css'; */
+@import "./styles/topbar.css";
 
 /* Base application styles */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -34,7 +35,7 @@ html, body {
 
 /* Code font family */
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
 
@@ -49,7 +50,9 @@ button {
 }
 
 /* Remove input/select default styles */
-input, select, textarea {
+input,
+select,
+textarea {
   font-family: inherit;
 }
 
@@ -60,7 +63,8 @@ a {
 }
 
 /* List styling */
-ul, ol {
+ul,
+ol {
   list-style: none;
   padding: 0;
   margin: 0;
