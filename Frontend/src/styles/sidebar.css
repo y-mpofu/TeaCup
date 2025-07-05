@@ -1,7 +1,3 @@
-/* src/styles/cards.css */
-/* Fixed sidebar styles with proper icon alignment when collapsed */
-
-/* === GENERAL CARD STYLES === */
 .card {
   background: #1a1a1a;
   border: 1px solid #333;
@@ -64,11 +60,10 @@
 .sidebar {
   width: 240px;
   background: #1a1a1a;
-  padding: 1.5rem 0;
+  padding: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden; /* Changed: prevent main container from scrolling */
   border-right: 1px solid #2a2a2a;
   height: 100vh;
   flex-shrink: 0;
@@ -77,21 +72,40 @@
   box-shadow: none;
 }
 
-/* Custom scrollbar for sidebar */
-.sidebar::-webkit-scrollbar {
+/* Sidebar content container for proper scrolling */
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1.5rem 0;
+  min-height: 0; /* Critical: allows flex child to shrink below content size */
+}
+
+/* Sidebar header - fixed at top */
+.sidebar-header {
+  flex-shrink: 0; /* Prevent header from shrinking */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1.5rem 0 1.5rem; /* Reduced bottom padding */
+  margin-bottom: 1rem; /* Add margin instead of padding */
+}
+
+/* Custom scrollbar for sidebar content */
+.sidebar-content::-webkit-scrollbar {
   width: 6px;
 }
 
-.sidebar::-webkit-scrollbar-track {
+.sidebar-content::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.sidebar::-webkit-scrollbar-thumb {
+.sidebar-content::-webkit-scrollbar-thumb {
   background: #333;
   border-radius: 3px;
 }
 
-.sidebar::-webkit-scrollbar-thumb:hover {
+.sidebar-content::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
 
@@ -99,17 +113,6 @@
 .sidebar.collapsed {
   width: 80px;
 }
-
-/* Sidebar header */
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 1.5rem;
-  margin-bottom: 2rem;
-}
-
-/* Brand container */
 .brand-container {
   display: flex;
   align-items: center;
@@ -160,17 +163,18 @@
   border-color: #555;
 }
 
+/* Main navigation section */
+.sidebar > .sidebar-content > .sidebar-nav {
+  margin-bottom: 2rem; /* Add bottom margin to main nav to separate from sections */
+}
+
 /* Navigation container */
 .sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   padding: 0 1rem;
-}
-
-/* Main navigation section */
-.sidebar > .sidebar-nav {
-  margin-bottom: 2rem; /* Add bottom margin to main nav to separate from sections */
+  flex-shrink: 0; /* Prevent nav sections from shrinking */
 }
 
 /* FIXED: Navigation links with proper alignment */
@@ -305,6 +309,7 @@
 .sidebar-section {
   margin-bottom: 1.5rem;
   margin-top: 2rem;
+  flex-shrink: 0; /* Prevent sections from shrinking */
 }
 
 .sidebar-section:first-of-type {
