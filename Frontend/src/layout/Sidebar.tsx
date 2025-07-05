@@ -30,6 +30,7 @@ import {
   CupSoda,
   CoffeeIcon,
 } from "lucide-react";
+import "../styles/Sidebar.css"; // Import sidebar styles
 
 export default function Sidebar() {
   // Track collapsed state - keeping this functionality from original
@@ -50,7 +51,7 @@ export default function Sidebar() {
 
   return (
     <aside className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
-      {/* Sidebar header with TeaCup brand */}
+      {/* Sidebar header with TeaCup brand - Fixed at top */}
       <div className="sidebar-header">
         <div className="brand-container">
           <img
@@ -62,142 +63,149 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Main navigation section */}
-      <nav className="sidebar-nav">
-        {/* Toggle button for collapse functionality */}
-        <button
-          className="sidebar-toggle"
-          onClick={toggleSidebar}
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {isCollapsed ? <Menu size={20} /> : <X size={20} />}
-        </button>
-
-        {/* Home - Main page */}
-        <Link
-          to="/"
-          className={`nav-link ${isActive("/") ? "active" : ""}`}
-          data-tooltip="Home"
-        >
-          <Home size={20} />
-          {!isCollapsed && <span className="nav-text">Home</span>}
-        </Link>
-
-        {/* The Sip - Main feed */}
-        <Link
-          to="/sip"
-          className={`nav-link ${isActive("/sip") ? "active" : ""}`}
-          data-tooltip="General Sip"
-        >
-          <CupSoda size={20} />
-          {!isCollapsed && <span className="nav-text">General Sip</span>}
-        </Link>
-
-        {/* Hot Takes - Trending content */}
-        <Link
-          to="/hot-takes"
-          className={`nav-link ${isActive("/hot-takes") ? "active" : ""}`}
-          data-tooltip="Trending Tea"
-        >
-          <MessageSquare size={20} />
-          {!isCollapsed && <span className="nav-text">Trending Tea</span>}
-        </Link>
-
-        {/* My Mix - Personalized content */}
-        <Link
-          to="/my-mix"
-          className={`nav-link ${isActive("/my-mix") ? "active" : ""}`}
-          data-tooltip="For You"
-        >
-          <List size={20} />
-          {!isCollapsed && <span className="nav-text">For You</span>}
-        </Link>
-      </nav>
-
-      {/* PAPERBOY DELIVERY section */}
-      <div className="sidebar-section">
-        {!isCollapsed && (
-          <h3 className="section-title">
-            PAPERBOY DELIVERY
-            <img
-              src="./paperboy.png"
-              className="section-icon"
-              width={60}
-              height={60}
-            />
-          </h3>
-        )}
-
+      {/* Scrollable content container */}
+      <div className="sidebar-content">
+        {/* Main navigation section */}
         <nav className="sidebar-nav">
-          {/* Politics */}
-          <Link
-            to="/politics"
-            className={`nav-link ${isActive("/politics") ? "active" : ""}`}
-            data-tooltip="Politics"
+          {/* Toggle button for collapse functionality */}
+          <button
+            className="sidebar-toggle"
+            onClick={toggleSidebar}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <Flag size={20} />
-            {!isCollapsed && <span className="nav-text">Politics</span>}
+            {isCollapsed ? <Menu size={20} /> : <X size={20} />}
+          </button>
+
+          {/* Home - Main page */}
+          <Link
+            to="/"
+            className={`nav-link ${isActive("/") ? "active" : ""}`}
+            data-tooltip="Home"
+          >
+            <Home size={20} />
+            {!isCollapsed && <span className="nav-text">Home</span>}
           </Link>
 
-          {/* Local Spills */}
+          {/* The Sip - Main feed */}
           <Link
-            to="/local-spills"
-            className={`nav-link ${isActive("/local-spills") ? "active" : ""}`}
-            data-tooltip="Local Spills"
+            to="/sip"
+            className={`nav-link ${isActive("/sip") ? "active" : ""}`}
+            data-tooltip="General Sip"
           >
-            <Radio size={20} />
-            {!isCollapsed && <span className="nav-text">Local Spills</span>}
+            <CupSoda size={20} />
+            {!isCollapsed && <span className="nav-text">General Sip</span>}
           </Link>
 
-          {/* Health */}
+          {/* Hot Takes - Trending content */}
           <Link
-            to="/health"
-            className={`nav-link ${isActive("/health") ? "active" : ""}`}
-            data-tooltip="Health"
+            to="/hot-takes"
+            className={`nav-link ${isActive("/hot-takes") ? "active" : ""}`}
+            data-tooltip="Trending Tea"
           >
-            <Cross size={20} />
-            {!isCollapsed && <span className="nav-text">Health</span>}
+            <MessageSquare size={20} />
+            {!isCollapsed && <span className="nav-text">Trending Tea</span>}
           </Link>
 
-          {/* Global */}
+          {/* My Mix - Personalized content */}
           <Link
-            to="/global"
-            className={`nav-link ${isActive("/global") ? "active" : ""}`}
-            data-tooltip="Global"
+            to="/my-mix"
+            className={`nav-link ${isActive("/my-mix") ? "active" : ""}`}
+            data-tooltip="For You"
           >
-            <Globe size={20} />
-            {!isCollapsed && <span className="nav-text">Global</span>}
+            <List size={20} />
+            {!isCollapsed && <span className="nav-text">For You</span>}
           </Link>
         </nav>
-      </div>
 
-      {/* Community Section */}
-      <div className="sidebar-section">
-        {!isCollapsed && <h3 className="section-title">Community</h3>}
+        {/* PAPERBOY DELIVERY section */}
+        <div className="sidebar-section">
+          {!isCollapsed && (
+            <h3 className="section-title">
+              PAPERBOY DELIVERY
+              <img
+                src="./paperboy.png"
+                className="section-icon"
+                width={60}
+                height={60}
+              />
+            </h3>
+          )}
 
-        <nav className="sidebar-nav">
-          {/* Saved Stories */}
-          <Link
-            to="/saved-stories"
-            className={`nav-link ${isActive("/saved-stories") ? "active" : ""}`}
-            data-tooltip="Saved Stories"
-          >
-            <Bookmark size={20} />
-            {!isCollapsed && <span className="nav-text">Saved Stories</span>}
-          </Link>
+          <nav className="sidebar-nav">
+            {/* Politics */}
+            <Link
+              to="/politics"
+              className={`nav-link ${isActive("/politics") ? "active" : ""}`}
+              data-tooltip="Politics"
+            >
+              <Flag size={20} />
+              {!isCollapsed && <span className="nav-text">Politics</span>}
+            </Link>
 
-          {/* Settings */}
-          <Link
-            to="/hudle"
-            className={`nav-link ${isActive("/hudle") ? "active" : ""}`}
-            data-tooltip="Start a Tea Party"
-          >
-            <UserCheck size={20} />
-            {!isCollapsed && (
-              <span className="nav-text">Start a Tea Party</span>
-            )}
-          </Link>
-        </nav>
+            {/* Local Spills */}
+            <Link
+              to="/local-spills"
+              className={`nav-link ${
+                isActive("/local-spills") ? "active" : ""
+              }`}
+              data-tooltip="Local Spills"
+            >
+              <Radio size={20} />
+              {!isCollapsed && <span className="nav-text">Local Spills</span>}
+            </Link>
+
+            {/* Health */}
+            <Link
+              to="/health"
+              className={`nav-link ${isActive("/health") ? "active" : ""}`}
+              data-tooltip="Health"
+            >
+              <Cross size={20} />
+              {!isCollapsed && <span className="nav-text">Health</span>}
+            </Link>
+
+            {/* Global */}
+            <Link
+              to="/global"
+              className={`nav-link ${isActive("/global") ? "active" : ""}`}
+              data-tooltip="Global"
+            >
+              <Globe size={20} />
+              {!isCollapsed && <span className="nav-text">Global</span>}
+            </Link>
+          </nav>
+        </div>
+
+        {/* Community Section */}
+        <div className="sidebar-section">
+          {!isCollapsed && <h3 className="section-title">Community</h3>}
+
+          <nav className="sidebar-nav">
+            {/* Saved Stories */}
+            <Link
+              to="/saved-stories"
+              className={`nav-link ${
+                isActive("/saved-stories") ? "active" : ""
+              }`}
+              data-tooltip="Saved Stories"
+            >
+              <Bookmark size={20} />
+              {!isCollapsed && <span className="nav-text">Saved Stories</span>}
+            </Link>
+
+            {/* Settings */}
+            <Link
+              to="/hudle"
+              className={`nav-link ${isActive("/hudle") ? "active" : ""}`}
+              data-tooltip="Start a Tea Party"
+            >
+              <UserCheck size={20} />
+              {!isCollapsed && (
+                <span className="nav-text">Start a Tea Party</span>
+              )}
+            </Link>
+          </nav>
+        </div>
       </div>
     </aside>
   );
