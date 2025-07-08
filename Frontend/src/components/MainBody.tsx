@@ -1,258 +1,13 @@
-// // src/components/MainBody.tsx
-// // Main content area with Spotify-inspired layout and Pan-African aesthetic
+// Frontend/src/components/MainBody.tsx
+// Updated MainBody component with beautiful teapot loading animation
 
-// import React, { useState } from 'react'
-// import NewsSection from './NewsSection'
-// import {
-//   politicalNews,
-//   localTrends,
-//   sportsNews,
-//   healthNews,
-//   getBreakingNews
-// } from '../data/mockNews'
-// import {
-//   businessNews,
-//   techNews,
-//   weatherNews,
-//   entertainmentNews,
-//   educationNews
-// } from '../data/additionalNews'
-// import {
-//   // ... your existing icons
-//   Coffee,  // Add this to your existing import
-// } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import NewsSection from './NewsSection'
+import TeapotLoading3D from './TeapotLoading3D' // Import our new loading component
+import { newsApiService } from '../services/newsApiService'
+import type { NewsArticle } from '../services/newsApiService'
 
-// // Define the Story interface to match what's expected by App.tsx
-// interface Story {
-//   id: string
-//   title: string
-//   category: string
-//   thumbnail?: string
-// }
-
-// // Define the props this component expects
-// interface MainBodyProps {
-//   onPlayStory?: (story: Story) => void
-// }
-
-// export default function MainBody({ onPlayStory }: MainBodyProps) {
-//   // Track which story is currently playing for visual feedback
-//   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null)
-
-//   // Handle when user wants to read a story
-//   const handleReadStory = (articleId: string) => {
-//     console.log('Reading story:', articleId)
-//     // TODO: Navigate to full story page or open story modal
-//     // For now, we'll just log it
-//   }
-
-//   // Handle when user wants to save a story
-//   const handleSaveStory = (articleId: string) => {
-//     console.log('Saving story:', articleId)
-//     // TODO: Add to saved stories list
-//     // For now, we'll just log it
-//   }
-
-//   // Handle when user wants to play audio for a story
-//   const handlePlayAudio = (articleId: string) => {
-//     // Find the article in all our news arrays
-//     const allNews = [
-//       ...getBreakingNews(),
-//       ...politicalNews,
-//       ...localTrends,
-//       ...weatherNews,
-//       ...businessNews,
-//       ...sportsNews,
-//       ...techNews,
-//       ...healthNews,
-//       ...educationNews,
-//       ...entertainmentNews
-//     ]
-
-//     const article = allNews.find(item => item.id === articleId)
-
-//     if (article && onPlayStory) {
-//       // Set currently playing state
-//       setCurrentlyPlaying(articleId)
-
-//       // Convert our NewsArticle to the Story format expected by BottomBar
-//       const story = {
-//         id: article.id,
-//         title: article.title,
-//         category: article.category,
-//         thumbnail: article.imageUrl
-//       }
-
-//       // Call the function passed down from App.tsx to show the bottom bar
-//       onPlayStory(story)
-//     }
-//   }
-
-//   // Get breaking news to show at the top
-//   const breakingNews = getBreakingNews()
-
-//   return (
-//     <div className="main-body-container">
-//       <section className="breaking-news-header">
-//         <h1 className="breaking-news-title">
-//           <Coffee size={32} className="breaking-news-icon" />
-//           Hot Spills
-//         </h1>
-//         <p className="breaking-news-subtitle">Stay updated with the latest developments</p>
-//       </section>
-//       {/* Hero section with breaking news */}
-//       {breakingNews.length > 0 && (
-//         <NewsSection
-//           title=" Breaking News"
-//           subtitle="Latest urgent updates and developing stories"
-//           articles={breakingNews}
-//           maxArticles={10}
-//           onReadStory={handleReadStory}
-//           onSaveStory={handleSaveStory}
-//           onPlayAudio={handlePlayAudio}
-//           currentlyPlaying={currentlyPlaying ?? undefined}
-//           layout="hero"
-//           showEmoji={true}
-//         />
-//       )}
-
-//       {/* Politics Section */}
-//       <NewsSection
-//         title=" Politics"
-//         subtitle="Government updates, policy changes, and political developments"
-//         articles={politicalNews}
-//         maxArticles={6}
-//         onReadStory={handleReadStory}
-//         onSaveStory={handleSaveStory}
-//         onPlayAudio={handlePlayAudio}
-//         currentlyPlaying={currentlyPlaying ?? undefined}
-//         layout="spotify"
-//         showEmoji={true}
-//       />
-
-//       {/* Weather Section */}
-//       <NewsSection
-//         title=" Weather"
-//         subtitle="Weather updates, forecasts, and climate information"
-//         articles={weatherNews}
-//         maxArticles={4}
-//         onReadStory={handleReadStory}
-//         onSaveStory={handleSaveStory}
-//         onPlayAudio={handlePlayAudio}
-//         currentlyPlaying={currentlyPlaying ?? undefined}
-//         layout="spotify"
-//         showEmoji={true}
-//       />
-
-//       {/* Local Trends Section */}
-//       <NewsSection
-//         title=" Local Trends"
-//         subtitle="Community stories and local developments"
-//         articles={localTrends}
-//         maxArticles={4}
-//         onReadStory={handleReadStory}
-//         onSaveStory={handleSaveStory}
-//         onPlayAudio={handlePlayAudio}
-//         currentlyPlaying={currentlyPlaying ?? undefined}
-//         layout="spotify"
-//         showEmoji={true}
-//       />
-
-//       {/* Business Section */}
-//       <NewsSection
-//         title=" Business & Economy"
-//         subtitle="Economic news, business developments, and market updates"
-//         articles={businessNews}
-//         maxArticles={4}
-//         onReadStory={handleReadStory}
-//         onSaveStory={handleSaveStory}
-//         onPlayAudio={handlePlayAudio}
-//         currentlyPlaying={currentlyPlaying ?? undefined}
-//         layout="spotify"
-//         showEmoji={true}
-//       />
-
-//       {/* Sports Section */}
-//       <NewsSection
-//         title=" Sports"
-//         subtitle="Latest scores, matches, and sports news"
-//         articles={sportsNews}
-//         maxArticles={4}
-//         onReadStory={handleReadStory}
-//         onSaveStory={handleSaveStory}
-//         onPlayAudio={handlePlayAudio}
-//         currentlyPlaying={currentlyPlaying ?? undefined}
-//         layout="spotify"
-//         showEmoji={true}
-//       />
-
-//       {/* Technology Section */}
-//       <NewsSection
-//         title=" Technology"
-//         subtitle="Tech updates, digital innovations, and IT developments"
-//         articles={techNews}
-//         maxArticles={3}
-//         onReadStory={handleReadStory}
-//         onSaveStory={handleSaveStory}
-//         onPlayAudio={handlePlayAudio}
-//         currentlyPlaying={currentlyPlaying ?? undefined}
-//         layout="spotify"
-//         showEmoji={true}
-//       />
-
-//       {/* Health Section */}
-//       <NewsSection
-//         title="Health"
-//         subtitle="Health updates, medical news, and wellness information"
-//         articles={healthNews}
-//         maxArticles={4}
-//         onReadStory={handleReadStory}
-//         onSaveStory={handleSaveStory}
-//         onPlayAudio={handlePlayAudio}
-//         currentlyPlaying={currentlyPlaying ?? undefined}
-//         layout="spotify"
-//         showEmoji={true}
-//       />
-
-//       {/* Education Section */}
-//       <NewsSection
-//         title="Education"
-//         subtitle="Educational developments, school news, and academic updates"
-//         articles={educationNews}
-//         maxArticles={3}
-//         onReadStory={handleReadStory}
-//         onSaveStory={handleSaveStory}
-//         onPlayAudio={handlePlayAudio}
-//         currentlyPlaying={currentlyPlaying ?? undefined}
-//         layout="spotify"
-//         showEmoji={true}
-//       />
-
-//       {/* Entertainment Section */}
-//       <NewsSection
-//         title=" Entertainment"
-//         subtitle="Arts, culture, music, and entertainment news"
-//         articles={entertainmentNews}
-//         maxArticles={3}
-//         onReadStory={handleReadStory}
-//         onSaveStory={handleSaveStory}
-//         onPlayAudio={handlePlayAudio}
-//         currentlyPlaying={currentlyPlaying ?? undefined}
-//         layout="spotify"
-//         showEmoji={true}
-//       />
-//     </div>
-//   )
-// }
-
-// src/components/MainBody.tsx
-// Updated to fetch real news from our backend API
-
-import React, { useState, useEffect } from "react";
-import NewsSection from "./NewsSection";
-import { Coffee } from "lucide-react";
-
-// Define the Story interface to match what's expected by App.tsx
+// Define the Story interface to match what App.tsx expects
 interface Story {
   id: string;
   title: string;
@@ -260,176 +15,89 @@ interface Story {
   thumbnail?: string;
 }
 
-// Define the NewsArticle interface to match our backend response
-interface NewsArticle {
-  id: string;
-  title: string;
-  summary: string;
-  category: string;
-  timestamp: string;
-  imageUrl?: string;
-  readTime: string;
-  isBreaking?: boolean;
-  sourceUrl?: string;
-  source?: string;
-}
-
 // Define the props this component expects
 interface MainBodyProps {
   onPlayStory?: (story: Story) => void;
 }
 
-// API service to interact with our backend
-class NewsApiService {
-  private baseUrl: string;
-
-  constructor() {
-    // This is the URL where your backend server will be running
-    this.baseUrl = "http://localhost:8000/api";
-  }
-
-  /**
-   * Fetch news articles for a specific category
-   */
-  async fetchNewsByCategory(
-    category: string,
-    maxArticles: number = 5
-  ): Promise<NewsArticle[]> {
-    try {
-      console.log(`Fetching ${category} news from backend...`);
-
-      const response = await fetch(
-        `${this.baseUrl}/news/${category}?max_articles=${maxArticles}` 
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        console.log(
-          `Successfully fetched ${data.articles.length} articles for ${category}`
-        );
-        return data.articles;
-      } else {
-        console.error(`Backend returned error for ${category}:`, data.error);
-        return [];
-      }
-    } catch (error) {
-      console.error(`Error fetching ${category} news:`, error);
-      return [];
-    }
-  }
-
-  /**
-   * Fetch news for all categories at once
-   */
-  async fetchAllNews(): Promise<Record<string, NewsArticle[]>> {
-    try {
-      console.log("Fetching all news categories from backend...");
-
-      const response = await fetch(`${this.baseUrl}/news/all`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        console.log("Successfully fetched all news categories");
-        return data.news;
-      } else {
-        console.error("Backend returned error for all news:", data.error);
-        return {};
-      }
-    } catch (error) {
-      console.error("Error fetching all news:", error);
-      return {};
-    }
-  }
-
-  /**
-   * Check if the backend server is running
-   */
-  async checkHealth(): Promise<boolean> {
-    try {
-      const response = await fetch(`${this.baseUrl}/health`);
-      return response.ok;
-    } catch (error) {
-      console.error("Backend health check failed:", error);
-      return false;
-    }
-  }
-}
-
+/**
+ * MainBody component that displays news sections
+ * Now fetches data from the FastAPI backend with beautiful teapot loading animation
+ */
 export default function MainBody({ onPlayStory }: MainBodyProps) {
-  // State for tracking currently playing story
-  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
-
-  // State for storing news articles by category
+  // State for storing news data from the backend
   const [newsData, setNewsData] = useState<Record<string, NewsArticle[]>>({
-    politics: [],
-    sports: [],
-    health: [],
-    business: [],
-    technology: [],
-    "local-trends": [],
-    entertainment: [],
-    weather: [],
+    'politics': [],
+    'sports': [],
+    'health': [],
+    'business': [],
+    'technology': [],
+    'local-trends': [],
+    'weather': [],
+    'entertainment': [],
+    'education': []
   });
 
-  // State for loading status
+  // State for loading and error handling
   const [isLoading, setIsLoading] = useState(true);
-  const [backendConnected, setBackendConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [backendConnected, setBackendConnected] = useState(false);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState("Brewing Your Perfect Cup...");
 
-  // Create instance of our API service
-  const newsApi = new NewsApiService();
-
-  // Load news data when component mounts
+  /**
+   * Load news data from the backend when component mounts
+   */
   useEffect(() => {
     loadNewsData();
   }, []);
 
   /**
-   * Main function to load all news data from backend
+   * Main function to load news data from backend
    */
-  const loadNewsData = async () => {
+  const loadNewsData = async (): Promise<void> => {
     try {
+      console.log("🫖 TeaCup: Starting to load news data from backend...");
       setIsLoading(true);
       setError(null);
-
-      // First check if backend is running
-      console.log("Checking backend connection...");
-      const isHealthy = await newsApi.checkHealth();
-      setBackendConnected(isHealthy);
-
-      if (!isHealthy) {
-        setError(
-          "Backend server is not running. Please start the backend server."
+      setLoadingMessage("Let him cook....");
+      // First, check if backend is available
+      const isBackendHealthy = await newsApiService.checkBackendHealth();
+      
+      if (!isBackendHealthy) {
+        throw new Error(
+          "Cannot connect to TeaCup backend server. Please make sure the backend is running on http://localhost:8000"
         );
-        setIsLoading(false);
-        return;
       }
 
-      console.log("Backend connected! Loading news data...");
+      setBackendConnected(true);
+      setLoadingMessage("Backend connected! Loading fresh news...");
+      console.log(" Backend connection established!");
 
-      // Fetch news for each category individually for better user experience
+      // Load news data category by category for better user experience
       const categories = [
-        "politics",
-        "sports",
-        "health",
-        "business",
-        "technology",
-        "local-trends",
+        'politics',
+        'sports', 
+        'health',
+        'business',
+        'technology',
+        'local-trends',
+        'weather',
+        'entertainment',
+        'education'
       ];
 
-      for (const category of categories) {
+      console.log(` Loading news for ${categories.length} categories...`);
+
+      for (let i = 0; i < categories.length; i++) {
+        const category = categories[i];
+        
+        // Update loading message to show progress
+        setLoadingMessage(`Loading ${category} news... (${i + 1}/${categories.length})`);
+        
         try {
-          const articles = await newsApi.fetchNewsByCategory(category, 6);
+          // Fetch articles for this category
+          const articles = await newsApiService.fetchNewsByCategory(category, 6);
 
           // Update state with new articles for this category
           setNewsData((prevData) => ({
@@ -437,30 +105,36 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
             [category]: articles,
           }));
 
-          console.log(`Loaded ${articles.length} articles for ${category}`);
+          console.log(` Loaded ${articles.length} articles for ${category}`);
 
-          // Small delay to avoid overwhelming the backend
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          // Small delay between categories for smooth loading experience
+          await new Promise((resolve) => setTimeout(resolve, 400));
         } catch (error) {
-          console.error(`Failed to load ${category} news:`, error);
+          console.error(` Failed to load ${category} news:`, error);
           // Continue with other categories even if one fails
         }
       }
 
+      setLoadingMessage("Finalizing your news experience...");
+      
+      // Final delay for smooth transition
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      
       setIsLoading(false);
-      console.log("Finished loading all news data");
+      console.log(" Finished loading all news data from backend!");
+
     } catch (error) {
-      console.error("Error loading news data:", error);
-      setError("Failed to load news data. Please try again.");
+      console.error(" Error loading news data:", error);
+      setError(error instanceof Error ? error.message : "Failed to load news data");
       setIsLoading(false);
     }
   };
 
   /**
-   * Handle when user wants to read a story
+   * Handle when user wants to read the full article
    */
-  const handleReadStory = (articleId: string) => {
-    console.log("Reading story:", articleId);
+  const handleReadStory = (articleId: string): void => {
+    console.log("📖 Read button clicked for article:", articleId);
 
     // Find the article to get its source URL
     let article: NewsArticle | null = null;
@@ -475,33 +149,44 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
     if (article && article.sourceUrl) {
       // Open the original article in a new tab
       window.open(article.sourceUrl, "_blank");
+      console.log(" Opened article source:", article.sourceUrl);
     } else {
-      console.log("Article source URL not found");
-      // TODO: You could implement a modal to show the full article content here
+      console.log("  No source URL available for this article");
+      // TODO: Could implement a modal to show the full article content
     }
   };
 
   /**
-   * Handle when user wants to save a story
+   * Handle when user wants to save an article
    */
-  const handleSaveStory = (articleId: string) => {
-    console.log("Saving story:", articleId);
-    // TODO: Implement saved stories functionality
-    // You could store saved article IDs in localStorage or send to backend
-    const savedStories = JSON.parse(
-      localStorage.getItem("savedStories") || "[]"
-    );
-    if (!savedStories.includes(articleId)) {
-      savedStories.push(articleId);
-      localStorage.setItem("savedStories", JSON.stringify(savedStories));
-      console.log("Story saved to localStorage");
+  const handleSaveStory = (articleId: string): void => {
+    console.log(" Save button clicked for article:", articleId);
+
+    try {
+      // Get existing saved stories from localStorage
+      const savedStories = JSON.parse(
+        localStorage.getItem("teacup_saved_stories") || "[]"
+      );
+
+      // Add this article if not already saved
+      if (!savedStories.includes(articleId)) {
+        savedStories.push(articleId);
+        localStorage.setItem("teacup_saved_stories", JSON.stringify(savedStories));
+        console.log(" Article saved to reading list");
+      } else {
+        console.log("  Article already in reading list");
+      }
+    } catch (error) {
+      console.error(" Error saving article:", error);
     }
   };
 
   /**
-   * Handle when user wants to play audio for a story
+   * Handle when user clicks the play button on a news card
    */
-  const handlePlayAudio = (articleId: string) => {
+  const handlePlayAudio = (articleId: string): void => {
+    console.log(" Play button clicked for article:", articleId);
+
     // Find the article in our news data
     let article: NewsArticle | null = null;
     for (const categoryArticles of Object.values(newsData)) {
@@ -513,270 +198,234 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
     }
 
     if (article && onPlayStory) {
-      // Set currently playing state
+      // Set currently playing state for visual feedback
       setCurrentlyPlaying(articleId);
 
-      // Convert our NewsArticle to the Story format expected by BottomBar
-      const story = {
+      // Convert NewsArticle to Story format expected by App.tsx
+      const story: Story = {
         id: article.id,
         title: article.title,
         category: article.category,
-        thumbnail: article.imageUrl,
+        thumbnail: article.imageUrl
       };
 
-      // Call the function passed down from App.tsx to show the bottom bar
+      // Call the parent function to show the bottom bar and play audio
       onPlayStory(story);
+      console.log(" Started playing story:", article.title);
+    } else {
+      console.warn("  Article not found for playback:", articleId);
     }
   };
 
   /**
-   * Get breaking news (articles marked as breaking from any category)
+   * Retry loading data when there's an error
    */
-  const getBreakingNews = (): NewsArticle[] => {
-    const allArticles = Object.values(newsData).flat();
-    return allArticles.filter((article) => article.isBreaking);
+  const handleRetry = (): void => {
+    console.log(" Retrying data load...");
+    loadNewsData();
   };
 
-  // Show loading state while fetching data
-  if (isLoading) {
+  // Show beautiful teapot loading animation while fetching data
+// Replace this section in MainBody.tsx:
+  if (isLoading && Object.values(newsData).every(articles => articles.length === 0)) {
     return (
-      <div className="main-body-container">
-        <div
-          className="loading-container"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "400px",
-            color: "#888",
-          }}
-        >
-          <Coffee
-            size={48}
-            className="loading-icon"
-            style={{ marginBottom: "1rem" }}
-          />
-          <h2>Brewing Fresh News...</h2>
-          <p>Please wait while we fetch the latest stories</p>
-          {!backendConnected && (
-            <p style={{ color: "#ff6b6b", marginTop: "1rem" }}>
-              Connecting to backend server...
-            </p>
-          )}
-        </div>
+      <div className="main-body">
+        <TeapotLoading3D 
+          message={loadingMessage}
+          subtitle={backendConnected 
+            ? "Steeping the perfect blend of stories for you" 
+            : "Making the tea for you..."
+          }
+        />
       </div>
     );
   }
 
-  // Show error state if something went wrong
+  // Show error state if backend connection failed
   if (error) {
     return (
-      <div className="main-body-container">
-        <div
-          className="error-container"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "400px",
-            color: "#ff6b6b",
-            textAlign: "center",
-          }}
-        >
-          <h2>Unable to Load News</h2>
-          <p>{error}</p>
-          <button
-            onClick={loadNewsData}
-            style={{
-              background: "#667eea",
-              color: "white",
-              border: "none",
-              padding: "0.75rem 1.5rem",
-              borderRadius: "8px",
-              cursor: "pointer",
-              marginTop: "1rem",
-            }}
-          >
-            Try Again
-          </button>
+      <div className="main-body">
+        <div className="error-container">
+          <div className="error-icon"></div>
+          <h2 className="error-title">Oops! The tea kettle is cold</h2>
+          <p className="error-message">{error}</p>
+          <div className="error-actions">
+            <button className="retry-button" onClick={handleRetry}>
+                Turn back on and try again
+            </button>
+            <p className="error-help">
+              Make sure your backend server is running: <code>python main.py</code>
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
-  const breakingNews = getBreakingNews();
-
+  // Main render: Display all news sections
   return (
     <div className="main-body-container">
-      {/* Header section */}
-      <section className="breaking-news-header">
-        <h1 className="breaking-news-title">
-          <Coffee size={32} className="breaking-news-icon" />
-          Hot Spills
-        </h1>
-        <p className="breaking-news-subtitle">
-          Stay updated with the latest developments
-        </p>
+      {/* Breaking News Section - Show if we have breaking news */}
+      {(() => {
+        // Find all breaking news articles across categories
+        const breakingNews = Object.values(newsData)
+          .flat()
+          .filter(article => article.isBreaking)
+          .slice(0, 6); // Limit to 6 breaking news items
 
-        {/* Show connection status */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            fontSize: "0.8rem",
-            color: backendConnected ? "#4ade80" : "#ff6b6b",
-            marginTop: "0.5rem",
-          }}
-        >
-          <div
-            style={{
-              width: "8px",
-              height: "8px",
-              borderRadius: "50%",
-              backgroundColor: backendConnected ? "#4ade80" : "#ff6b6b",
-            }}
-          />
-          {backendConnected ? "Live News Feed" : "Offline Mode"}
-        </div>
-      </section>
-
-      {/* Breaking News Section */}
-      {breakingNews.length > 0 && (
-        <NewsSection
-          title="Breaking News"
-          subtitle="Latest urgent updates and developing stories"
-          articles={breakingNews}
-          maxArticles={5}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? undefined}
-          layout="hero"
-          showEmoji={false}
-        />
-      )}
+        if (breakingNews.length > 0) {
+          return (
+            <NewsSection
+              title=" Breaking News"
+              subtitle="Latest urgent updates and developing stories"
+              articles={breakingNews}
+              maxArticles={6}
+              onReadStory={handleReadStory}
+              onSaveStory={handleSaveStory}
+              onPlayAudio={handlePlayAudio}
+              currentlyPlaying={currentlyPlaying ?? undefined}
+              layout="hero"
+              showEmoji={true}
+            />
+          );
+        }
+        return null;
+      })()}
 
       {/* Politics Section */}
-      {newsData.politics.length > 0 && (
-        <NewsSection
-          title="Politics"
-          subtitle="Government updates, policy changes, and political developments"
-          articles={newsData.politics}
-          maxArticles={6}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? undefined}
-          layout="spotify"
-        />
-      )}
-
-      {/* Sports Section */}
-      {newsData.sports.length > 0 && (
-        <NewsSection
-          title="Sports"
-          subtitle="Latest scores, matches, and sports news"
-          articles={newsData.sports}
-          maxArticles={6}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? undefined}
-          layout="spotify"
-        />
-      )}
-
-      {/* Health Section */}
-      {newsData.health.length > 0 && (
-        <NewsSection
-          title="Health"
-          subtitle="Health updates, medical news, and wellness information"
-          articles={newsData.health}
-          maxArticles={6}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? undefined}
-          layout="spotify"
-        />
-      )}
-
-      {/* Business Section */}
-      {newsData.business.length > 0 && (
-        <NewsSection
-          title="Business & Economy"
-          subtitle="Economic news, business developments, and market updates"
-          articles={newsData.business}
-          maxArticles={6}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? undefined}
-          layout="spotify"
-        />
-      )}
-
-      {/* Technology Section */}
-      {newsData.technology.length > 0 && (
-        <NewsSection
-          title="Technology"
-          subtitle="Tech updates, digital innovations, and IT developments"
-          articles={newsData.technology}
-          maxArticles={6}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? undefined}
-          layout="spotify"
-        />
-      )}
+      <NewsSection
+        title=" Politics"
+        subtitle="Political developments, government news, and policy updates"
+        articles={newsData.politics || []}
+        maxArticles={6}
+        onReadStory={handleReadStory}
+        onSaveStory={handleSaveStory}
+        onPlayAudio={handlePlayAudio}
+        currentlyPlaying={currentlyPlaying ?? undefined}
+        layout="spotify"
+        showEmoji={true}
+      />
 
       {/* Local Trends Section */}
-      {newsData["local-trends"].length > 0 && (
-        <NewsSection
-          title="Local Trends"
-          subtitle="Community stories and local developments"
-          articles={newsData["local-trends"]}
-          maxArticles={6}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? undefined}
-          layout="spotify"
-        />
-      )}
+      <NewsSection
+        title=" Local Spills"
+        subtitle="Community news, local trends, and regional developments"
+        articles={newsData['local-trends'] || []}
+        maxArticles={6}
+        onReadStory={handleReadStory}
+        onSaveStory={handleSaveStory}
+        onPlayAudio={handlePlayAudio}
+        currentlyPlaying={currentlyPlaying ?? undefined}
+        layout="spotify"
+        showEmoji={true}
+      />
 
-      {/* Entertainment Section */}
-      {newsData.entertainment && newsData.entertainment.length > 0 && (
-        <NewsSection
-          title="Entertainment"
-          subtitle="Arts, culture, music, and entertainment news"
-          articles={newsData.entertainment}
-          maxArticles={6}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? undefined}
-          layout="spotify"
-        />
-      )}
+      {/* Sports Section */}
+      <NewsSection
+        title=" Sports"
+        subtitle="Sports news, match results, and athletic achievements"
+        articles={newsData.sports || []}
+        maxArticles={6}
+        onReadStory={handleReadStory}
+        onSaveStory={handleSaveStory}
+        onPlayAudio={handlePlayAudio}
+        currentlyPlaying={currentlyPlaying ?? undefined}
+        layout="spotify"
+        showEmoji={true}
+      />
+
+      {/* Health Section */}
+      <NewsSection
+        title=" Health"
+        subtitle="Health updates, medical news, and wellness information"
+        articles={newsData.health || []}
+        maxArticles={6}
+        onReadStory={handleReadStory}
+        onSaveStory={handleSaveStory}
+        onPlayAudio={handlePlayAudio}
+        currentlyPlaying={currentlyPlaying ?? undefined}
+        layout="spotify"
+        showEmoji={true}
+      />
+
+      {/* Business Section */}
+      <NewsSection
+        title=" Business"
+        subtitle="Business news, economic updates, and market developments"
+        articles={newsData.business || []}
+        maxArticles={6}
+        onReadStory={handleReadStory}
+        onSaveStory={handleSaveStory}
+        onPlayAudio={handlePlayAudio}
+        currentlyPlaying={currentlyPlaying ?? undefined}
+        layout="spotify"
+        showEmoji={true}
+      />
+
+      {/* Technology Section */}
+      <NewsSection
+        title=" Technology"
+        subtitle="Tech updates, digital innovations, and IT developments"
+        articles={newsData.technology || []}
+        maxArticles={6}
+        onReadStory={handleReadStory}
+        onSaveStory={handleSaveStory}
+        onPlayAudio={handlePlayAudio}
+        currentlyPlaying={currentlyPlaying ?? undefined}
+        layout="spotify"
+        showEmoji={true}
+      />
 
       {/* Weather Section */}
-      {newsData.weather && newsData.weather.length > 0 && (
-        <NewsSection
-          title="Weather"
-          subtitle="Weather updates, forecasts, and climate information"
-          articles={newsData.weather}
-          maxArticles={6}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? undefined}
-          layout="spotify"
-        />
+      <NewsSection
+        title=" Weather"
+        subtitle="Weather forecasts, climate updates, and environmental news"
+        articles={newsData.weather || []}
+        maxArticles={6}
+        onReadStory={handleReadStory}
+        onSaveStory={handleSaveStory}
+        onPlayAudio={handlePlayAudio}
+        currentlyPlaying={currentlyPlaying ?? undefined}
+        layout="spotify"
+        showEmoji={true}
+      />
+
+      {/* Entertainment Section */}
+      <NewsSection
+        title=" Entertainment"
+        subtitle="Arts, culture, music, and entertainment news"
+        articles={newsData.entertainment || []}
+        maxArticles={6}
+        onReadStory={handleReadStory}
+        onSaveStory={handleSaveStory}
+        onPlayAudio={handlePlayAudio}
+        currentlyPlaying={currentlyPlaying ?? undefined}
+        layout="spotify"
+        showEmoji={true}
+      />
+
+      {/* Education Section */}
+      <NewsSection
+        title=" Education"
+        subtitle="Educational developments, school news, and academic updates"
+        articles={newsData.education || []}
+        maxArticles={6}
+        onReadStory={handleReadStory}
+        onSaveStory={handleSaveStory}
+        onPlayAudio={handlePlayAudio}
+        currentlyPlaying={currentlyPlaying ?? undefined}
+        layout="spotify"
+        showEmoji={true}
+      />
+
+      {/* Show teapot loading for progressive loading */}
+      {isLoading && (
+        <div className="progressive-loading">
+          <TeapotLoading3D
+            message="Adding more stories to your cup..."
+            subtitle="Almost ready to serve!"
+          />
+        </div>
       )}
     </div>
   );

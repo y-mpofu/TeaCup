@@ -77,7 +77,7 @@ function App() {
               
               <Route path="/saved" element={
                 <div className="page-container">
-                  <h1 className="page-title">📖 Saved Articles</h1>
+                  <h1 className="page-title"> Saved Articles</h1>
                   <p className="page-subtitle">Your saved articles will appear here...</p>
                 </div>
               } />
@@ -86,7 +86,7 @@ function App() {
               <Route path="*" element={
                 <div className="page-container">
                   <div className="error-container">
-                    <div className="error-icon">📰</div>
+                    <div className="error-icon"></div>
                     <h1 className="error-title">Page Not Found</h1>
                     <p className="error-message">
                       The page you're looking for doesn't exist. 

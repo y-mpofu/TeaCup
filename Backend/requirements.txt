@@ -1,0 +1,45 @@
+# === Core Web Framework ===
+fastapi>=0.104.1                # Main backend framework for building APIs
+uvicorn[standard]>=0.24.0       # ASGI server to serve FastAPI (includes uvloop)
+
+# === Environment and Config ===
+python-dotenv>=1.0.0            # Loads .env for API keys and environment variables
+
+# === HTTP, CORS, and File Uploads ===
+requests>=2.31.0                # For synchronous external API calls
+httpx>=0.25.0                   # For asynchronous HTTP calls
+python-multipart>=0.0.6        # File upload/form-data support
+
+# === Data Validation & Typing ===
+pydantic>=2.5.0                 # FastAPI uses this for schema validation
+typing-extensions>=4.8.0       # Enables extended type hints
+
+# === Web Scraping Tools ===
+beautifulsoup4>=4.12.0          # HTML parsing
+html5lib>=1.1                   # HTML parser (fallback for BeautifulSoup)
+newspaper3k>=0.2.8              # Lightweight article extraction
+feedparser>=6.0.0               # RSS feed parsing
+
+# === OpenAI / AI Integrations ===
+openai>=1.3.0                   # OpenAI API (GPT-3.5+ access)
+nltk>=3.8.0                     # Natural Language Toolkit for text processing
+
+# === Google Search / API Integration ===
+google-api-python-client>=2.80.0
+google-auth>=2.16.0
+google-auth-oauthlib>=1.0.0
+google-auth-httplib2>=0.2.0
+
+# === Firebase Integration ===
+firebase-admin>=6.2.0          # Firebase Admin SDK
+google-cloud-firestore>=2.10.0 # Firestore DB integration
+
+# === Utility Libraries ===
+python-dateutil>=2.8.0         # Better datetime parsing
+pandas>=2.0.0                   # Dataframes & analysis (for news enrichment)
+
+# === Testing & Dev Tools ===
+pytest>=7.0.0                   # Testing framework
+
+# === Optional for Production ===
+# gunicorn>=21.2.0             # Production WSGI server (not required for ASGI/FastAPI)
