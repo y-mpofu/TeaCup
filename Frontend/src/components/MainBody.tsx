@@ -6,6 +6,7 @@ import NewsSection from './NewsSection'
 import TeapotLoading3D from './TeapotLoading3D' // Import our new loading component
 import { newsApiService } from '../services/newsApiService'
 import type { NewsArticle } from '../services/newsApiService'
+const max_articles_per_section = 18;
 
 // Define the Story interface to match what App.tsx expects
 interface Story {
