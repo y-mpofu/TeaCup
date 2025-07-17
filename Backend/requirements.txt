@@ -7,21 +7,22 @@ python-dotenv>=1.0.0            # Loads .env for API keys and environment variab
 
 # === HTTP, CORS, and File Uploads ===
 requests>=2.31.0                # For synchronous external API calls
-httpx>=0.25.0                   # For asynchronous HTTP calls
-python-multipart>=0.0.6        # File upload/form-data support
+aiohttp>=3.9.0                  # For async HTTP requests (Google API, web scraping)
+python-multipart>=0.0.6         # File upload/form-data support
 
 # === Data Validation & Typing ===
 pydantic>=2.5.0                 # FastAPI uses this for schema validation
-typing-extensions>=4.8.0       # Enables extended type hints
+typing-extensions>=4.8.0        # Enables extended type hints
 
 # === Web Scraping Tools ===
 beautifulsoup4>=4.12.0          # HTML parsing
+lxml>=4.9.3                     # Fast XML/HTML parser for BeautifulSoup
 html5lib>=1.1                   # HTML parser (fallback for BeautifulSoup)
 newspaper3k>=0.2.8              # Lightweight article extraction
 feedparser>=6.0.0               # RSS feed parsing
 
 # === OpenAI / AI Integrations ===
-openai>=1.3.0                   # OpenAI API (GPT-3.5+ access)
+openai>=0.28.0,<1.0.0           # OpenAI API (compatible with old API format)
 nltk>=3.8.0                     # Natural Language Toolkit for text processing
 
 # === Google Search / API Integration ===
