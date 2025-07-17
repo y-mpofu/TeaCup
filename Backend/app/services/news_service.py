@@ -1,22 +1,19 @@
 # Backend/app/services/news_service.py
-# Real news service using Google Custom Search API + Beautiful Soup + OpenAI
+# Fixed news service - uses Google search snippets instead of full scraping
 
 import asyncio
 import aiohttp
-import requests
-from bs4 import BeautifulSoup
 import openai
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional
 from datetime import datetime
 import os
-from urllib.parse import urljoin, urlparse
-import json
+from urllib.parse import urlparse
 import logging
 from dataclasses import dataclass
-import re
 import time
 from dotenv import load_dotenv
-load_dotenv()  # Now .env variables are loaded into environment
+
+load_dotenv()
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -33,10 +30,10 @@ class NewsSource:
 
 @dataclass
 class ProcessedArticle:
-    """Fully processed news article with GPT summary"""
+    """Fully processed news article"""
     id: str
     title: str
-    summary: str  # This will contain embedded links
+    summary: str
     category: str
     timestamp: str
     readTime: str
@@ -48,44 +45,29 @@ class ProcessedArticle:
 
 class NewsService:
     """
-    Complete news service that replaces mock data
-    Uses Google Custom Search + Web Scraping + OpenAI for summaries
+    Fixed news service that uses Google search snippets
+    Much more reliable than web scraping
     """
     
     def __init__(self):
-        # Load API keys from environment
+        # Load API keys
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
         self.google_api_key = os.getenv("GOOGLE_SEARCH_API_KEY")
-        
-        # You'll need to create a Custom Search Engine and get this ID
-        # Instructions will be provided below
         self.google_cse_id = os.getenv("GOOGLE_CSE_ID")
         
         # Initialize OpenAI
         if self.openai_api_key:
             openai.api_key = self.openai_api_key
-        else:
-            logger.warning("⚠️  OpenAI API key not found!")
         
         # Google Custom Search endpoint
         self.google_search_url = "https://www.googleapis.com/customsearch/v1"
         
-        # Headers for web scraping (act like a real browser)
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept-Encoding': 'gzip, deflate',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1'
-        }
-        
         # Rate limiting
         self.last_request_time = 0
-        self.min_request_interval = 0.1  # 100ms between requests
+        self.min_request_interval = 0.1
         
     def _wait_for_rate_limit(self):
-        """Simple rate limiting to avoid overwhelming APIs"""
+        """Simple rate limiting"""
         current_time = time.time()
         time_since_last = current_time - self.last_request_time
         if time_since_last < self.min_request_interval:
@@ -95,53 +77,50 @@ class NewsService:
     async def search_google_news(self, query: str, num_results: int = 10) -> List[NewsSource]:
         """
         Search Google for news articles using Custom Search API
-        Returns list of NewsSource objects
         """
         try:
             logger.info(f"🔍 Searching Google for: '{query}' (wanting {num_results} results)")
             
-            # Check API key
             if not self.google_api_key:
-                logger.error("❌ Google API key not found in environment variables")
+                logger.error("❌ Google API key not found")
                 return []
             
-            # Build search parameters
+            # Build search parameters for Zimbabwe-focused news
             params = {
                 'key': self.google_api_key,
                 'cx': self.google_cse_id,
-                'q': query,
-                'num': min(num_results, 10),  # Google allows max 10 per request
-                'dateRestrict': 'd3',  # Last 3 days for fresh news
+                'q': f"{query} Zimbabwe news",  # Focus on Zimbabwe
+                'num': min(num_results, 10),
+                'dateRestrict': 'd7',  # Last 7 days for more Zimbabwe content
                 'sort': 'date',
-                'siteSearch': 'bbc.com OR cnn.com OR reuters.com OR apnews.com OR npr.org',  # Focus on news sites
-                'fileType': '',
-                'lr': 'lang_en',  # English language results
+                'lr': 'lang_en',
+                'gl': 'zw',  # Geographic location: Zimbabwe
+                'cr': 'countryZW',  # Country restrict to Zimbabwe
             }
             
-            # Add a small delay to respect rate limits
             self._wait_for_rate_limit()
             
-            # Make the API request
             async with aiohttp.ClientSession() as session:
                 async with session.get(self.google_search_url, params=params) as response:
                     if response.status == 200:
                         data = await response.json()
                         
-                        # Check if we have results
                         if 'items' not in data:
                             logger.warning(f"⚠️  No results found for '{query}'")
                             return []
                         
-                        # Parse results into NewsSource objects
                         sources = []
                         for item in data['items']:
                             try:
+                                # Clean up the title and snippet
+                                title = item.get('title', '').replace(' - ' + self._extract_domain(item.get('link', '')), '')
+                                snippet = item.get('snippet', '')
+                                
                                 source = NewsSource(
                                     url=item.get('link', ''),
-                                    title=item.get('title', ''),
-                                    snippet=item.get('snippet', ''),
-                                    source_name=self._extract_domain(item.get('link', '')),
-                                    published_date=item.get('pagemap', {}).get('metatags', [{}])[0].get('article:published_time')
+                                    title=title,
+                                    snippet=snippet,
+                                    source_name=self._extract_domain(item.get('link', ''))
                                 )
                                 sources.append(source)
                             except Exception as e:
@@ -151,9 +130,6 @@ class NewsService:
                         logger.info(f"✅ Found {len(sources)} news sources for '{query}'")
                         return sources
                     
-                    elif response.status == 429:
-                        logger.error("❌ Google API rate limit exceeded")
-                        return []
                     else:
                         logger.error(f"❌ Google Search API error: {response.status}")
                         return []
@@ -167,280 +143,263 @@ class NewsService:
         try:
             parsed = urlparse(url)
             domain = parsed.netloc.lower()
-            # Remove www. prefix
             if domain.startswith('www.'):
                 domain = domain[4:]
-            return domain
+            return domain.title()  # Make it look nicer
         except:
-            return "Unknown Source"
+            return "News Source"
     
-    async def scrape_article_content(self, url: str) -> Optional[str]:
+    async def create_summary_from_snippets(self, sources: List[NewsSource], topic: str) -> str:
         """
-        Scrape article content using Beautiful Soup
-        Returns cleaned article text or None
+        Create a summary using Google search snippets and OpenAI
+        Much more reliable than web scraping
         """
         try:
-            logger.info(f"📰 Scraping content from: {url}")
-            
-            # Add delay for rate limiting
-            self._wait_for_rate_limit()
-            
-            # Make request with proper headers
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=self.headers, timeout=10) as response:
-                    if response.status != 200:
-                        logger.error(f"❌ Failed to fetch {url}: HTTP {response.status}")
-                        return None
-                    
-                    html = await response.text()
-                    
-                    # Parse with Beautiful Soup
-                    soup = BeautifulSoup(html, 'html.parser')
-                    
-                    # Remove unwanted elements
-                    for tag in soup(['script', 'style', 'nav', 'header', 'footer', 'aside', 'form', 'iframe']):
-                        tag.decompose()
-                    
-                    # Try different selectors for article content
-                    content_selectors = [
-                        'article',
-                        '[role="main"]',
-                        '.article-content',
-                        '.post-content',
-                        '.entry-content',
-                        '.story-body',
-                        '.article-body',
-                        'main',
-                        '.content',
-                        '.story-content'
-                    ]
-                    
-                    article_text = ""
-                    
-                    # Try each selector
-                    for selector in content_selectors:
-                        elements = soup.select(selector)
-                        if elements:
-                            article_text = elements[0].get_text(strip=True)
-                            break
-                    
-                    # If no specific content found, try paragraphs
-                    if not article_text:
-                        paragraphs = soup.find_all('p')
-                        if paragraphs:
-                            article_text = ' '.join([p.get_text(strip=True) for p in paragraphs])
-                    
-                    # Clean up the text
-                    article_text = re.sub(r'\s+', ' ', article_text).strip()
-                    
-                    # Check if we got substantial content
-                    if len(article_text) > 200:
-                        logger.info(f"✅ Scraped {len(article_text)} characters from {url}")
-                        return article_text
-                    else:
-                        logger.warning(f"⚠️  Insufficient content from {url} (only {len(article_text)} chars)")
-                        return None
-                        
-        except Exception as e:
-            logger.error(f"❌ Error scraping {url}: {str(e)}")
-            return None
-    
-    async def create_summary_with_openai(self, sources_data: List[Dict], topic: str) -> str:
-        """
-        Create embedded summary using OpenAI
-        Returns summary with embedded source links
-        """
-        try:
-            logger.info(f"🤖 Creating OpenAI summary for {len(sources_data)} sources about '{topic}'")
+            logger.info(f"🤖 Creating summary from {len(sources)} sources about '{topic}'")
             
             if not self.openai_api_key:
-                logger.error("❌ OpenAI API key not available")
-                return "Summary unavailable - OpenAI API key not configured"
+                logger.warning("⚠️  OpenAI not available, using basic summary")
+                return self._create_basic_summary_from_snippets(sources, topic)
             
-            # Prepare content for OpenAI
-            sources_text = ""
-            for i, source in enumerate(sources_data, 1):
-                sources_text += f"\n--- Source {i}: {source['title']} ---\n"
-                sources_text += f"URL: {source['url']}\n"
-                sources_text += f"Source: {source['source']}\n"
-                sources_text += f"Content: {source['content'][:1500]}...\n"  # Limit to avoid token limits
+            # Prepare snippets for OpenAI
+            snippets_text = ""
+            for i, source in enumerate(sources[:5], 1):  # Use top 5 sources
+                snippets_text += f"\nSource {i} - {source.source_name}:\n"
+                snippets_text += f"Title: {source.title}\n"
+                snippets_text += f"Snippet: {source.snippet}\n"
+                snippets_text += f"URL: {source.url}\n"
             
             # Create prompt for OpenAI
             prompt = f"""
-            Create a comprehensive news summary about "{topic}" using the following sources.
+            Create a comprehensive news summary about "{topic}" using these news snippets.
             
             Requirements:
-            1. Write 2-3 paragraphs (200-300 words total)
-            2. Include embedded links using this format: [link text](URL)
-            3. Make it engaging and informative
-            4. Combine information from multiple sources
-            5. Highlight key developments and facts
-            6. Use professional news writing style
-            7. Include at least 3-4 embedded links to sources
+            1. Write 2-3 engaging paragraphs (200-250 words)
+            2. Include embedded links using this format: [text](URL)
+            3. Combine information from multiple sources
+            4. Make it informative and well-written
+            5. Include 3-4 source links throughout the text
+            6. Focus on the most important and recent developments
             
-            Sources:
-            {sources_text}
+            News snippets:
+            {snippets_text}
             
             Write the summary now:
             """
             
-            # Make OpenAI API call
+            # Call OpenAI
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are a professional news writer. Create engaging summaries with embedded source links."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=600,
+                max_tokens=400,
                 temperature=0.7
             )
             
             summary = response.choices[0].message.content.strip()
-            logger.info(f"✅ OpenAI summary created successfully ({len(summary)} chars)")
+            logger.info(f"✅ OpenAI summary created successfully")
             return summary
             
         except Exception as e:
             logger.error(f"❌ OpenAI error: {str(e)}")
-            # Return a basic summary without OpenAI
-            return self._create_basic_summary(sources_data, topic)
+            return self._create_basic_summary_from_snippets(sources, topic)
     
-    def _create_basic_summary(self, sources_data: List[Dict], topic: str) -> str:
+    def _create_basic_summary_from_snippets(self, sources: List[NewsSource], topic: str) -> str:
         """
-        Fallback summary creation without OpenAI
+        Create a basic summary without OpenAI using just the snippets
         """
-        if not sources_data:
+        if not sources:
             return f"No recent news found about {topic}."
         
+        # Create summary from snippets
         summary_parts = []
-        for i, source in enumerate(sources_data[:3]):  # Use first 3 sources
-            title = source['title']
-            url = source['url']
-            source_name = source['source']
+        for i, source in enumerate(sources[:3]):
+            title = source.title
+            snippet = source.snippet
+            url = source.url
+            source_name = source.source_name
             
-            summary_parts.append(f"[{title}]({url}) from {source_name}")
+            # Combine title and snippet for a richer summary
+            if snippet and len(snippet) > 50:
+                summary_parts.append(f"[{title}]({url}) - {snippet} (Source: {source_name})")
+            else:
+                summary_parts.append(f"[{title}]({url}) from {source_name}")
         
-        return f"Latest news about {topic}:\n\n" + "\n\n".join(summary_parts)
+        intro = f"Latest updates on {topic}:\n\n"
+        return intro + "\n\n".join(summary_parts)
     
     def _calculate_reading_time(self, text: str) -> str:
-        """Calculate reading time based on word count"""
+        """Calculate reading time"""
         words = len(text.split())
-        minutes = max(1, round(words / 200))  # 200 words per minute
+        minutes = max(1, round(words / 200))
         return f"{minutes} min read"
     
-    def _detect_breaking_news(self, title: str, content: str) -> bool:
-        """Simple breaking news detection"""
+    def _detect_breaking_news(self, title: str, snippet: str) -> bool:
+        """Detect breaking news from title and snippet"""
         breaking_keywords = [
             'breaking', 'urgent', 'just in', 'developing', 'live', 
             'alert', 'update', 'emergency', 'major', 'significant'
         ]
         
-        text_to_check = (title + ' ' + content).lower()
+        text_to_check = (title + ' ' + snippet).lower()
         return any(keyword in text_to_check for keyword in breaking_keywords)
     
-    async def get_news_for_category(self, category: str, max_articles: int = 3) -> List[ProcessedArticle]:
+    async def get_news_for_category(self, category: str, max_articles: int = 12) -> List[ProcessedArticle]:
         """
-        Main function: Get processed news for a category
-        This completely replaces mock data
+        Get processed news for a category using search snippets
+        Creates INDIVIDUAL articles for each source (not one combined summary)
         """
         try:
             logger.info(f"📡 Getting REAL news for category: {category} (max: {max_articles})")
             
-            # Map categories to search queries
+            # Zimbabwe-focused search queries for better local relevance
             search_queries = {
-                'politics': 'politics news government election',
-                'sports': 'sports news games results',
-                'health': 'health news medical healthcare',
-                'business': 'business news economy finance',
-                'technology': 'technology news tech innovation',
-                'local-trends': 'trending news viral social media',
-                'weather': 'weather news climate forecast',
-                'entertainment': 'entertainment news celebrity movies',
-                'education': 'education news schools university'
+                'politics': 'Zimbabwe politics government ZANU-PF CCC election policy',
+                'sports': 'Zimbabwe sports cricket rugby football soccer Warriors',
+                'health': 'Zimbabwe health medical healthcare hospitals clinics',
+                'business': 'Zimbabwe business economy ZSE stock exchange mining agriculture',
+                'technology': 'Zimbabwe technology innovation digital transformation ICT',
+                'local-trends': 'Zimbabwe trending social media local news events',
+                'weather': 'Zimbabwe weather climate forecast rain season',
+                'entertainment': 'Zimbabwe entertainment music movies celebrities arts',
+                'education': 'Zimbabwe education schools universities ZIMSEC'
             }
             
             query = search_queries.get(category, f'{category} news')
             
-            # Step 1: Search Google for news sources
-            sources = await self.search_google_news(query, max_articles * 3)  # Get extra to account for scraping failures
+            # Search Google for news sources
+            sources = await self.search_google_news(query, max_articles * 3)  # Get extra sources
             
             if not sources:
                 logger.warning(f"⚠️  No sources found for {category}")
                 return []
             
-            # Step 2: Scrape content from sources
-            scraped_articles = []
-            for source in sources[:max_articles * 2]:  # Try more than we need
-                content = await self.scrape_article_content(source.url)
-                if content:
-                    scraped_articles.append({
-                        'title': source.title,
-                        'content': content,
-                        'url': source.url,
-                        'source': source.source_name,
-                        'snippet': source.snippet
-                    })
+            # Create INDIVIDUAL articles for each source (not one combined summary)
+            processed_articles = []
+            
+            for i, source in enumerate(sources[:max_articles]):
+                try:
+                    # Create individual article for each source
+                    is_breaking = self._detect_breaking_news(source.title, source.snippet)
                     
-                    # Stop when we have enough
-                    if len(scraped_articles) >= max_articles:
-                        break
+                    # Enhanced snippet as summary (could be improved with OpenAI for individual articles)
+                    summary = await self._create_individual_summary(source, category)
+                    
+                    processed_article = ProcessedArticle(
+                        id=f"{category}_{i}_{int(time.time())}",
+                        title=source.title,  # Use the actual news title
+                        summary=summary,
+                        category=self._format_category_for_frontend(category),  # Format for frontend
+                        timestamp=datetime.now().isoformat(),
+                        readTime=self._calculate_reading_time(summary),
+                        isBreaking=is_breaking,
+                        imageUrl=None,
+                        sourceUrl=source.url,
+                        source=source.source_name,
+                        linked_sources=[source.url]
+                    )
+                    
+                    processed_articles.append(processed_article)
+                    
+                except Exception as e:
+                    logger.warning(f"⚠️  Error processing source {i}: {e}")
+                    continue
             
-            if not scraped_articles:
-                logger.warning(f"⚠️  No content could be scraped for {category}")
-                return []
-            
-            # Step 3: Create summary with OpenAI
-            summary = await self.create_summary_with_openai(scraped_articles, f"{category} news")
-            
-            # Step 4: Create the processed article
-            first_article = scraped_articles[0]
-            is_breaking = self._detect_breaking_news(first_article['title'], first_article['content'])
-            
-            processed_article = ProcessedArticle(
-                id=f"{category}_{int(time.time())}",
-                title=f"Latest {category.replace('-', ' ').title()} News",
-                summary=summary,
-                category=category,
-                timestamp=datetime.now().isoformat(),
-                readTime=self._calculate_reading_time(summary),
-                isBreaking=is_breaking,
-                imageUrl=None,  # Could add image extraction later
-                sourceUrl=first_article['url'],
-                source=first_article['source'],
-                linked_sources=[article['url'] for article in scraped_articles]
-            )
-            
-            logger.info(f"✅ Successfully processed {category} news with {len(scraped_articles)} sources")
-            return [processed_article]
+            logger.info(f"✅ Successfully created {len(processed_articles)} individual articles for {category}")
+            return processed_articles
             
         except Exception as e:
             logger.error(f"❌ Error processing {category} news: {str(e)}")
             return []
     
+    async def _create_individual_summary(self, source: NewsSource, category: str) -> str:
+        """
+        Create a summary for an individual article
+        Uses the snippet and optionally enhances it with OpenAI
+        """
+        try:
+            # If snippet is good enough, use it directly
+            if len(source.snippet) > 100:
+                return f"{source.snippet}\n\n[Read full article at {source.source_name}]({source.url})"
+            
+            # If OpenAI is available and snippet is short, enhance it
+            if self.openai_api_key and len(source.snippet) < 100:
+                prompt = f"""
+                Create a brief news summary (100-150 words) for this article:
+                
+                Title: {source.title}
+                Snippet: {source.snippet}
+                Source: {source.source_name}
+                Category: {category}
+                
+                Make it informative and engaging. Include a link to the source at the end.
+                """
+                
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "You are a news writer. Create brief, engaging summaries."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=200,
+                    temperature=0.7
+                )
+                
+                enhanced_summary = response.choices[0].message.content.strip()
+                return f"{enhanced_summary}\n\n[Read more at {source.source_name}]({source.url})"
+            
+            # Fallback: use snippet as-is
+            return f"{source.snippet}\n\n[Read full article at {source.source_name}]({source.url})"
+            
+        except Exception as e:
+            logger.warning(f"⚠️  Error creating individual summary: {e}")
+            return f"{source.snippet}\n\n[Read more at {source.source_name}]({source.url})"
+    
+    def _format_category_for_frontend(self, category: str) -> str:
+        """
+        Format category names to match frontend CSS classes
+        Backend: 'politics' -> Frontend: 'Politics'
+        Backend: 'local-trends' -> Frontend: 'Local Trends'
+        """
+        category_mapping = {
+            'politics': 'Politics',
+            'sports': 'Sports', 
+            'health': 'Health',
+            'business': 'Business',
+            'technology': 'Technology',
+            'local-trends': 'Local Trends',
+            'weather': 'Weather',
+            'entertainment': 'Entertainment',
+            'education': 'Education'
+        }
+        
+        return category_mapping.get(category, category.title())
+    
     async def search_news(self, query: str, max_results: int = 10) -> List[Dict]:
         """
-        Search for news articles by query
-        Returns list of article dictionaries
+        Search for news articles by query using snippets
         """
         try:
             logger.info(f"🔍 Searching for news: '{query}'")
             
-            # Search Google
             sources = await self.search_google_news(query, max_results)
             
             if not sources:
                 return []
             
-            # Convert to article format
+            # Convert to article format using snippets
             articles = []
             for i, source in enumerate(sources):
                 article = {
                     'id': f"search_{hash(query)}_{i}_{int(time.time())}",
                     'title': source.title,
                     'summary': source.snippet,
-                    'category': 'search',
+                    'category': 'Search',  # Format for frontend
                     'timestamp': datetime.now().isoformat(),
                     'readTime': '2 min read',
-                    'isBreaking': False,
+                    'isBreaking': self._detect_breaking_news(source.title, source.snippet),
                     'imageUrl': None,
                     'sourceUrl': source.url,
                     'source': source.source_name,
