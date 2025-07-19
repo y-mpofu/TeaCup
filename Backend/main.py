@@ -1,71 +1,98 @@
 # Backend/main.py
-# Updated main FastAPI application with all routes
+# FIXED: Main FastAPI application with /api prefix for all routes
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from datetime import datetime
+import logging
 
-# Import our route modules
-from app.routes.news_routes import router as news_router
-from app.routes.health_routes import router as health_router
+# Import route modules
+from app.routes import health_routes, news_routes
 
-# Create the FastAPI application
+# Set up logging to see what's happening
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Create FastAPI application instance
 app = FastAPI(
     title="TeaCup News API",
-    description="Backend API for TeaCup news application - serving fresh news like a perfect cup of tea",
-    version="1.0.0"
+    description="A real-time news aggregation API with multiple categories",
+    version="1.0.0",
+    docs_url="/docs",  # Swagger UI will be at /docs
+    redoc_url="/redoc"  # ReDoc will be at /redoc
 )
 
-# Configure CORS for frontend communication
+# Configure CORS - allows frontend to communicate with backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",    # React default port
-        "http://localhost:5173",    # Vite default port  
+        "http://localhost:3000",  # React dev server
+        "http://localhost:5173",  # Vite dev server
         "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173"
+        "http://127.0.0.1:5173",
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
-# Include our route modules with proper prefixes
-app.include_router(news_router, prefix="/api", tags=["news"])
-app.include_router(health_router, prefix="/api", tags=["health"])
+# FIXED: Include routers with /api prefix to match frontend expectations
+app.include_router(
+    health_routes.router,
+    prefix="/api",  # This makes health endpoints available at /api/health/*
+    tags=["Health"]
+)
 
-# Root endpoint
+app.include_router(
+    news_routes.router,
+    prefix="/api",  # This makes news endpoints available at /api/news/*
+    tags=["News"]
+)
+
+# Root endpoint - just for testing
 @app.get("/")
 async def root():
+    """
+    Root endpoint - confirms API is running
+    """
     return {
-        "message": "Welcome to TeaCup News API! 🫖",
-        "description": "High Quality Tea Served Hot - Your AI-powered news companion",
-        "timestamp": datetime.now().isoformat(),
-        "docs": "Visit /docs for API documentation",
-        "available_endpoints": {
-            "health": "/api/health",
-            "all_news": "/api/news/all",
-            "politics": "/api/news/politics",
-            "sports": "/api/news/sports",
-            "breaking": "/api/news/breaking",
-            "search": "/api/news/search?q=keyword"
-        }
+        "message": "TeaCup News API is running! 🫖",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "health": "/api/health/ping"
     }
 
-# Run the server
+# Startup event - runs when server starts
+@app.on_event("startup")
+async def startup_event():
+    """
+    Runs when the FastAPI server starts up
+    """
+    logger.info("🫖 TeaCup News API starting up...")
+    logger.info("📡 API endpoints available at:")
+    logger.info("   Health: /api/health/ping")
+    logger.info("   News: /api/news/{category}")
+    logger.info("   All News: /api/news/all")
+    logger.info("   Documentation: /docs")
+
+# Shutdown event - runs when server stops
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    Runs when the FastAPI server shuts down
+    """
+    logger.info("🫖 TeaCup News API shutting down...")
+
+# Run the server if this file is executed directly
 if __name__ == "__main__":
-    print("🫖 Starting TeaCup News API server...")
-    print("📖 API Documentation: http://localhost:8000/docs")
-    print("🔗 Frontend connects to: http://localhost:8000/api")
-    print("🧪 Test endpoints:")
-    print("   - Health: http://localhost:8000/api/health")
-    print("   - All News: http://localhost:8000/api/news/all")
-    print("   - Politics: http://localhost:8000/api/news/politics")
-    
+    logger.info("🚀 Starting TeaCup News API server...")
     uvicorn.run(
-        "main:app", 
-        host="0.0.0.0",
-        port=8000,
-        reload=True
+        "main:app",  # Module and application instance
+        host="127.0.0.1",  # Listen on localhost
+        port=8000,  # Port 8000
+        reload=True,  # Auto-reload on code changes (development mode)
+        log_level="info"  # Logging level
     )
