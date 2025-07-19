@@ -1,5 +1,6 @@
 // Frontend/src/services/newsApiService.ts
 // Service for communicating with the FastAPI backend
+// Now includes backend refresh functionality
 
 // Define the NewsArticle interface to match backend response
 export interface NewsArticle {
@@ -32,6 +33,14 @@ interface AllNewsResponse {
   timestamp: string;
 }
 
+interface RefreshResponse {
+  success: boolean;
+  message: string;
+  timestamp: string;
+  categories_refreshed?: string[];
+  total_new_articles?: number;
+}
+
 /**
  * News API Service Class
  * Handles all communication with the FastAPI backend
@@ -43,7 +52,7 @@ export class NewsApiService {
   constructor() {
     // Backend server URL
     this.baseUrl = "http://localhost:8000/api";
-    this.timeout = 10000; // 10 second timeout
+    this.timeout = 30000; // 30 second timeout for refresh operations
   }
 
   /**
@@ -78,6 +87,60 @@ export class NewsApiService {
         console.error("❌ Backend health check failed:", error);
       }
       return false;
+    }
+  }
+
+  /**
+   * Tell backend to refresh news data from sources
+   * This triggers the backend to fetch fresh news from external APIs
+   */
+  async refreshBackendNews(): Promise<RefreshResponse> {
+    try {
+      console.log("🔄 Requesting backend to refresh news data...");
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+      const response = await fetch(`${this.baseUrl}/news/refresh`, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          timestamp: new Date().toISOString(),
+          force_refresh: true
+        })
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data: RefreshResponse = await response.json();
+
+      if (data.success) {
+        console.log("✅ Backend news refresh completed:", data.message);
+        return data;
+      } else {
+        console.error("❌ Backend news refresh failed:", data);
+        return {
+          success: false,
+          message: "Backend refresh failed",
+          timestamp: new Date().toISOString()
+        };
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error("⏰ Backend news refresh timed out");
+      } else {
+        console.error("❌ Error refreshing backend news:", error);
+      }
+      return {
+        success: false,
+        message: `Refresh failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        timestamp: new Date().toISOString()
+      };
     }
   }
 
@@ -268,6 +331,7 @@ export const newsApiService = new NewsApiService();
 // Export individual functions for easier importing
 export const {
   checkBackendHealth,
+  refreshBackendNews,
   fetchNewsByCategory,
   fetchAllNews,
   fetchBreakingNews,
