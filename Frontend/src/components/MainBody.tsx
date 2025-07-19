@@ -98,7 +98,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         
         try {
           // Fetch articles for this category
-          const articles = await newsApiService.fetchNewsByCategory(category, 6);
+          const articles = await newsApiService.fetchNewsByCategory(category, max_articles_per_section);
 
           // Update state with new articles for this category
           setNewsData((prevData) => ({
@@ -272,7 +272,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         const breakingNews = Object.values(newsData)
           .flat()
           .filter(article => article.isBreaking)
-          .slice(0, 6); // Limit to 6 breaking news items
+          .slice(0, max_articles_per_section); // Limit to 18 breaking news items
 
         if (breakingNews.length > 0) {
           return (
@@ -280,7 +280,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
               title=" Breaking News"
               subtitle="Latest urgent updates and developing stories"
               articles={breakingNews}
-              maxArticles={6}
+              maxArticles={max_articles_per_section}
               onReadStory={handleReadStory}
               onSaveStory={handleSaveStory}
               onPlayAudio={handlePlayAudio}
@@ -298,7 +298,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         title=" Politics"
         subtitle="Political developments, government news, and policy updates"
         articles={newsData.politics || []}
-        maxArticles={6}
+        maxArticles={max_articles_per_section}
         onReadStory={handleReadStory}
         onSaveStory={handleSaveStory}
         onPlayAudio={handlePlayAudio}
@@ -312,7 +312,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         title=" Local Spills"
         subtitle="Community news, local trends, and regional developments"
         articles={newsData['local-trends'] || []}
-        maxArticles={6}
+        maxArticles={max_articles_per_section}
         onReadStory={handleReadStory}
         onSaveStory={handleSaveStory}
         onPlayAudio={handlePlayAudio}
@@ -326,7 +326,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         title=" Sports"
         subtitle="Sports news, match results, and athletic achievements"
         articles={newsData.sports || []}
-        maxArticles={6}
+        maxArticles={max_articles_per_section}
         onReadStory={handleReadStory}
         onSaveStory={handleSaveStory}
         onPlayAudio={handlePlayAudio}
@@ -340,7 +340,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         title=" Health"
         subtitle="Health updates, medical news, and wellness information"
         articles={newsData.health || []}
-        maxArticles={6}
+        maxArticles={max_articles_per_section}
         onReadStory={handleReadStory}
         onSaveStory={handleSaveStory}
         onPlayAudio={handlePlayAudio}
@@ -354,7 +354,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         title=" Business"
         subtitle="Business news, economic updates, and market developments"
         articles={newsData.business || []}
-        maxArticles={6}
+        maxArticles={max_articles_per_section}
         onReadStory={handleReadStory}
         onSaveStory={handleSaveStory}
         onPlayAudio={handlePlayAudio}
@@ -368,7 +368,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         title=" Technology"
         subtitle="Tech updates, digital innovations, and IT developments"
         articles={newsData.technology || []}
-        maxArticles={6}
+        maxArticles={max_articles_per_section}
         onReadStory={handleReadStory}
         onSaveStory={handleSaveStory}
         onPlayAudio={handlePlayAudio}
@@ -382,7 +382,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         title=" Weather"
         subtitle="Weather forecasts, climate updates, and environmental news"
         articles={newsData.weather || []}
-        maxArticles={6}
+        maxArticles={max_articles_per_section}
         onReadStory={handleReadStory}
         onSaveStory={handleSaveStory}
         onPlayAudio={handlePlayAudio}
@@ -396,7 +396,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         title=" Entertainment"
         subtitle="Arts, culture, music, and entertainment news"
         articles={newsData.entertainment || []}
-        maxArticles={6}
+        maxArticles={max_articles_per_section}
         onReadStory={handleReadStory}
         onSaveStory={handleSaveStory}
         onPlayAudio={handlePlayAudio}
@@ -410,7 +410,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         title=" Education"
         subtitle="Educational developments, school news, and academic updates"
         articles={newsData.education || []}
-        maxArticles={6}
+        maxArticles={18}
         onReadStory={handleReadStory}
         onSaveStory={handleSaveStory}
         onPlayAudio={handlePlayAudio}
