@@ -256,7 +256,7 @@ class NewsService:
             
             # Zimbabwe-focused search queries for better local relevance
             search_queries = {
-                'politics': 'Zimbabwe politics government ZANU-PF CCC election policy',
+                'politics': 'Zimbabwe politics government ZANU-PF CCC election policy Blessed Geza',
                 'sports': 'Zimbabwe sports cricket rugby football soccer Warriors',
                 'health': 'Zimbabwe health medical healthcare hospitals clinics',
                 'business': 'Zimbabwe business economy ZSE stock exchange mining agriculture',
