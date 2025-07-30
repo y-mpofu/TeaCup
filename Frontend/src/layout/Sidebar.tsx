@@ -105,8 +105,10 @@ export default function Sidebar() {
             <MessageSquare size={20} />
             {!isCollapsed && <span className="nav-text">Trending Tea</span>}
           </Link>
-
-          {/* My Mix - Personalized content */}
+ 
+          
+          {/*
+          My Mix - Personalized content, will be implemented later
           <Link
             to="/my-mix"
             className={`nav-link ${isActive("/my-mix") ? "active" : ""}`}
@@ -114,7 +116,9 @@ export default function Sidebar() {
           >
             <List size={20} />
             {!isCollapsed && <span className="nav-text">For You</span>}
-          </Link>
+          </Link> 
+          */}
+          
         </nav>
 
         {/* PAPERBOY DELIVERY section */}
@@ -176,12 +180,12 @@ export default function Sidebar() {
           </nav>
         </div>
 
-        {/* Community Section */}
+        {/* Community Section - will be implemented later 
         <div className="sidebar-section">
           {!isCollapsed && <h3 className="section-title">Community</h3>}
 
           <nav className="sidebar-nav">
-            {/* Saved Stories */}
+            {/* Saved Stories 
             <Link
               to="/saved-stories"
               className={`nav-link ${
@@ -193,10 +197,10 @@ export default function Sidebar() {
               {!isCollapsed && <span className="nav-text">Saved Stories</span>}
             </Link>
 
-            {/* Settings */}
+            {/* Huddle 
             <Link
-              to="/hudle"
-              className={`nav-link ${isActive("/hudle") ? "active" : ""}`}
+              to="/huddle"
+              className={`nav-link ${isActive("/huddle") ? "active" : ""}`}
               data-tooltip="Start a Tea Party"
             >
               <UserCheck size={20} />
@@ -205,7 +209,7 @@ export default function Sidebar() {
               )}
             </Link>
           </nav>
-        </div>
+        </div> */}
       </div>
     </aside>
   );
