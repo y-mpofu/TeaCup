@@ -20,12 +20,12 @@
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
 }
 
-/* Profile avatar (the circular image/initial) */
+/* Profile avatar (the circular image/initial) - Main topbar version */
 .profile-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, black, grey);
+  background: linear-gradient(135deg, black, grey); /* Consistent black to grey */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -34,12 +34,12 @@
   font-size: 16px;
 }
 
-/* Small avatar for dropdown */
+/* Small avatar for dropdown - Now matches main avatar gradient */
 .profile-avatar-small {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, grey, black);
+  background: linear-gradient(135deg, black, grey); /* Now consistent with main avatar */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -126,6 +126,7 @@
 /* Menu container */
 .dropdown-menu {
   padding: 8px 0;
+  background-color: #010229eb;
 }
 
 /* Individual menu items */

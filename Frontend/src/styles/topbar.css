@@ -8,16 +8,6 @@
   height: 120px;
   position: relative; /* Allow absolute positioning for profile */
 }
-/* Top header bar styles */
-.topbar {
-  /* Background is now handled by React state with gradients */
-  padding: 0.5rem 1.5rem;
-  display: flex;
-  justify-content: center; /* Center the search form */
-  align-items: center;
-  height: 120px;
-  position: relative; /* Allow absolute positioning for profile */
-}
 
 /* Position profile component on the right side */
 .topbar > :last-child {
@@ -43,6 +33,7 @@
   outline: none;
   background-color: #444;
 }
+
 /* Fade in animation for background changes */
 @keyframes fadeInBackground {
   from {
@@ -51,29 +42,4 @@
   to {
     opacity: 1;
   }
-}
-
-/* Position profile component on the right side */
-.topbar > :last-child {
-  position: absolute;
-  right: 1.5rem;
-}
-
-.topbar input {
-  width: 400px; /* Much longer search bar like in the example */
-  padding: 10px 20px; /* More padding for better look */
-  border: none;
-  border-radius: 25px; /* Rounded corners (pill shape) */
-  background-color: #333;
-  color: white;
-  font-size: 16px; /* Larger font size */
-}
-
-.topbar input::placeholder {
-  color: #ccc;
-}
-
-.topbar input:focus {
-  outline: none;
-  background-color: #444;
 }
