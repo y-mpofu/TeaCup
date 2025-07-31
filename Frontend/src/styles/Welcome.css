@@ -52,7 +52,19 @@
   33% { filter: drop-shadow(0 0 15px rgba(234, 179, 8, 0.3)); }
   66% { filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.3)); }
 }
+.logo-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
 
+.logo-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
 .brand-title {
   font-size: 3rem;
   font-weight: 800;
@@ -62,6 +74,13 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: gradientText 4s ease-in-out infinite;
+}
+.brand-subtitle {
+  font-size: 1.3rem;
+  font-style: italic;
+  font-weight: bold;
+  margin-top: 0.5rem;
+  text-align: center;
 }
 
 @keyframes gradientText {
@@ -79,10 +98,6 @@
   background: linear-gradient(135deg ,#120f06 0%,#09243b 100%);
   position: relative;
   z-index: 1;
-}
-
-.brand-info{
-    padding-left: 1px;
 }
 
 .form-container {
@@ -275,4 +290,49 @@
 .welcome-container *::after {
   border-color: inherit;
   color: inherit;
+}
+
+/* Add this to your existing Welcome.css file */
+
+/* Country dropdown styling */
+.form-input select,
+select.form-input {
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  color: #ffffff !important;
+  padding-right: 2.5rem; /* Space for dropdown arrow */
+}
+
+.form-input select:focus,
+select.form-input:focus {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  outline: none;
+}
+
+/* Country dropdown options */
+.form-input select option,
+select.form-input option {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  padding: 0.5rem;
+}
+
+.form-input select option:hover,
+select.form-input option:hover {
+  background-color: #333333;
+}
+
+/* Form row for side-by-side fields */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Responsive form row */
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
 }

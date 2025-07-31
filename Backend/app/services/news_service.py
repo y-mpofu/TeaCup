@@ -256,15 +256,15 @@ class NewsService:
             
             # Zimbabwe-focused search queries for better local relevance
             search_queries = {
-                'politics': 'Zimbabwe politics government ZANU-PF CCC election policy Blessed Geza',
-                'sports': 'Zimbabwe sports cricket rugby football soccer Warriors',
-                'health': 'Zimbabwe health medical healthcare hospitals clinics',
-                'business': 'Zimbabwe business economy ZSE stock exchange mining agriculture',
-                'technology': 'Zimbabwe technology innovation digital transformation ICT',
-                'local-trends': 'Zimbabwe trending social media local news events',
-                'weather': 'Zimbabwe weather climate forecast rain season',
-                'entertainment': 'Zimbabwe entertainment music movies celebrities arts',
-                'education': 'Zimbabwe education schools universities ZIMSEC'
+                'politics': f'{country_of_interest} politics government ZANU-PF CCC election policy Blessed Geza',
+                'sports': f'{country_of_interest} sports cricket rugby football soccer Warriors',
+                'health': f'{country_of_interest} health medical healthcare hospitals clinics',
+                'business': f'{country_of_interest} business economy ZSE stock exchange mining agriculture',
+                'technology': f'{country_of_interest} technology innovation digital transformation ICT',
+                'local-trends': f'{country_of_interest} trending social media local news events',
+                'weather': f'{country_of_interest} weather climate forecast rain season',
+                'entertainment': f'{country_of_interest} entertainment music movies celebrities arts',
+                'education': f'{country_of_interest} education schools universities ZIMSEC'
             }
             
             query = search_queries.get(category, f'{category} news')

@@ -1,5 +1,5 @@
 /* Frontend/src/styles/enhanced-settings.css */
-/* Additional styles for enhanced settings page with authentication */
+/* UPDATED: Balanced grey theme with bigger fonts for settings page */
 
 /* Profile dropdown styles (moved here to ensure they load) */
 .profile-container {
@@ -26,7 +26,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e8e9ed 0%, #0a0a0a 100%);
+  background: linear-gradient(135deg, black, grey);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -53,10 +53,10 @@
   top: 100%;
   right: 0;
   margin-top: 8px;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: #f5f5f5;  /* Light grey background */
+  border: 1px solid #d0d0d0;
   border-radius: 12px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
   min-width: 250px;
   overflow: hidden;
   z-index: 1000;
@@ -79,15 +79,15 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e5e7eb;
+  background: #e8e8e8;  /* Medium grey */
+  border-bottom: 1px solid #d0d0d0;
 }
 
 .profile-avatar-small {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #535356 0%, #000000 100%);
+  background: linear-gradient(135deg, black, grey);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -110,9 +110,9 @@
 }
 
 .profile-name {
-  color: #111827;
+  color: #2a2a2a;  /* Dark grey text */
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px;  /* Slightly bigger */
   margin: 0 0 4px 0;
   white-space: nowrap;
   overflow: hidden;
@@ -120,8 +120,8 @@
 }
 
 .profile-email {
-  color: #6b7280;
-  font-size: 12px;
+  color: #666;  /* Medium grey */
+  font-size: 13px;  /* Slightly bigger */
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -137,7 +137,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  color: #374151;
+  color: #4a4a4a;  /* Medium dark grey */
   text-decoration: none;
   transition: background-color 0.2s ease;
   cursor: pointer;
@@ -145,97 +145,97 @@
   background: none;
   width: 100%;
   text-align: left;
-  font-size: 14px;
+  font-size: 15px;  /* Bigger font */
 }
 
 .menu-item:hover {
-  background-color: #f3f4f6;
+  background-color: #e0e0e0;  /* Light grey hover */
+  color: #2a2a2a;
 }
 
 .logout-item {
-  color: #dc2626;
+  color: #ff6b6b;
 }
 
 .logout-item:hover {
-  background-color: #fef2f2;
+  background-color: #ffe8e8;
 }
 
 .menu-divider {
   height: 1px;
-  background-color: #e5e7eb;
+  background-color: #d0d0d0;  /* Medium grey divider */
   margin: 8px 0;
 }
 
-/* Additional styles for Account page */
-
 /* Message banner for success/error messages */
 .message-banner {
-  padding: 1rem 1.25rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  font-size: 0.875rem;
+  padding: 1.25rem 1.5rem;  /* Bigger padding */
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  font-size: 1rem;  /* Bigger font */
   font-weight: 500;
 }
 
 .message-banner.success {
   background: rgba(34, 197, 94, 0.1);
   border: 1px solid rgba(34, 197, 94, 0.3);
-  color: #22c55e;
+  color: #16a34a;
 }
 
 .message-banner.error {
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+  color: #dc2626;
 }
 
-/* Settings form styles */
+/* Settings form styles - BALANCED GREY THEME */
 .settings-form {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 2.5rem;  /* More spacing */
 }
 
 .form-section {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;  /* More spacing */
 }
 
 .section-title {
-  font-size: 1.1rem;
+  font-size: 1.4rem;  /* Much bigger */
   font-weight: 600;
-  color: #e5e7eb;
-  margin: 0 0 1rem 0;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #374151;
+  color: #2a2a2a;  /* Dark grey text */
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #d0d0d0;  /* Medium grey border */
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;  /* More spacing */
 }
 
 .form-group label {
   display: block;
-  font-size: 0.875rem;
+  font-size: 1rem;  /* Bigger font */
   font-weight: 500;
-  color: #d1d5db;
-  margin-bottom: 0.5rem;
+  color: #4a4a4a;  /* Medium dark grey */
+  margin-bottom: 0.75rem;
 }
 
 .form-input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid #4b5563;
-  border-radius: 6px;
-  color: #ffffff;
-  font-size: 0.875rem;
+  padding: 1rem 1.25rem;  /* Bigger padding */
+  background: #f8f8f8;  /* Very light grey */
+  border: 1px solid #c0c0c0;  /* Medium grey border */
+  border-radius: 8px;
+  color: #2a2a2a;  /* Dark grey text */
+  font-size: 1rem;  /* Bigger font */
   transition: all 0.2s ease;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #22c55e;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  background: #ffffff;  /* White on focus */
 }
 
 .form-input:disabled {
@@ -245,406 +245,109 @@
 
 .form-help {
   display: block;
-  font-size: 0.75rem;
-  color: #9ca3af;
-  margin-top: 0.25rem;
-  line-height: 1.4;
-}
-
-/* Session list styles */
-.session-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.session-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  border: 1px solid #374151;
-}
-
-.session-item.current {
-  border-color: #22c55e;
-  background: rgba(34, 197, 94, 0.05);
-}
-
-.session-icon {
-  color: #9ca3af;
-  flex-shrink: 0;
-}
-
-.session-info {
-  flex: 1;
-}
-
-.session-device {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #e5e7eb;
-  margin: 0 0 0.25rem 0;
-}
-
-.session-details {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  margin: 0 0 0.25rem 0;
-}
-
-.session-time {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.session-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.session-badge.current {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
-}
-
-.btn-danger-small {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.75rem;
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.btn-danger-small:hover {
-  background: #dc2626;
-}
-
-/* Account details */
-.account-details {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #374151;
-}
-
-.detail-row:last-child {
-  border-bottom: none;
-}
-
-.detail-label {
-  font-size: 0.875rem;
-  color: #9ca3af;
-}
-
-.detail-value {
-  font-size: 0.875rem;
-  color: #000000;
-  font-weight: 500;
-}
-
-/* Danger zone styles */
-.danger-zone {
-  border-color: #ef4444 !important;
-  background: rgb(31, 16, 16) !important;
-}
-
-.danger-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.danger-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1rem;
-  background: rgba(251, 251, 251, 0.05);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 8px;
-}
-
-.danger-info h4 {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #ef4444;
-  margin: 0 0 0.25rem 0;
-}
-
-.danger-info p {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.btn-danger {
-  padding: 0.5rem 1rem;
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  white-space: nowrap;
-}
-
-.btn-danger:hover {
-  background: #dc2626;
-}
-
-/* Loading spinner for buttons */
-.loading-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-/* Card header with icons */
-.card-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #374151;
-}
-
-.card-header .card-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-}
-
-/* Button styles */
-.btn-secondary {
-  padding: 0.5rem 1rem;
-  background: #374151;
-  color: #e5e7eb;
-  border: 1px solid #4b5563;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-secondary:hover {
-  background: #4b5563;
-  border-color: #6b7280;
-}
-
-/* Enhanced page header with save button */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.header-content {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.header-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #717276 0%, #000000 100%);
-  border-radius: 12px;
-  color: white;
-  flex-shrink: 0;
-}
-
-/* Save button styles */
-.save-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #000000 0%, #767479 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 140px;
-  justify-content: center;
-}
-
-.save-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-.save-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.save-button.success {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.save-button.error {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-}
-
-/* Loading spinner for save button */
-.button-spinner {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Error banner styles */
-.error-banner {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.25rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 12px;
-  color: #dc2626;
-  margin-bottom: 1.5rem;
-  font-size: 0.875rem;
+  font-size: 0.9rem;  /* Bigger help text */
+  color: #666;  /* Medium grey */
+  margin-top: 0.5rem;
   line-height: 1.5;
-}
-
-/* Loading container for initial load */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-}
-
-.loading-spinner {
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-  color: #667eea;
 }
 
 /* Enhanced settings grid */
 .settings-grid {
   display: grid;
-  gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;  /* More spacing */
+  grid-template-columns: 1fr;  /* Single column for simplified layout */
 }
 
-/* Enhanced settings card */
+/* Enhanced settings card - BALANCED GREY */
 .settings-card {
-  background: white;
+  background: #f0f0f0;  /* Light grey background */
   border-radius: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #c8c8c8;  /* Medium grey border */
   overflow: hidden;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);  /* Subtle shadow */
 }
 
 .settings-card:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border-color: #d1d5db;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);  /* Slightly stronger on hover */
+  border-color: #b0b0b0;
 }
 
-/* Card header */
+/* Card header - BALANCED */
 .card-header {
-  padding: 1.5rem 1.5rem 1rem 1.5rem;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 2rem 2rem 1.5rem 2rem;  /* More padding */
+  border-bottom: 1px solid #d0d0d0;  /* Medium grey border */
+  background: #e8e8e8;  /* Slightly darker grey for header */
 }
 
 .card-title {
-  font-size: 1.25rem;
+  font-size: 1.5rem;  /* Much bigger */
   font-weight: 700;
-  color: #111827;
-  margin: 0 0 0.25rem 0;
+  color: #2a2a2a;  /* Dark grey text */
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .card-subtitle {
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: 1rem;  /* Bigger subtitle */
+  color: #666;  /* Medium grey */
   margin: 0;
   line-height: 1.5;
 }
 
 /* Settings list */
 .settings-list {
-  padding: 0.5rem;
+  padding: 1rem;  /* More padding */
+  background: #f5f5f5;  /* Very light grey background */
 }
 
-/* Enhanced setting item */
+/* Enhanced setting item - BALANCED */
 .setting-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1rem;
-  border-radius: 8px;
+  padding: 1.5rem 1.25rem;  /* Much bigger padding */
+  border-radius: 12px;
   transition: background-color 0.2s ease;
+  margin-bottom: 0.5rem;
+  background: #fafafa;  /* Almost white */
+  border: 1px solid #e0e0e0;  /* Light border */
 }
 
 .setting-item:hover {
-  background-color: #f9fafb;
+  background-color: #ffffff;  /* White on hover */
+  border-color: #d0d0d0;
 }
 
-/* Setting info */
+/* Setting info - BIGGER FONTS */
 .setting-info {
   flex: 1;
-  margin-right: 1rem;
+  margin-right: 1.5rem;
 }
 
 .setting-label {
   display: block;
   font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.25rem;
+  color: #2a2a2a;  /* Dark grey text */
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;  /* Much bigger */
 }
 
 .setting-description {
   display: block;
-  font-size: 0.875rem;
-  color: #6b7280;
-  line-height: 1.4;
+  font-size: 1rem;  /* Bigger description */
+  color: #666;  /* Medium grey */
+  line-height: 1.5;
 }
 
-/* Enhanced toggle switch */
+/* Enhanced toggle switch - BIGGER */
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 48px;
-  height: 24px;
+  width: 56px;  /* Bigger toggle */
+  height: 28px;  /* Bigger toggle */
   cursor: pointer;
 }
 
@@ -660,113 +363,857 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #d1d5db;
-  border-radius: 24px;
+  background-color: #c0c0c0;  /* Medium grey inactive */
+  border-radius: 28px;
   transition: all 0.3s ease;
 }
 
 .toggle-slider:before {
   position: absolute;
   content: "";
-  height: 20px;
-  width: 20px;
+  height: 24px;  /* Bigger slider */
+  width: 24px;   /* Bigger slider */
   left: 2px;
   bottom: 2px;
-  background-color: white;
+  background-color: white;  /* White slider */
   border-radius: 50%;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .toggle-switch input:checked + .toggle-slider {
-  background: linear-gradient(135deg, #040404 0%, #838284 100%);
+  background: linear-gradient(135deg, #4a4a4a, #808080);  /* Medium grey gradient when active */
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
-  transform: translateX(24px);
+  transform: translateX(28px);  /* Adjust for bigger size */
+  background-color: white;  /* Keep white when active */
 }
 
-/* Enhanced select dropdown */
+/* Enhanced select dropdown - BALANCED */
 .setting-select {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background-color: white;
-  font-size: 0.875rem;
-  color: #374151;
+  padding: 0.75rem 1rem;  /* Bigger padding */
+  border: 1px solid #c0c0c0;  /* Medium grey border */
+  border-radius: 8px;
+  background-color: #f8f8f8;  /* Very light grey */
+  font-size: 1rem;  /* Bigger font */
+  color: #2a2a2a;  /* Dark grey text */
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 120px;
+  min-width: 180px;  /* Wider */
 }
 
 .setting-select:focus {
   outline: none;
-  border-color: #7e7f82;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  background-color: white;  /* White on focus */
 }
 
 .setting-select:hover {
-  border-color: #9ca3af;
+  border-color: #a0a0a0;
+  background-color: white;
 }
 
-/* Settings footer */
-.settings-footer {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+.setting-select option {
+  background-color: #f8f8f8;  /* Light grey options */
+  color: #2a2a2a;
+  padding: 0.5rem;
 }
 
-.footer-text {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #64748b;
+/* Loading container for initial load - BALANCED */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;  /* More padding */
   text-align: center;
-  line-height: 1.5;
 }
 
-/* Error container for no auth */
+.loading-container p {
+  color: #666;  /* Medium grey */
+  font-size: 1.2rem;  /* Bigger loading text */
+  margin-top: 1rem;
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+  color: #667eea;
+}
+
+/* Error container for no auth - BALANCED */
 .error-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
+  padding: 5rem 2rem;  /* More padding */
   text-align: center;
-  color: #6b7280;
+  color: #666;  /* Medium grey */
 }
 
 .error-container h1 {
-  margin: 1rem 0 0.5rem 0;
-  color: #374151;
+  margin: 1.5rem 0 1rem 0;
+  color: #2a2a2a;  /* Dark grey heading */
+  font-size: 2rem;  /* Bigger error title */
 }
 
 .error-container p {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: 1.1rem;  /* Bigger error text */
+  color: #666;
+}
+
+/* Enhanced page header - BALANCED */
+.page-header {
+  margin-bottom: 2.5rem;  /* More spacing */
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #d0d0d0;  /* Medium grey border */
+}
+
+.settings-title {
+  font-size: 2.5rem;  /* Much bigger title */
+  color: #ffffff;  /* Dark grey */
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.page-subtitle {
+  font-size: 1.2rem;  /* Bigger subtitle */
+  color: #666;  /* Medium grey */
+  margin: 0;
+}
+
+/* Success/Error banners - BALANCED */
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1.25rem 1.5rem;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  color: #16a34a;
+  font-size: 1rem;  /* Bigger font */
+  margin-bottom: 2rem;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1.25rem 1.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  color: #dc2626;
+  font-size: 1rem;  /* Bigger font */
+  margin-bottom: 2rem;
+}
+
+/* Country changing indicator */
+.country-changing {
+  padding: 1.25rem;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #667eea;
+  font-size: 1rem;  /* Bigger font */
+  margin-top: 1rem;
+}
+
+/* Enhanced settings card - BALANCED GREY */
+.settings-card {
+  background: #f5f5f5;  /* Light grey background */
+  border-radius: 16px;
+  border: 1px solid #c8c8c8;  /* Medium grey border */
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);  /* Subtle shadow */
+}
+
+.settings-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);  /* Slightly stronger on hover */
+  border-color: #b0b0b0;
+}
+
+/* Card header - BALANCED */
+.card-header {
+  padding: 2rem 2rem 1.5rem 2rem;  /* More padding */
+  border-bottom: 1px solid #d0d0d0;  /* Medium grey border */
+  background: #e8e8e8;  /* Medium grey for header */
+}
+
+.settings-card-title {
+  font-size: 1.5rem;  /* Much bigger */
+  font-weight: 700;
+  color: #2a2a2a;  /* Dark grey text */
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.card-subtitle {
+  font-size: 1rem;  /* Bigger subtitle */
+  color: #666;  /* Medium grey */
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Settings list */
+.settings-list {
+  padding: 1rem;  /* More padding */
+  background: #f8f8f8;  /* Very light grey background */
+}
+
+/* Enhanced setting item - BALANCED */
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.25rem;  /* Much bigger padding */
+  border-radius: 12px;
+  transition: background-color 0.2s ease;
+  margin-bottom: 0.5rem;
+  background: white;  /* White background */
+  border: 1px solid #e0e0e0;  /* Light border */
+}
+
+.setting-item:hover {
+  background-color: #fafafa;  /* Very light grey on hover */
+  border-color: #d0d0d0;
+}
+
+/* Setting info - BIGGER FONTS */
+.setting-info {
+  flex: 1;
+  margin-right: 1.5rem;
+}
+
+.settings-label {
+  display: block;
+  font-weight: 600;
+  color: #000000;  /* Dark grey text */
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;  /* Much bigger */
+}
+
+.setting-description {
+  display: block;
+  font-size: 1rem;  /* Bigger description */
+  color: #666;  /* Medium grey */
+  line-height: 1.5;
+}
+
+/* Button spinner animation */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.button-spinner {
+  animation: spin 1s linear infinite;
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .settings-grid {
-    grid-template-columns: 1fr;
+  .page-title {
+    font-size: 2rem;  /* Smaller on mobile but still big */
   }
   
-  .page-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
+  .page-subtitle {
+    font-size: 1.1rem;
   }
   
-  .save-button {
-    width: 100%;
+  .card-title {
+    font-size: 1.3rem;
+  }
+  
+  .setting-label {
+    font-size: 1rem;
+  }
+  
+  .setting-description {
+    font-size: 0.95rem;
   }
   
   .setting-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
+    padding: 1.25rem;
+  }
+  
+  .setting-info {
+    margin-right: 0;
+  }
+  
+  .toggle-switch,
+  .setting-select {
+    align-self: flex-end;
+  }
+}
+
+/* Profile dropdown styles (moved here to ensure they load) */
+.profile-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.profile-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 50%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, black, grey);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.profile-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-initial {
+  user-select: none;
+  color: white;
+  font-weight: 600;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: #1f1f1f;  /* Much darker */
+  border: 1px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+  min-width: 250px;
+  overflow: hidden;
+  z-index: 1000;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profile-info {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #2a2a2a;  /* Darker */
+  border-bottom: 1px solid #333;
+}
+
+.profile-avatar-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, black, grey);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.profile-image-small {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  color: white;  /* White text */
+  font-weight: 600;
+  font-size: 15px;  /* Slightly bigger */
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-email {
+  color: #888;
+  font-size: 13px;  /* Slightly bigger */
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-menu {
+  padding: 8px 0;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: #ccc;  /* Light grey text */
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-size: 15px;  /* Bigger font */
+}
+
+.menu-item:hover {
+  background-color: #333;  /* Darker hover */
+  color: white;
+}
+
+.logout-item {
+  color: #ff6b6b;
+}
+
+.logout-item:hover {
+  background-color: rgba(255, 107, 107, 0.1);
+}
+
+.menu-divider {
+  height: 1px;
+  background-color: #333;  /* Darker divider */
+  margin: 8px 0;
+}
+
+/* Message banner for success/error messages */
+.message-banner {
+  padding: 1.25rem 1.5rem;  /* Bigger padding */
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  font-size: 1rem;  /* Bigger font */
+  font-weight: 500;
+}
+
+.message-banner.success {
+  background: rgba(34, 197, 94, 0.15);  /* Darker success */
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #22c55e;
+}
+
+.message-banner.error {
+  background: rgba(239, 68, 68, 0.15);  /* Darker error */
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+/* Settings form styles - DARKER THEME */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;  /* More spacing */
+}
+
+.form-section {
+  margin-bottom: 2.5rem;  /* More spacing */
+}
+
+.section-title {
+  font-size: 1.4rem;  /* Much bigger */
+  font-weight: 600;
+  color: white;  /* White text */
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #333;  /* Darker border */
+}
+
+.form-group {
+  margin-bottom: 2rem;  /* More spacing */
+}
+
+.form-group label {
+  display: block;
+  font-size: 1rem;  /* Bigger font */
+  font-weight: 500;
+  color: #ccc;  /* Light grey */
+  margin-bottom: 0.75rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 1rem 1.25rem;  /* Bigger padding */
+  background: #0a0a0a;  /* Much darker */
+  border: 1px solid #333;  /* Darker border */
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 1rem;  /* Bigger font */
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  background: #111;  /* Slightly lighter on focus */
+}
+
+.form-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-help {
+  display: block;
+  font-size: 0.9rem;  /* Bigger help text */
+  color: #888;  /* Light grey */
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+/* Enhanced settings grid */
+.settings-grid {
+  display: grid;
+  gap: 2rem;  /* More spacing */
+  grid-template-columns: 1fr;  /* Single column for simplified layout */
+}
+
+/* Enhanced settings card - MUCH DARKER */
+.settings-card {
+  background: #0f0f0f;  /* Much darker background */
+  border-radius: 16px;
+  border: 1px solid #222;  /* Darker border */
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);  /* Darker shadow */
+}
+
+.settings-card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);  /* Even darker on hover */
+  border-color: #333;
+}
+
+/* Card header - DARKER */
+.card-header {
+  padding: 2rem 2rem 1.5rem 2rem;  /* More padding */
+  border-bottom: 1px solid #222;  /* Darker border */
+}
+
+.card-title {
+  font-size: 1.5rem;  /* Much bigger */
+  font-weight: 700;
+  color: white;  /* White text */
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.card-subtitle {
+  font-size: 1rem;  /* Bigger subtitle */
+  color: #888;  /* Light grey */
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Settings list */
+.settings-list {
+  padding: 1rem;  /* More padding */
+}
+
+/* Enhanced setting item - DARKER */
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.25rem;  /* Much bigger padding */
+  border-radius: 12px;
+  transition: background-color 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.setting-item:hover {
+  background-color: #04513cc7;  /* Darker hover */
+}
+
+/* Setting info - BIGGER FONTS */
+.setting-info {
+  flex: 1;
+  margin-right: 1.5rem;
+}
+
+.setting-label {
+  display: block;
+  font-weight: 600;
+  color: white;  /* White text */
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;  /* Much bigger */
+}
+
+.setting-description {
+  display: block;
+  font-size: 1rem;  /* Bigger description */
+  color: #aaa;  /* Light grey */
+  line-height: 1.5;
+}
+
+/* Enhanced toggle switch - BIGGER */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 56px;  /* Bigger toggle */
+  height: 28px;  /* Bigger toggle */
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #333;  /* Darker inactive */
+  border-radius: 28px;
+  transition: all 0.3s ease;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 24px;  /* Bigger slider */
+  width: 24px;   /* Bigger slider */
+  left: 2px;
+  bottom: 2px;
+  background-color: #666;  /* Grey inactive */
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: linear-gradient(135deg, black, grey);  /* Match your theme */
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(28px);  /* Adjust for bigger size */
+  background-color: white;  /* White when active */
+}
+
+/* Enhanced select dropdown - DARKER */
+.setting-select {
+  padding: 0.75rem 1rem;  /* Bigger padding */
+  border: 1px solid #333;  /* Darker border */
+  border-radius: 8px;
+  background-color: #1a1a1a;  /* Much darker */
+  font-size: 1rem;  /* Bigger font */
+  color: white;  /* White text */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 180px;  /* Wider */
+}
+
+.setting-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  background-color: #222;  /* Slightly lighter on focus */
+}
+
+.setting-select:hover {
+  border-color: #555;
+  background-color: #222;
+}
+
+.setting-select option {
+  background-color: #1a1a1a;  /* Dark options */
+  color: white;
+  padding: 0.5rem;
+}
+
+/* Loading container for initial load - DARKER */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;  /* More padding */
+  text-align: center;
+}
+
+.loading-container p {
+  color: #ccc;
+  font-size: 1.2rem;  /* Bigger loading text */
+  margin-top: 1rem;
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+  color: #667eea;
+}
+
+/* Error container for no auth - DARKER */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;  /* More padding */
+  text-align: center;
+  color: #888;  /* Light grey */
+}
+
+.error-container h1 {
+  margin: 1.5rem 0 1rem 0;
+  color: white;  /* White heading */
+  font-size: 2rem;  /* Bigger error title */
+}
+
+.error-container p {
+  margin: 0;
+  font-size: 1.1rem;  /* Bigger error text */
+  color: #aaa;
+}
+
+/* Enhanced page header - DARKER */
+.page-header {
+  margin-bottom: 2.5rem;  /* More spacing */
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #222;  /* Darker border */
+}
+
+.page-title {
+  font-size: 2.5rem;  /* Much bigger title */
+  color: white;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.page-subtitle {
+  font-size: 1.2rem;  /* Bigger subtitle */
+  color: #888;
+  margin: 0;
+}
+
+/* Success/Error banners - DARKER */
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1.25rem 1.5rem;
+  background: rgba(34, 197, 94, 0.1);  /* Darker success */
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  color: #22c55e;
+  fontSize: 1rem;  /* Bigger font */
+  marginBottom: 2rem;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1.25rem 1.5rem;
+  background: rgba(239, 68, 68, 0.1);  /* Darker error */
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  color: #ff6b6b;
+  font-size: 1rem;  /* Bigger font */
+  margin-bottom: 2rem;
+}
+
+/* Country changing indicator */
+.country-changing {
+  padding: 1.25rem;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #667eea;
+  font-size: 1rem;  /* Bigger font */
+  margin-top: 1rem;
+}
+
+/* Button spinner animation */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.button-spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 2rem;  /* Smaller on mobile but still big */
+  }
+  
+  .page-subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .card-title {
+    font-size: 1.3rem;
+  }
+  
+  .setting-label {
+    font-size: 1rem;
+  }
+  
+  .setting-description {
+    font-size: 0.95rem;
+  }
+  
+  .setting-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem;
   }
   
   .setting-info {
