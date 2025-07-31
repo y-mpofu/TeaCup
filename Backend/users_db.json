@@ -40,7 +40,7 @@
       "country_of_interest": "ZW",
       "profile_picture": null,
       "created_at": "2025-07-31T14:08:10.167470",
-      "last_login": "2025-07-31T14:08:10.167493",
+      "last_login": "2025-07-31T14:53:42.604710",
       "is_active": true,
       "settings": {
         "notifications": {
@@ -61,6 +61,15 @@
           "country_focus": "ZW"
         }
       }
+    }
+  ],
+  "sessions": [
+    {
+      "session_id": "sess_8q1YZcRZQF0YJawRWoLYaetU3Lkzu1DYo0cdQefvSW8",
+      "user_id": "2",
+      "created_at": "2025-07-31T14:53:42.605615",
+      "expires_at": "2025-08-07T14:53:42.605599",
+      "is_active": true
     }
   ]
 }

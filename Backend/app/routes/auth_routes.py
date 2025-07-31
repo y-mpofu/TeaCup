@@ -466,6 +466,8 @@
 
 # Backend/app/routes/auth_routes.py
 # Updated authentication routes with country of interest support
+# Backend/app/routes/auth_routes.py
+# Fixed authentication routes with proper session handling
 
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -533,52 +535,102 @@ VALID_COUNTRIES = [
     'BI'   # Burundi
 ]
 
-# Helper functions (unchanged)
+# FIXED: Enhanced database loading with proper structure validation
 def load_database() -> Dict[str, Any]:
-    """Load user data from JSON file"""
+    """
+    Load user data from JSON file with proper structure validation
+    This ensures both 'users' and 'sessions' keys always exist
+    """
     try:
         if os.path.exists(DATABASE_FILE):
             with open(DATABASE_FILE, 'r') as f:
-                return json.load(f)
+                data = json.load(f)
+                
+            # CRITICAL FIX: Ensure both required keys exist
+            # This prevents the 'sessions' KeyError that was causing your 500 error
+            if "users" not in data:
+                data["users"] = []
+                logger.warning("⚠️ Added missing 'users' key to database")
+                
+            if "sessions" not in data:
+                data["sessions"] = []
+                logger.warning("⚠️ Added missing 'sessions' key to database")
+                # Save the corrected structure back to file
+                save_database(data)
+                
+            return data
         else:
-            # Create empty database if file doesn't exist
-            return {"users": [], "sessions": []}
+            # Create empty database with proper structure if file doesn't exist
+            logger.info("📁 Creating new database file with proper structure")
+            default_data = {"users": [], "sessions": []}
+            save_database(default_data)
+            return default_data
+            
+    except json.JSONDecodeError as e:
+        logger.error(f"💥 JSON decode error in database file: {e}")
+        # Create backup of corrupted file and start fresh
+        backup_name = f"{DATABASE_FILE}.backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        if os.path.exists(DATABASE_FILE):
+            os.rename(DATABASE_FILE, backup_name)
+            logger.info(f"📦 Corrupted database backed up as: {backup_name}")
+        return {"users": [], "sessions": []}
+        
     except Exception as e:
-        logger.error(f"Error loading database: {e}")
+        logger.error(f"💥 Unexpected error loading database: {e}")
         return {"users": [], "sessions": []}
 
 def save_database(data: Dict[str, Any]) -> bool:
-    """Save user data to JSON file"""
+    """
+    Save user data to JSON file with error handling
+    """
     try:
+        # Ensure the data has the correct structure before saving
+        if "users" not in data:
+            data["users"] = []
+        if "sessions" not in data:
+            data["sessions"] = []
+            
         with open(DATABASE_FILE, 'w') as f:
             json.dump(data, f, indent=2)
         return True
     except Exception as e:
-        logger.error(f"Error saving database: {e}")
+        logger.error(f"💥 Error saving database: {e}")
         return False
 
 def hash_password(password: str) -> str:
-    """Hash a password using bcrypt"""
+    """
+    Hash a password using bcrypt for secure storage
+    """
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed.decode('utf-8')
 
 def verify_password(password: str, hashed: str) -> bool:
-    """Verify a password against its hash"""
+    """
+    Verify a password against its hash using bcrypt
+    """
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 def find_user_by_username_or_email(username: str, db_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """Find a user by username or email"""
+    """
+    Find a user by username or email address
+    This allows users to login with either their username or email
+    """
     for user in db_data["users"]:
         if user["username"] == username or user["email"] == username:
             return user
     return None
 
 def create_session(user_id: str, db_data: Dict[str, Any]) -> str:
-    """Create a new session for a user"""
+    """
+    Create a new session for a user after successful login
+    Returns a secure session token that expires in 7 days
+    """
+    # Generate a cryptographically secure session ID
     session_id = f"sess_{secrets.token_urlsafe(32)}"
     expires_at = datetime.now() + timedelta(days=7)  # Session expires in 7 days
     
+    # Create session object with all necessary info
     session = {
         "session_id": session_id,
         "user_id": user_id,
@@ -587,42 +639,49 @@ def create_session(user_id: str, db_data: Dict[str, Any]) -> str:
         "is_active": True
     }
     
+    # FIXED: This line was failing because 'sessions' key didn't exist
+    # Now it's guaranteed to exist thanks to our improved load_database function
     db_data["sessions"].append(session)
     return session_id
 
 def get_user_from_token(token: str) -> Optional[Dict[str, Any]]:
-    """Get user information from session token"""
+    """
+    Get user information from session token
+    Validates token and checks expiration
+    """
     db_data = load_database()
     
-    # Find active session
+    # Find active session matching the provided token
     for session in db_data["sessions"]:
         if session["session_id"] == token and session["is_active"]:
-            # Check if session is expired
+            # Check if session has expired
             expires_at = datetime.fromisoformat(session["expires_at"])
             if datetime.now() > expires_at:
-                # Session expired, deactivate it
+                # Session expired, deactivate it automatically
                 session["is_active"] = False
                 save_database(db_data)
+                logger.info(f"🕐 Session expired and deactivated: {token[:20]}...")
                 return None
             
-            # Find user by ID
+            # Find the user associated with this session
             for user in db_data["users"]:
                 if user["id"] == session["user_id"]:
                     return user
     
     return None
 
-# Authentication Routes
+# MAIN AUTHENTICATION ROUTES
 
 @router.post("/login", response_model=LoginResponse)
 async def login(request: LoginRequest):
     """
     User login endpoint - UPDATED to include country in response
+    Validates credentials and creates a new session
     """
     try:
         logger.info(f"🔐 Login attempt for: {request.username}")
         
-        # Load database
+        # Load database (now guaranteed to have proper structure)
         db_data = load_database()
         
         # Find user by username or email
@@ -635,7 +694,7 @@ async def login(request: LoginRequest):
                 detail="Invalid username/email or password"
             )
         
-        # Verify password
+        # Verify the provided password against stored hash
         if not verify_password(request.password, user["password_hash"]):
             logger.warning(f"❌ Login failed: Invalid password for {request.username}")
             raise HTTPException(
@@ -643,7 +702,7 @@ async def login(request: LoginRequest):
                 detail="Invalid username/email or password"
             )
         
-        # Check if user is active
+        # Check if user account is active
         if not user["is_active"]:
             logger.warning(f"❌ Login failed: Account disabled for {request.username}")
             raise HTTPException(
@@ -651,16 +710,16 @@ async def login(request: LoginRequest):
                 detail="Account is disabled"
             )
         
-        # Update last login time
+        # Update user's last login timestamp
         user["last_login"] = datetime.now().isoformat()
         
-        # Create session token
+        # Create new session token (this will now work properly)
         access_token = create_session(user["id"], db_data)
         
-        # Save updated database
+        # Save updated database with new session and login time
         save_database(db_data)
         
-        # Create user response with country info
+        # Create user response object (excludes sensitive password hash)
         user_response = UserResponse(
             id=user["id"],
             username=user["username"],
@@ -684,9 +743,11 @@ async def login(request: LoginRequest):
         )
         
     except HTTPException:
+        # Re-raise HTTP exceptions (like 401 Unauthorized)
         raise
     except Exception as e:
-        logger.error(f"💥 Login error: {e}")
+        # Log unexpected errors and return 500
+        logger.error(f"💥 Unexpected login error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during login"
@@ -695,16 +756,17 @@ async def login(request: LoginRequest):
 @router.post("/register")
 async def register(request: RegisterRequest):
     """
-    User registration endpoint - UPDATED to include country of interest
+    User registration endpoint with country support
+    Creates a new user account with hashed password
     """
     try:
         logger.info(f"📝 Registration attempt for: {request.username}")
         
-        # Validate country of interest
+        # Validate country is in our supported list
         if request.country_of_interest not in VALID_COUNTRIES:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid country code. Must be one of: {', '.join(VALID_COUNTRIES)}"
+                detail=f"Invalid country. Must be one of: {', '.join(VALID_COUNTRIES)}"
             )
         
         # Load database
@@ -724,13 +786,13 @@ async def register(request: RegisterRequest):
                 detail="Email already registered"
             )
         
-        # Generate new user ID
+        # Generate new user ID (simple incremental approach)
         user_id = str(len(db_data["users"]) + 1)
         
-        # Hash password
+        # Hash the password securely
         password_hash = hash_password(request.password)
         
-        # Create new user with country of interest
+        # Create new user object with all required fields
         new_user = {
             "id": user_id,
             "username": request.username,
@@ -738,7 +800,7 @@ async def register(request: RegisterRequest):
             "password_hash": password_hash,
             "first_name": request.first_name,
             "last_name": request.last_name,
-            "country_of_interest": request.country_of_interest,  # NEW: Store country
+            "country_of_interest": request.country_of_interest,  # Store user's country preference
             "profile_picture": None,
             "created_at": datetime.now().isoformat(),
             "last_login": datetime.now().isoformat(),
@@ -759,7 +821,7 @@ async def register(request: RegisterRequest):
                     "language": "english",
                     "autoplay": False,
                     "font_size": "medium",
-                    "country_focus": request.country_of_interest  # NEW: Store in preferences too
+                    "country_focus": request.country_of_interest  # Also store in preferences
                 }
             }
         }
@@ -774,8 +836,7 @@ async def register(request: RegisterRequest):
         
         return {
             "success": True,
-            "message": f"Registration successful! You'll receive news focused on {request.country_of_interest}",
-            "user_id": user_id
+            "message": f"Registration successful! You can now log in with your credentials."
         }
         
     except HTTPException:
@@ -787,73 +848,15 @@ async def register(request: RegisterRequest):
             detail="An error occurred during registration"
         )
 
-# NEW: Endpoint to update user's country of interest
-@router.put("/profile/country")
-async def update_country_of_interest(
-    country_data: Dict[str, str], 
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    """
-    Update user's country of interest
-    """
-    try:
-        # Get current user
-        current_user = get_user_from_token(credentials.credentials)
-        
-        if not current_user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication token"
-            )
-        
-        new_country = country_data.get("country_of_interest")
-        
-        if not new_country or new_country not in VALID_COUNTRIES:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid country code. Must be one of: {', '.join(VALID_COUNTRIES)}"
-            )
-        
-        # Load database
-        db_data = load_database()
-        
-        # Update user's country
-        for user in db_data["users"]:
-            if user["id"] == current_user["id"]:
-                user["country_of_interest"] = new_country
-                user["settings"]["preferences"]["country_focus"] = new_country
-                break
-        
-        # Save database
-        save_database(db_data)
-        
-        logger.info(f"✅ Country updated for user {current_user['username']}: {new_country}")
-        
-        return {
-            "success": True,
-            "message": f"Country of interest updated to {new_country}",
-            "country_of_interest": new_country
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"💥 Update country error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while updating country preference"
-        )
-
-# Rest of your existing routes (logout, get_user_info, settings) remain the same...
-
 @router.post("/logout")
 async def logout(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """User logout endpoint"""
+    """
+    User logout endpoint
+    Deactivates the current session token
+    """
     try:
-        logger.info("🚪 Logout attempt")
-        
-        # Get token from authorization header
         token = credentials.credentials
+        logger.info(f"🚪 Logout attempt with token: {token[:20]}...")
         
         # Load database
         db_data = load_database()
@@ -861,25 +864,73 @@ async def logout(credentials: HTTPAuthorizationCredentials = Depends(security)):
         # Find and deactivate session
         session_found = False
         for session in db_data["sessions"]:
-            if session["session_id"] == token and session["is_active"]:
+            if session["session_id"] == token:
                 session["is_active"] = False
                 session_found = True
                 break
         
-        if session_found:
-            save_database(db_data)
-            logger.info("✅ Logout successful")
-        else:
-            logger.warning("⚠️ Session not found during logout")
+        if not session_found:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid session token"
+            )
+        
+        # Save database
+        save_database(db_data)
+        
+        logger.info("✅ Logout successful")
         
         return {
             "success": True,
             "message": "Logout successful"
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"💥 Logout error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during logout"
+        )
+
+@router.get("/me", response_model=UserResponse)
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get current user information from session token
+    Used to check if user is still logged in and get user details
+    """
+    try:
+        token = credentials.credentials
+        
+        # Get user from token (includes expiration check)
+        user = get_user_from_token(token)
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired session token"
+            )
+        
+        # Return user information (without password hash)
+        return UserResponse(
+            id=user["id"],
+            username=user["username"],
+            email=user["email"],
+            first_name=user["first_name"],
+            last_name=user["last_name"],
+            country_of_interest=user.get("country_of_interest", "ZW"),  # Default to Zimbabwe
+            profile_picture=user.get("profile_picture"),
+            created_at=user["created_at"],
+            last_login=user["last_login"],
+            is_active=user["is_active"]
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"💥 Get current user error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while fetching user information"
         )
