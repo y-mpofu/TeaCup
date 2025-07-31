@@ -1,0 +1,338 @@
+/* ===========================================
+   Welcome Page - Clean, Borderless Form UI
+   Color Palette: Black, Grey, White, Green, Yellow, Red
+   No Blue/Purple Allowed
+=========================================== */
+
+/* Base container */
+.welcome-container {
+  display: flex;
+  min-height: 100vh;
+  background: #000000;
+  font-family: 'Inter', sans-serif;
+  color: #ffffff;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Animated background using YOUR colors */
+.welcome-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(34, 197, 94, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(234, 179, 8, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(239, 68, 68, 0.1) 0%, transparent 50%);
+  animation: backgroundShift 10s ease-in-out infinite;
+  z-index: 0;
+}
+
+@keyframes backgroundShift {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Left side branding */
+.welcome-background {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, #09243b 0%, #120f06 100%);
+}
+
+
+
+@keyframes logoGlow {
+  0%, 100% { filter: drop-shadow(0 0 15px rgba(34, 197, 94, 0.3)); }
+  33% { filter: drop-shadow(0 0 15px rgba(234, 179, 8, 0.3)); }
+  66% { filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.3)); }
+}
+.logo-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.logo-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+.brand-title {
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(45deg, #22c55e, #eab308, #ef4444, #ffffff, #22c55e);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientText 4s ease-in-out infinite;
+}
+.brand-subtitle {
+  font-size: 1.3rem;
+  font-style: italic;
+  font-weight: bold;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+@keyframes gradientText {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Right form section */
+.form-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(135deg ,#120f06 0%,#09243b 100%);
+  position: relative;
+  z-index: 1;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 400px;
+  background: linear-gradient(135deg, #09243b 0%, #120f06 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 2rem;
+  border: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.form-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.form-subtitle {
+  font-size: 0.9rem;
+  color: #cccccc;
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  color: #cccccc;
+  z-index: 1;
+}
+
+.form-input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff !important;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: 8px;
+  outline: none;
+  box-shadow: none;
+  transition: background 0.3s ease;
+}
+
+.form-input::placeholder {
+  color: #999999 !important;
+}
+
+.form-input:focus {
+  background: rgba(0, 0, 0, 0.8);
+  box-shadow: none;
+  outline: none;
+}
+
+.form-input:focus + .input-icon {
+  color: #22c55e;
+}
+
+.form-input.error {
+  box-shadow: 0 0 4px rgba(239, 68, 68, 0.3);
+}
+
+.password-toggle {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #cccccc;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+  color: #22c55e;
+}
+
+.error-text {
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin-top: 0.25rem;
+}
+
+.submit-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1rem;
+  background:#0a04387f;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.submit-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.form-footer {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #666666;
+}
+
+.form-footer p {
+  font-size: 0.875rem;
+  color: #cccccc;
+}
+
+.toggle-button {
+  background: none;
+  border: none;
+  color: #22c55e;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font-size: inherit;
+}
+
+.toggle-button:hover {
+  color: #16a34a;
+}
+
+@media (max-width: 768px) {
+  .welcome-container {
+    flex-direction: column;
+  }
+
+  .welcome-background {
+    min-height: 40vh;
+    padding: 1rem;
+  }
+
+  .form-section {
+    padding: 1rem;
+  }
+
+  .form-container {
+    padding: 1.5rem;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.welcome-container *,
+.welcome-container *::before,
+.welcome-container *::after {
+  border-color: inherit;
+  color: inherit;
+}
+
+/* Add this to your existing Welcome.css file */
+
+/* Country dropdown styling */
+.form-input select,
+select.form-input {
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  color: #ffffff !important;
+  padding-right: 2.5rem; /* Space for dropdown arrow */
+}
+
+.form-input select:focus,
+select.form-input:focus {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  outline: none;
+}
+
+/* Country dropdown options */
+.form-input select option,
+select.form-input option {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  padding: 0.5rem;
+}
+
+.form-input select option:hover,
+select.form-input option:hover {
+  background-color: #333333;
+}
+
+/* Form row for side-by-side fields */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Responsive form row */
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}

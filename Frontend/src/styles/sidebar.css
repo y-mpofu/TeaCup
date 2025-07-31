@@ -59,7 +59,7 @@
 /* Main sidebar container */
 .sidebar {
   width: 240px;
-  background: #1a1a1a;
+  background: #2c2b2c2e;
   padding: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
