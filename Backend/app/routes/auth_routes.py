@@ -463,11 +463,8 @@
 
 
 
-
 # Backend/app/routes/auth_routes.py
-# Updated authentication routes with country of interest support
-# Backend/app/routes/auth_routes.py
-# Fixed authentication routes with proper session handling
+# Authentication routes with dynamic country support - no Zimbabwe defaults
 
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -485,32 +482,43 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 security = HTTPBearer()
 
-# Path to our simple JSON database file
+# Path to our JSON database file
 DATABASE_FILE = "users_db.json"
 
-# Updated Pydantic models with country support
+# Country validation - all 7 supported countries (no Zimbabwe preference)
+VALID_COUNTRIES = [
+    'ZW',  # Zimbabwe
+    'KE',  # Kenya
+    'GH',  # Ghana
+    'RW',  # Rwanda
+    'CD',  # Democratic Republic of Congo
+    'ZA',  # South Africa
+    'BI'   # Burundi
+]
+
+# Pydantic models for request/response validation
 class LoginRequest(BaseModel):
-    """Data model for login requests"""
+    """Data model for user login requests"""
     username: str  # Can be username or email
     password: str
 
 class RegisterRequest(BaseModel):
-    """Data model for user registration - NOW WITH COUNTRY SUPPORT"""
+    """Data model for user registration - REQUIRES country selection"""
     username: str
     email: EmailStr
     password: str
     first_name: str
     last_name: str
-    country_of_interest: str  # NEW: Required during registration
+    country_of_interest: str  # REQUIRED: User must select a country
 
 class UserResponse(BaseModel):
-    """Data model for user information responses - NOW WITH COUNTRY"""
+    """Data model for user information responses - includes country"""
     id: str
     username: str
     email: str
     first_name: str
     last_name: str
-    country_of_interest: str  # NEW: Country they want news from
+    country_of_interest: str  # User's selected country for news
     profile_picture: Optional[str]
     created_at: str
     last_login: str
@@ -524,82 +532,49 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "Bearer"
 
-# Country validation list - Updated with specific African countries
-VALID_COUNTRIES = [
-    'ZW',  # Zimbabwe
-    'KE',  # Kenya
-    'GH',  # Ghana
-    'RW',  # Rwanda
-    'CD',  # Democratic Republic of Congo
-    'ZA',  # South Africa
-    'BI'   # Burundi
-]
+class CountryUpdateRequest(BaseModel):
+    """Data model for country preference updates"""
+    country_of_interest: str
 
-# FIXED: Enhanced database loading with proper structure validation
+# Database helper functions
 def load_database() -> Dict[str, Any]:
     """
-    Load user data from JSON file with proper structure validation
-    This ensures both 'users' and 'sessions' keys always exist
+    Load user data from JSON database file
+    Creates empty database if file doesn't exist
     """
     try:
         if os.path.exists(DATABASE_FILE):
             with open(DATABASE_FILE, 'r') as f:
-                data = json.load(f)
-                
-            # CRITICAL FIX: Ensure both required keys exist
-            # This prevents the 'sessions' KeyError that was causing your 500 error
-            if "users" not in data:
-                data["users"] = []
-                logger.warning("⚠️ Added missing 'users' key to database")
-                
-            if "sessions" not in data:
-                data["sessions"] = []
-                logger.warning("⚠️ Added missing 'sessions' key to database")
-                # Save the corrected structure back to file
-                save_database(data)
-                
-            return data
+                return json.load(f)
         else:
-            # Create empty database with proper structure if file doesn't exist
-            logger.info("📁 Creating new database file with proper structure")
-            default_data = {"users": [], "sessions": []}
-            save_database(default_data)
-            return default_data
-            
-    except json.JSONDecodeError as e:
-        logger.error(f"💥 JSON decode error in database file: {e}")
-        # Create backup of corrupted file and start fresh
-        backup_name = f"{DATABASE_FILE}.backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        if os.path.exists(DATABASE_FILE):
-            os.rename(DATABASE_FILE, backup_name)
-            logger.info(f"📦 Corrupted database backed up as: {backup_name}")
-        return {"users": [], "sessions": []}
-        
+            # Create empty database structure
+            return {"users": [], "sessions": []}
     except Exception as e:
-        logger.error(f"💥 Unexpected error loading database: {e}")
+        logger.error(f"Error loading database: {e}")
         return {"users": [], "sessions": []}
 
 def save_database(data: Dict[str, Any]) -> bool:
     """
-    Save user data to JSON file with error handling
+    Save user data to JSON database file
+    Returns True if successful, False otherwise
     """
     try:
-        # Ensure the data has the correct structure before saving
-        if "users" not in data:
-            data["users"] = []
-        if "sessions" not in data:
-            data["sessions"] = []
-            
         with open(DATABASE_FILE, 'w') as f:
             json.dump(data, f, indent=2)
         return True
     except Exception as e:
-        logger.error(f"💥 Error saving database: {e}")
+        logger.error(f"Error saving database: {e}")
         return False
 
 def hash_password(password: str) -> str:
     """
     Hash a password using bcrypt for secure storage
+    
+    Args:
+        password: Plain text password to hash
+        
+    Returns:
+        Hashed password string
     """
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
@@ -607,30 +582,49 @@ def hash_password(password: str) -> str:
 
 def verify_password(password: str, hashed: str) -> bool:
     """
-    Verify a password against its hash using bcrypt
+    Verify a password against its bcrypt hash
+    
+    Args:
+        password: Plain text password to verify
+        hashed: Stored password hash
+        
+    Returns:
+        True if password matches hash
     """
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
-def find_user_by_username_or_email(username: str, db_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def find_user_by_username_or_email(identifier: str, db_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """
     Find a user by username or email address
-    This allows users to login with either their username or email
+    
+    Args:
+        identifier: Username or email to search for
+        db_data: Database data dictionary
+        
+    Returns:
+        User dictionary if found, None otherwise
     """
     for user in db_data["users"]:
-        if user["username"] == username or user["email"] == username:
+        if user["username"] == identifier or user["email"] == identifier:
             return user
     return None
 
 def create_session(user_id: str, db_data: Dict[str, Any]) -> str:
     """
-    Create a new session for a user after successful login
-    Returns a secure session token that expires in 7 days
-    """
-    # Generate a cryptographically secure session ID
-    session_id = f"sess_{secrets.token_urlsafe(32)}"
-    expires_at = datetime.now() + timedelta(days=7)  # Session expires in 7 days
+    Create a new session token for a user
     
-    # Create session object with all necessary info
+    Args:
+        user_id: ID of the user to create session for
+        db_data: Database data to add session to
+        
+    Returns:
+        New session token string
+    """
+    # Generate secure session token
+    session_id = f"sess_{secrets.token_urlsafe(32)}"
+    expires_at = datetime.now() + timedelta(days=7)  # 7-day expiration
+    
+    # Create session record
     session = {
         "session_id": session_id,
         "user_id": user_id,
@@ -639,8 +633,7 @@ def create_session(user_id: str, db_data: Dict[str, Any]) -> str:
         "is_active": True
     }
     
-    # FIXED: This line was failing because 'sessions' key didn't exist
-    # Now it's guaranteed to exist thanks to our improved load_database function
+    # Add to database
     db_data["sessions"].append(session)
     return session_id
 
@@ -648,40 +641,55 @@ def get_user_from_token(token: str) -> Optional[Dict[str, Any]]:
     """
     Get user information from session token
     Validates token and checks expiration
+    
+    Args:
+        token: Session token to validate
+        
+    Returns:
+        User dictionary if token is valid, None otherwise
     """
+    if not token:
+        return None
+        
     db_data = load_database()
     
-    # Find active session matching the provided token
+    # Find active session matching the token
     for session in db_data["sessions"]:
         if session["session_id"] == token and session["is_active"]:
             # Check if session has expired
             expires_at = datetime.fromisoformat(session["expires_at"])
             if datetime.now() > expires_at:
-                # Session expired, deactivate it automatically
+                # Session expired - deactivate it
                 session["is_active"] = False
                 save_database(db_data)
-                logger.info(f"🕐 Session expired and deactivated: {token[:20]}...")
                 return None
             
-            # Find the user associated with this session
+            # Find user by session's user_id
             for user in db_data["users"]:
                 if user["id"] == session["user_id"]:
                     return user
     
     return None
 
-# MAIN AUTHENTICATION ROUTES
-
+# Authentication endpoint routes
 @router.post("/login", response_model=LoginResponse)
 async def login(request: LoginRequest):
     """
-    User login endpoint - UPDATED to include country in response
-    Validates credentials and creates a new session
+    User login endpoint
+    
+    Validates credentials and returns user info with access token.
+    User must have a valid country_of_interest to access news endpoints.
+    
+    Args:
+        request: Login credentials (username/email and password)
+        
+    Returns:
+        Login response with user info and access token
     """
     try:
         logger.info(f"🔐 Login attempt for: {request.username}")
         
-        # Load database (now guaranteed to have proper structure)
+        # Load database
         db_data = load_database()
         
         # Find user by username or email
@@ -694,7 +702,7 @@ async def login(request: LoginRequest):
                 detail="Invalid username/email or password"
             )
         
-        # Verify the provided password against stored hash
+        # Verify password
         if not verify_password(request.password, user["password_hash"]):
             logger.warning(f"❌ Login failed: Invalid password for {request.username}")
             raise HTTPException(
@@ -707,33 +715,42 @@ async def login(request: LoginRequest):
             logger.warning(f"❌ Login failed: Account disabled for {request.username}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Account is disabled"
+                detail="Account is disabled. Please contact support."
             )
         
-        # Update user's last login timestamp
+        # Check if user has a valid country preference
+        user_country = user.get("country_of_interest")
+        if not user_country or user_country not in VALID_COUNTRIES:
+            logger.warning(f"❌ Login failed: Invalid country '{user_country}' for {request.username}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid country preference. Please contact support to update your account."
+            )
+        
+        # Update last login timestamp
         user["last_login"] = datetime.now().isoformat()
         
-        # Create new session token (this will now work properly)
+        # Create new session token
         access_token = create_session(user["id"], db_data)
         
-        # Save updated database with new session and login time
+        # Save updated database
         save_database(db_data)
         
-        # Create user response object (excludes sensitive password hash)
+        # Create user response (excluding sensitive data like password hash)
         user_response = UserResponse(
             id=user["id"],
             username=user["username"],
             email=user["email"],
             first_name=user["first_name"],
             last_name=user["last_name"],
-            country_of_interest=user.get("country_of_interest", "ZW"),  # Default to Zimbabwe if missing
+            country_of_interest=user["country_of_interest"],
             profile_picture=user.get("profile_picture"),
             created_at=user["created_at"],
             last_login=user["last_login"],
             is_active=user["is_active"]
         )
         
-        logger.info(f"✅ Login successful for: {request.username}")
+        logger.info(f"✅ Login successful for: {request.username} (Country: {user_country})")
         
         return LoginResponse(
             success=True,
@@ -743,10 +760,9 @@ async def login(request: LoginRequest):
         )
         
     except HTTPException:
-        # Re-raise HTTP exceptions (like 401 Unauthorized)
+        # Re-raise HTTP exceptions without modification
         raise
     except Exception as e:
-        # Log unexpected errors and return 500
         logger.error(f"💥 Unexpected login error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -756,17 +772,31 @@ async def login(request: LoginRequest):
 @router.post("/register")
 async def register(request: RegisterRequest):
     """
-    User registration endpoint with country support
-    Creates a new user account with hashed password
+    User registration endpoint
+    
+    Creates new user account with required country selection.
+    User MUST select a country during registration to access news.
+    
+    Args:
+        request: Registration data including required country_of_interest
+        
+    Returns:
+        Success message confirming registration
     """
     try:
-        logger.info(f"📝 Registration attempt for: {request.username}")
+        logger.info(f"📝 Registration attempt for: {request.username} (Country: {request.country_of_interest})")
         
-        # Validate country is in our supported list
+        # Validate country selection is required and valid
+        if not request.country_of_interest:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Country selection is required during registration"
+            )
+        
         if request.country_of_interest not in VALID_COUNTRIES:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid country. Must be one of: {', '.join(VALID_COUNTRIES)}"
+                detail=f"Invalid country '{request.country_of_interest}'. Valid countries: {', '.join(VALID_COUNTRIES)}"
             )
         
         # Load database
@@ -786,13 +816,13 @@ async def register(request: RegisterRequest):
                 detail="Email already registered"
             )
         
-        # Generate new user ID (simple incremental approach)
+        # Generate new user ID
         user_id = str(len(db_data["users"]) + 1)
         
-        # Hash the password securely
+        # Hash password securely
         password_hash = hash_password(request.password)
         
-        # Create new user object with all required fields
+        # Create new user with country preference
         new_user = {
             "id": user_id,
             "username": request.username,
@@ -800,7 +830,7 @@ async def register(request: RegisterRequest):
             "password_hash": password_hash,
             "first_name": request.first_name,
             "last_name": request.last_name,
-            "country_of_interest": request.country_of_interest,  # Store user's country preference
+            "country_of_interest": request.country_of_interest,  # User's selected country
             "profile_picture": None,
             "created_at": datetime.now().isoformat(),
             "last_login": datetime.now().isoformat(),
@@ -821,7 +851,7 @@ async def register(request: RegisterRequest):
                     "language": "english",
                     "autoplay": False,
                     "font_size": "medium",
-                    "country_focus": request.country_of_interest  # Also store in preferences
+                    "country_focus": request.country_of_interest  # Store in preferences too
                 }
             }
         }
@@ -836,57 +866,145 @@ async def register(request: RegisterRequest):
         
         return {
             "success": True,
-            "message": f"Registration successful! You can now log in with your credentials."
+            "message": f"Registration successful! You'll receive news focused on {request.country_of_interest}",
+            "user_id": user_id,
+            "country_set": request.country_of_interest
         }
         
     except HTTPException:
+        # Re-raise validation errors
         raise
     except Exception as e:
-        logger.error(f"💥 Registration error: {e}")
+        logger.error(f"💥 Unexpected registration error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during registration"
+        )
+
+@router.put("/profile/country")
+async def update_country_of_interest(
+    country_data: CountryUpdateRequest, 
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Update user's country of interest preference
+    
+    This endpoint is called when user changes their country in settings page.
+    All subsequent news requests will use the new country automatically.
+    
+    Args:
+        country_data: New country preference
+        credentials: User authentication token
+        
+    Returns:
+        Success confirmation with new country
+    """
+    try:
+        # Get current authenticated user
+        current_user = get_user_from_token(credentials.credentials)
+        
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired authentication token"
+            )
+        
+        new_country = country_data.country_of_interest
+        
+        # Validate new country is supported
+        if not new_country or new_country not in VALID_COUNTRIES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid country '{new_country}'. Valid countries: {', '.join(VALID_COUNTRIES)}"
+            )
+        
+        # Load database
+        db_data = load_database()
+        
+        # Find and update user's country preference
+        user_updated = False
+        for user in db_data["users"]:
+            if user["id"] == current_user["id"]:
+                old_country = user.get("country_of_interest", "None")
+                user["country_of_interest"] = new_country
+                user["settings"]["preferences"]["country_focus"] = new_country
+                user_updated = True
+                logger.info(f"🌍 Country updated for {user['username']}: {old_country} → {new_country}")
+                break
+        
+        if not user_updated:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found in database"
+            )
+        
+        # Save updated database
+        if not save_database(db_data):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to save country preference"
+            )
+        
+        logger.info(f"✅ Country preference updated successfully for user {current_user['username']}: {new_country}")
+        
+        return {
+            "success": True,
+            "message": f"Country preference updated to {new_country}",
+            "country_of_interest": new_country,
+            "effective_immediately": True  # News requests will use new country immediately
+        }
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"💥 Error updating country preference: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while updating country preference"
         )
 
 @router.post("/logout")
 async def logout(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
     User logout endpoint
-    Deactivates the current session token
+    
+    Deactivates the user's current session token.
+    
+    Args:
+        credentials: User's current authentication token
+        
+    Returns:
+        Success confirmation
     """
     try:
+        logger.info("🚪 Logout attempt")
+        
+        # Get token from authorization header
         token = credentials.credentials
-        logger.info(f"🚪 Logout attempt with token: {token[:20]}...")
         
         # Load database
         db_data = load_database()
         
-        # Find and deactivate session
+        # Find and deactivate the session
         session_found = False
         for session in db_data["sessions"]:
-            if session["session_id"] == token:
+            if session["session_id"] == token and session["is_active"]:
                 session["is_active"] = False
                 session_found = True
                 break
         
-        if not session_found:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid session token"
-            )
-        
-        # Save database
-        save_database(db_data)
-        
-        logger.info("✅ Logout successful")
+        if session_found:
+            save_database(db_data)
+            logger.info("✅ Logout successful - session deactivated")
+        else:
+            logger.warning("⚠️  Session not found during logout (may already be expired)")
         
         return {
             "success": True,
             "message": "Logout successful"
         }
         
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"💥 Logout error: {e}")
         raise HTTPException(
@@ -898,12 +1016,19 @@ async def logout(credentials: HTTPAuthorizationCredentials = Depends(security)):
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
     Get current user information from session token
-    Used to check if user is still logged in and get user details
+    
+    Used to verify authentication status and get user details including country preference.
+    
+    Args:
+        credentials: User's authentication token
+        
+    Returns:
+        Current user information including country_of_interest
     """
     try:
         token = credentials.credentials
         
-        # Get user from token (includes expiration check)
+        # Get user from token
         user = get_user_from_token(token)
         
         if not user:
@@ -912,14 +1037,23 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
                 detail="Invalid or expired session token"
             )
         
-        # Return user information (without password hash)
+        # Validate user has a country preference
+        user_country = user.get("country_of_interest")
+        if not user_country or user_country not in VALID_COUNTRIES:
+            logger.warning(f"⚠️  User {user['username']} has invalid country: {user_country}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid country preference. Please update your settings."
+            )
+        
+        # Return user information
         return UserResponse(
             id=user["id"],
             username=user["username"],
             email=user["email"],
             first_name=user["first_name"],
             last_name=user["last_name"],
-            country_of_interest=user.get("country_of_interest", "ZW"),  # Default to Zimbabwe
+            country_of_interest=user["country_of_interest"],
             profile_picture=user.get("profile_picture"),
             created_at=user["created_at"],
             last_login=user["last_login"],
@@ -927,10 +1061,157 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         )
         
     except HTTPException:
+        # Re-raise HTTP exceptions
         raise
     except Exception as e:
-        logger.error(f"💥 Get current user error: {e}")
+        logger.error(f"💥 Error getting current user: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while fetching user information"
+        )
+
+@router.get("/countries")
+async def get_available_countries():
+    """
+    Get list of all supported countries
+    
+    Used by frontend for country selection dropdowns in registration and settings.
+    
+    Returns:
+        List of supported countries with codes, names, and flags
+    """
+    try:
+        # Country information for frontend dropdowns
+        countries_info = [
+            {"code": "ZW", "name": "Zimbabwe", "flag": "🇿🇼"},
+            {"code": "KE", "name": "Kenya", "flag": "🇰🇪"}, 
+            {"code": "GH", "name": "Ghana", "flag": "🇬🇭"},
+            {"code": "RW", "name": "Rwanda", "flag": "🇷🇼"},
+            {"code": "CD", "name": "Democratic Republic of Congo", "flag": "🇨🇩"},
+            {"code": "ZA", "name": "South Africa", "flag": "🇿🇦"},
+            {"code": "BI", "name": "Burundi", "flag": "🇧🇮"}
+        ]
+        
+        return {
+            "success": True,
+            "countries": countries_info,
+            "valid_codes": VALID_COUNTRIES,
+            "count": len(VALID_COUNTRIES),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting countries: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to fetch available countries"
+        )
+
+@router.get("/settings")
+async def get_user_settings(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get current user's settings
+    
+    Returns all user settings including country preference and notification settings.
+    
+    Args:
+        credentials: User's authentication token
+        
+    Returns:
+        User's complete settings object
+    """
+    try:
+        # Get current authenticated user
+        current_user = get_user_from_token(credentials.credentials)
+        
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired authentication token"
+            )
+        
+        return {
+            "success": True,
+            "user_id": current_user["id"],
+            "country_of_interest": current_user.get("country_of_interest"),
+            "settings": current_user.get("settings", {}),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"💥 Error getting user settings: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while fetching settings"
+        )
+
+@router.put("/settings")
+async def update_user_settings(
+    settings_data: Dict[str, Any], 
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Update user's settings
+    
+    Updates notification preferences and other settings.
+    Note: Country changes should use the specific /profile/country endpoint.
+    
+    Args:
+        settings_data: New settings to apply
+        credentials: User's authentication token
+        
+    Returns:
+        Success confirmation
+    """
+    try:
+        # Get current authenticated user
+        current_user = get_user_from_token(credentials.credentials)
+        
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired authentication token"
+            )
+        
+        # Load database
+        db_data = load_database()
+        
+        # Find and update user settings
+        user_updated = False
+        for user in db_data["users"]:
+            if user["id"] == current_user["id"]:
+                # Update settings (but preserve country_of_interest)
+                user["settings"] = settings_data.get("settings", user.get("settings", {}))
+                user_updated = True
+                break
+        
+        if not user_updated:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Save updated database
+        if not save_database(db_data):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to save settings"
+            )
+        
+        logger.info(f"✅ Settings updated for user: {current_user['username']}")
+        
+        return {
+            "success": True,
+            "message": "Settings updated successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"💥 Error updating settings: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while updating settings"
         )
