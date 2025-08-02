@@ -276,9 +276,9 @@ async def startup_event():
         logger.error(f"❌ Database initialization error: {e}")
         raise Exception(f"Failed to initialize user database: {e}")
     
-    # Validate API credentials
+    # Validate API credentials - FIXED: Don't re-import os
     try:
-        import os
+        # Use the os module that's already imported at the top
         google_key = os.getenv("GOOGLE_SEARCH_API_KEY")
         google_cse = os.getenv("GOOGLE_CSE_ID")
         openai_key = os.getenv("OPENAI_API_KEY")

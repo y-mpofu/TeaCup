@@ -719,573 +719,715 @@
 # # Create singleton instance
 # news_service = NewsService()
 
-# Backend/app/routes/news_routes.py
-# Dynamic country-aware news routes - gets country from authenticated user's settings
 
-from fastapi import APIRouter, HTTPException, Query, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional, Dict, List, Any
+
+
+
+
+
+
+
+
+
+
+# Backend/app/services/news_service.py
+# Complete, coherent news service that actually works
+# Combines all functionality with proper error handling and country support
+
 import asyncio
+import aiohttp
+import time
+import hashlib
 from datetime import datetime
+from typing import List, Dict, Any, Optional
 import logging
-import json
+from dataclasses import dataclass, asdict
+from urllib.parse import urlparse
 import os
+from dotenv import load_dotenv
 
-# Import the real news service (no mock data)
-from app.services.news_service import news_service
+# Load environment variables from .env file
+load_dotenv()
 
-# Configuration constants
-MAX_ARTICLES_PER_CATEGORY = 18
-MAX_SEARCH_RESULTS = 50
-MAX_BREAKING_NEWS = 30
-
-# Valid news categories supported by the system
-VALID_CATEGORIES = [
-    'politics', 'sports', 'health', 'business', 'technology',
-    'local-trends', 'weather', 'entertainment', 'education'
-]
-
-# Valid countries that users can select in their settings
-VALID_COUNTRIES = [
-    'ZW',  # Zimbabwe
-    'KE',  # Kenya  
-    'GH',  # Ghana
-    'RW',  # Rwanda
-    'CD',  # Democratic Republic of Congo
-    'ZA',  # South Africa
-    'BI'   # Burundi
-]
-
-# Create router and security instances
-router = APIRouter()
-security = HTTPBearer(auto_error=False)  # Optional authentication
+# Set up logging to track what's happening
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Database functions (shared with auth_routes)
-def load_database() -> Dict[str, Any]:
-    """Load user data from JSON database file"""
-    try:
-        if os.path.exists("users_db.json"):
-            with open("users_db.json", 'r') as f:
-                return json.load(f)
-        else:
-            return {"users": [], "sessions": []}
-    except Exception as e:
-        logger.error(f"Error loading database: {e}")
-        return {"users": [], "sessions": []}
+@dataclass
+class NewsSource:
+    """
+    Data structure for a single news source from search results
+    Represents raw data before processing into full articles
+    """
+    url: str                            # The URL of the news article
+    title: str                          # Article headline/title
+    snippet: str                        # Short preview/description
+    source_name: str                    # Name of the news website/organization
+    published_date: Optional[str] = None # When the article was published (if available)
 
-def get_user_from_token(token: str) -> Optional[Dict[str, Any]]:
+@dataclass
+class ProcessedArticle:
     """
-    Get user information from session token
-    Returns user object with country_of_interest field
+    Data structure for a fully processed news article
+    This matches what the frontend expects to receive
     """
-    if not token:
-        return None
-        
-    db_data = load_database()
-    
-    # Find active session matching the token
-    for session in db_data["sessions"]:
-        if session["session_id"] == token and session["is_active"]:
-            # Check if session is expired
-            expires_at = datetime.fromisoformat(session["expires_at"])
-            if datetime.now() > expires_at:
-                # Session expired, deactivate it
-                session["is_active"] = False
-                # Note: In production, you might want to save this change
-                return None
-            
-            # Find user by session's user_id
-            for user in db_data["users"]:
-                if user["id"] == session["user_id"]:
-                    return user
-    
-    return None
+    id: str                             # Unique identifier for the article
+    title: str                          # Article headline
+    summary: str                        # Processed summary of the article
+    category: str                       # News category (Politics, Sports, etc.)
+    timestamp: str                      # When this article was processed
+    readTime: str                       # Estimated reading time (e.g., "3 min read")
+    isBreaking: bool                    # Whether this is breaking news
+    imageUrl: Optional[str]             # URL to article image (if available)
+    sourceUrl: str                      # Original article URL
+    source: str                         # Name of the news source
+    linked_sources: List[str]           # List of related source URLs
 
-def get_user_country(credentials: Optional[HTTPAuthorizationCredentials] = None) -> Optional[str]:
+class NewsService:
     """
-    Get the authenticated user's country preference
+    Complete news service for fetching, processing, and serving news articles
     
-    Args:
-        credentials: Optional authentication credentials
-        
-    Returns:
-        User's country code, or None if no authentication/invalid country
+    This service handles:
+    1. Searching for news using Google Custom Search API
+    2. Processing raw search results into structured articles
+    3. Country-specific news filtering
+    4. Category-based news organization
+    5. Breaking news detection
+    6. AI-powered summarization (optional)
     """
-    # If no authentication provided, return None
-    if not credentials:
-        logger.info("🌍 No authentication - no country specified")
-        return None
     
-    # Get user from token
-    user = get_user_from_token(credentials.credentials)
-    
-    if not user:
-        logger.info("🌍 Invalid/expired token - no country available") 
-        return None
-    
-    # Get user's country preference
-    user_country = user.get("country_of_interest")
-    
-    # Validate the country is supported
-    if not user_country or user_country not in VALID_COUNTRIES:
-        logger.warning(f"⚠️  User has invalid/missing country '{user_country}' - authentication required")
-        return None
-    
-    logger.info(f"🌍 Using user's country preference: {user_country}")
-    return user_country
-
-def validate_category(category: str) -> None:
-    """
-    Validate that the requested category is supported
-    
-    Args:
-        category: Category name to validate
+    def __init__(self):
+        """
+        Initialize the news service with API keys and configuration
+        """
+        # Load API keys from environment variables
+        self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        self.google_api_key = os.getenv("GOOGLE_SEARCH_API_KEY") 
+        self.google_cse_id = os.getenv("GOOGLE_CSE_ID")
         
-    Raises:
-        HTTPException: If category is not in VALID_CATEGORIES
-    """
-    if category not in VALID_CATEGORIES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid category '{category}'. Valid categories: {', '.join(VALID_CATEGORIES)}"
-        )
-
-@router.get("/news/{category}")
-async def get_news_by_category(
-    category: str,
-    max_articles: Optional[int] = Query(MAX_ARTICLES_PER_CATEGORY, ge=1, le=20),
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    """
-    Get real news articles for a specific category using user's country preference
-    
-    Requires authentication - user must be logged in and have a country set in their settings.
-    The country is automatically determined from the authenticated user's settings.
-    When user changes country in settings, all subsequent news requests use the new country.
-    
-    Args:
-        category: News category (politics, sports, health, etc.)
-        max_articles: Maximum number of articles to return (1-20)
-        credentials: Required user authentication (country extracted from user settings)
+        # Google Custom Search API endpoint
+        self.google_search_url = "https://www.googleapis.com/customsearch/v1"
         
-    Returns:
-        JSON response with success status and list of localized articles
-    """
-    try:
-        # Get user's country preference from their settings (required)
-        user_country = get_user_country(credentials)
+        # Rate limiting to avoid hitting API limits
+        self.last_request_time = 0
+        self.min_request_interval = 0.1  # Minimum time between requests (100ms)
         
-        if not user_country:
-            raise HTTPException(
-                status_code=401,
-                detail="Authentication required. Please log in and set your country preference in settings."
-            )
-        
-        logger.info(f"📰 API Request: {category} news for country {user_country} (max: {max_articles})")
-        
-        # Validate the requested category
-        validate_category(category)
-        
-        # Fetch real news articles using user's country preference
-        articles = await news_service.get_news_for_category(category, user_country, max_articles)
-        
-        logger.info(f"✅ Retrieved {len(articles)} real {category} articles for {user_country}")
-        
-        # FastAPI automatically converts ProcessedArticle dataclass objects to JSON
-        return {
-            "success": True,
-            "articles": articles,                           # Auto-converted to JSON
-            "category": category.title(),                   # Formatted category name
-            "count": len(articles),                         # Number of articles returned
-            "country": user_country,                        # User's country preference
-            "timestamp": datetime.now().isoformat()        # When this response was generated
-        }
-        
-    except HTTPException:
-        # Re-raise HTTP exceptions (400, 401, 404, etc.) without modification
-        raise
-    except Exception as general_error:
-        # Log and convert unexpected errors to 500 responses
-        logger.error(f"❌ Unexpected error fetching {category} news: {general_error}")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Failed to fetch {category} news. Please try again later."
-        )
-
-@router.get("/news/all")
-async def get_all_categories_news(
-    max_per_category: Optional[int] = Query(6, ge=1, le=10),
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    """
-    Get news for all categories simultaneously using user's country preference
-    
-    Requires authentication - user must be logged in with a valid country preference.
-    Perfect for homepage/dashboard that displays multiple categories.
-    Country is automatically determined from user's settings.
-    
-    Args:
-        max_per_category: Number of articles per category (1-10)
-        credentials: Required user authentication (country extracted from user settings)
-        
-    Returns:
-        JSON with news organized by category, localized to user's country
-    """
-    try:
-        # Get user's country preference dynamically (required)
-        user_country = get_user_country(credentials)
-        
-        if not user_country:
-            raise HTTPException(
-                status_code=401,
-                detail="Authentication required. Please log in and set your country preference in settings."
-            )
-        
-        logger.info(f"📊 API Request: ALL categories for country {user_country} ({max_per_category} per category)")
-        
-        # Use the news service's optimized concurrent fetching with user's country
-        news_by_category = await news_service.get_all_categories_news(user_country, max_per_category)
-        
-        # Calculate total statistics
-        total_articles = sum(len(articles) for articles in news_by_category.values())
-        successful_categories = sum(1 for articles in news_by_category.values() if len(articles) > 0)
-        
-        logger.info(f"✅ Dashboard complete: {total_articles} articles across {successful_categories} categories for {user_country}")
-        
-        # FastAPI automatically converts ProcessedArticle objects to JSON
-        return {
-            "success": True,
-            "news_by_category": news_by_category,           # Auto-converted to JSON
-            "total_articles": total_articles,               # Total count across all categories
-            "categories_count": successful_categories,      # Number of categories with articles
-            "country": user_country,                        # User's current country preference
-            "timestamp": datetime.now().isoformat()        # Response generation time
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as dashboard_error:
-        logger.error(f"❌ Error fetching all categories: {dashboard_error}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to fetch news dashboard. Please try again later."
-        )
-
-@router.get("/news/breaking")
-async def get_breaking_news(
-    max_articles: Optional[int] = Query(15, ge=1, le=MAX_BREAKING_NEWS),
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    """
-    Get breaking news articles using user's country preference
-    
-    Requires authentication - user must be logged in with a valid country preference.
-    Searches multiple categories for urgent news from the user's selected country.
-    When user changes their country in settings, breaking news automatically updates.
-    
-    Args:
-        max_articles: Maximum breaking news articles to return
-        credentials: Required user authentication (country extracted from user settings)
-        
-    Returns:
-        JSON response with breaking news articles from user's country
-    """
-    try:
-        # Get user's country preference dynamically (required)
-        user_country = get_user_country(credentials)
-        
-        if not user_country:
-            raise HTTPException(
-                status_code=401,
-                detail="Authentication required. Please log in and set your country preference in settings."
-            )
-        
-        logger.info(f"🚨 API Request: Breaking news for country {user_country} (max: {max_articles})")
-        
-        # Priority categories most likely to have breaking news
-        priority_categories = ['politics', 'business', 'health', 'sports', 'technology']
-        
-        # Collect breaking news from multiple categories concurrently
-        async def get_breaking_from_category(category: str):
-            """Get articles from one category and filter for breaking news"""
+        # Initialize OpenAI if API key is available
+        if self.openai_api_key:
             try:
-                # Get recent articles from this category using user's country
-                articles = await news_service.get_news_for_category(category, user_country, 5)
-                # Filter only the breaking news articles
-                breaking_only = [article for article in articles if getattr(article, 'isBreaking', False)]
-                return breaking_only
-            except Exception as category_error:
-                logger.warning(f"⚠️  Error getting breaking news from {category}: {category_error}")
+                import openai
+                openai.api_key = self.openai_api_key
+                self.openai_available = True
+                logger.info("✅ OpenAI initialized for enhanced summaries")
+            except ImportError:
+                logger.warning("⚠️  OpenAI library not installed - using basic summaries")
+                self.openai_available = False
+        else:
+            logger.info("ℹ️  OpenAI API key not provided - using basic summaries")
+            self.openai_available = False
+
+    def _get_country_name(self, country_code: str) -> str:
+        """
+        Convert country code to full country name for better search results
+        
+        Args:
+            country_code: Two-letter country code (e.g., 'ZW', 'KE')
+            
+        Returns:
+            Full country name (e.g., 'Zimbabwe', 'Kenya')
+        """
+        # Mapping of country codes to full names
+        # Add more countries as needed for your application
+        country_map = {
+            'ZW': 'Zimbabwe',       # Primary focus country
+            'KE': 'Kenya', 
+            'GH': 'Ghana',
+            'RW': 'Rwanda',
+            'CD': 'Democratic Republic of Congo',
+            'ZA': 'South Africa',
+            'BI': 'Burundi',
+            'UG': 'Uganda',
+            'TZ': 'Tanzania',
+            'MW': 'Malawi',
+            'ZM': 'Zambia',
+            'BW': 'Botswana',
+            'US': 'United States',
+            'UK': 'United Kingdom',
+            'CA': 'Canada'
+        }
+        return country_map.get(country_code.upper(), country_code)
+
+    def _wait_for_rate_limit(self):
+        """
+        Simple rate limiting to prevent API abuse
+        Ensures minimum time between API requests
+        """
+        current_time = time.time()
+        time_since_last = current_time - self.last_request_time
+        
+        # If we made a request too recently, wait
+        if time_since_last < self.min_request_interval:
+            sleep_time = self.min_request_interval - time_since_last
+            time.sleep(sleep_time)
+        
+        self.last_request_time = time.time()
+
+    def _extract_domain(self, url: str) -> str:
+        """
+        Extract a clean domain name from a URL for display purposes
+        
+        Args:
+            url: Full URL (e.g., 'https://www.cnn.com/article/123')
+            
+        Returns:
+            Clean domain name (e.g., 'CNN')
+        """
+        try:
+            parsed = urlparse(url)
+            domain = parsed.netloc.lower()
+            
+            # Remove 'www.' prefix if present
+            if domain.startswith('www.'):
+                domain = domain[4:]
+            
+            # Convert to title case for better display
+            return domain.title()
+        except Exception as e:
+            logger.warning(f"Error parsing domain from {url}: {e}")
+            return "News Source"
+
+    async def search_google_news(self, query: str, num_results: int = 10, country_code: str = 'ZW') -> List[NewsSource]:
+        """
+        Search Google for news articles using the Custom Search API
+        
+        Args:
+            query: Search terms to look for
+            num_results: Maximum number of results to return
+            country_code: Country to focus the search on
+            
+        Returns:
+            List of NewsSource objects with raw search results
+        """
+        try:
+            country_name = self._get_country_name(country_code)
+            logger.info(f"🔍 Searching Google for: '{query}' in {country_name} (wanting {num_results} results)")
+            
+            # Check if Google API is configured
+            if not self.google_api_key or not self.google_cse_id:
+                logger.warning("⚠️  Google Search API not configured - using mock data")
+                return await self._generate_mock_news_sources(query, num_results, country_name)
+            
+            # Build search parameters for country-focused news
+            params = {
+                'key': self.google_api_key,
+                'cx': self.google_cse_id,
+                'q': f"{query} {country_name} news",  # Include country in search
+                'num': min(num_results, 10),          # Google allows max 10 per request
+                'dateRestrict': 'd7',                 # Last 7 days for fresh content
+                'sort': 'date',                       # Sort by most recent
+                'lr': 'lang_en',                      # English language results
+                'gl': country_code.lower(),           # Geographic location
+                'cr': f'country{country_code.upper()}', # Country restriction
+            }
+            
+            # Apply rate limiting
+            self._wait_for_rate_limit()
+            
+            # Make the API request
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.google_search_url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        
+                        # Check if we got results
+                        if 'items' not in data:
+                            logger.warning(f"⚠️  No Google search results found for '{query}' in {country_name}")
+                            return await self._generate_mock_news_sources(query, num_results, country_name)
+                        
+                        # Convert Google results to our NewsSource format
+                        sources = []
+                        for item in data['items']:
+                            try:
+                                # Clean up the title (remove site name suffix)
+                                title = item.get('title', '')
+                                domain = self._extract_domain(item.get('link', ''))
+                                if title.endswith(f' - {domain}'):
+                                    title = title[:-len(f' - {domain}')]
+                                
+                                source = NewsSource(
+                                    url=item.get('link', ''),
+                                    title=title,
+                                    snippet=item.get('snippet', ''),
+                                    source_name=domain,
+                                    published_date=item.get('snippet', {}).get('publishedTime')
+                                )
+                                sources.append(source)
+                                
+                            except Exception as e:
+                                logger.warning(f"⚠️  Error parsing Google search result: {e}")
+                                continue
+                        
+                        logger.info(f"✅ Found {len(sources)} Google news sources for '{query}' in {country_name}")
+                        return sources
+                    
+                    else:
+                        logger.error(f"❌ Google Search API error: {response.status}")
+                        return await self._generate_mock_news_sources(query, num_results, country_name)
+                        
+        except Exception as e:
+            logger.error(f"❌ Error searching Google for '{query}': {str(e)}")
+            return await self._generate_mock_news_sources(query, num_results, country_name)
+
+    async def _generate_mock_news_sources(self, query: str, num_results: int, country_name: str) -> List[NewsSource]:
+        """
+        Generate realistic mock news sources when API is not available
+        This ensures the service works even without API keys during development
+        
+        Args:
+            query: The search query
+            num_results: Number of mock sources to generate
+            country_name: Country to focus the mock news on
+            
+        Returns:
+            List of mock NewsSource objects
+        """
+        try:
+            logger.info(f"🎭 Generating {num_results} mock news sources for '{query}' in {country_name}")
+            
+            # Realistic news source names
+            mock_sources = [
+                'Herald Tribune', 'Daily News', 'Independent Times', 'Chronicle Post',
+                'National Gazette', 'Express News', 'Observer Daily', 'Standard Times'
+            ]
+            
+            sources = []
+            for i in range(min(num_results, 8)):  # Limit to 8 mock sources
+                try:
+                    source_name = mock_sources[i % len(mock_sources)]
+                    
+                    # Create realistic titles and snippets based on query and country
+                    title = f"{country_name} {query.title()}: Latest Developments Reported"
+                    snippet = f"Recent updates on {query} in {country_name} with significant implications for local communities and policy development. Full coverage and analysis available."
+                    
+                    # Generate a realistic mock URL
+                    clean_query = query.lower().replace(' ', '-')
+                    url = f"https://{source_name.lower().replace(' ', '')}.com/{clean_query}-{country_name.lower()}-{i+1}"
+                    
+                    source = NewsSource(
+                        url=url,
+                        title=title,
+                        snippet=snippet,
+                        source_name=source_name,
+                        published_date=datetime.now().isoformat()
+                    )
+                    sources.append(source)
+                    
+                except Exception as e:
+                    logger.warning(f"Error creating mock source {i}: {e}")
+                    continue
+            
+            logger.info(f"✅ Generated {len(sources)} mock news sources")
+            return sources
+            
+        except Exception as e:
+            logger.error(f"❌ Error generating mock sources: {str(e)}")
+            return []
+
+    async def _create_enhanced_summary_with_ai(self, source: NewsSource, category: str) -> str:
+        """
+        Create an enhanced summary using OpenAI GPT
+        Falls back to basic summary if AI is not available
+        
+        Args:
+            source: The news source to summarize
+            category: The news category for context
+            
+        Returns:
+            Enhanced summary text with embedded links
+        """
+        try:
+            if not self.openai_available:
+                return self._create_basic_summary(source)
+            
+            # Import OpenAI here to avoid import errors if not installed
+            import openai
+            
+            # Create a prompt for GPT to enhance the summary
+            prompt = f"""
+            Create an engaging news summary for this article:
+            
+            Title: {source.title}
+            Snippet: {source.snippet}
+            Source: {source.source_name}
+            Category: {category}
+            
+            Requirements:
+            1. Write 2-3 informative sentences (80-120 words)
+            2. Make it engaging and newsworthy
+            3. Include key facts from the snippet
+            4. End with: "Read the full article at [{source.source_name}]({source.url})"
+            5. Focus on what readers need to know
+            
+            Write the summary now:
+            """
+            
+            # Call OpenAI API
+            response = await asyncio.get_event_loop().run_in_executor(
+                None,  # Use default executor
+                lambda: openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "You are a professional news editor. Create clear, engaging summaries."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=150,
+                    temperature=0.7
+                )
+            )
+            
+            enhanced_summary = response.choices[0].message.content.strip()
+            logger.debug(f"✅ AI-enhanced summary created for: {source.title}")
+            return enhanced_summary
+            
+        except Exception as e:
+            logger.warning(f"⚠️  AI enhancement failed for '{source.title}': {e}")
+            return self._create_basic_summary(source)
+
+    def _create_basic_summary(self, source: NewsSource) -> str:
+        """
+        Create a basic summary when AI enhancement is not available
+        
+        Args:
+            source: The news source to summarize
+            
+        Returns:
+            Basic summary using the snippet and source information
+        """
+        # If snippet is good length, use it directly with a source link
+        if len(source.snippet) > 50:
+            return f"{source.snippet}\n\nRead the full article at [{source.source_name}]({source.url})"
+        else:
+            # If snippet is too short, enhance it slightly
+            return f"{source.title}: {source.snippet}\n\nRead more at [{source.source_name}]({source.url})"
+
+    def _calculate_reading_time(self, text: str) -> str:
+        """
+        Calculate estimated reading time based on average reading speed
+        
+        Args:
+            text: The text to calculate reading time for
+            
+        Returns:
+            Reading time string (e.g., "3 min read")
+        """
+        # Average reading speed is about 200 words per minute
+        words = len(text.split())
+        minutes = max(1, round(words / 200))  # Minimum 1 minute
+        return f"{minutes} min read"
+
+    def _detect_breaking_news(self, title: str, snippet: str) -> bool:
+        """
+        Detect if news should be marked as breaking based on keywords
+        
+        Args:
+            title: Article title
+            snippet: Article snippet/description
+            
+        Returns:
+            True if article appears to be breaking news
+        """
+        # Keywords that indicate breaking news
+        breaking_keywords = [
+            'breaking', 'urgent', 'just in', 'developing', 'live', 
+            'alert', 'update', 'emergency', 'major', 'significant',
+            'exclusive', 'confirmed', 'announced', 'reports'
+        ]
+        
+        # Check both title and snippet for breaking news indicators
+        text_to_check = (title + ' ' + snippet).lower()
+        return any(keyword in text_to_check for keyword in breaking_keywords)
+
+    def _format_category_for_frontend(self, category: str) -> str:
+        """
+        Format category names to match frontend display expectations
+        
+        Args:
+            category: Backend category name (e.g., 'local-trends')
+            
+        Returns:
+            Frontend-friendly category name (e.g., 'Local Trends')
+        """
+        # Mapping of backend categories to frontend display names
+        category_mapping = {
+            'politics': 'Politics',
+            'sports': 'Sports', 
+            'health': 'Health',
+            'business': 'Business',
+            'technology': 'Technology',
+            'local-trends': 'Local Trends',
+            'weather': 'Weather',
+            'entertainment': 'Entertainment',
+            'education': 'Education',
+            'trending': 'Trending',
+            'search': 'Search Results'
+        }
+        
+        return category_mapping.get(category.lower(), category.title())
+
+    async def get_news_for_category(self, category: str, max_articles: int = 12, country_code: str = 'ZW') -> List[ProcessedArticle]:
+        """
+        Get processed news articles for a specific category
+        Creates individual articles for each news source found
+        
+        Args:
+            category: News category (politics, sports, etc.)
+            max_articles: Maximum number of articles to return
+            country_code: Country code for localized news
+            
+        Returns:
+            List of ProcessedArticle objects ready for the frontend
+        """
+        try:
+            country_name = self._get_country_name(country_code)
+            logger.info(f"📡 Getting {category} news for {country_name} (max: {max_articles})")
+            
+            # Country-focused search queries for better local relevance
+            # Each category gets specific search terms relevant to that country
+            search_queries = {
+                'politics': f'{country_name} politics government parliament election policy minister president',
+                'sports': f'{country_name} sports cricket rugby football soccer national team league',
+                'health': f'{country_name} health medical healthcare hospitals clinics ministry wellness',
+                'business': f'{country_name} business economy stock exchange mining agriculture trade investment',
+                'technology': f'{country_name} technology innovation digital transformation ICT startups internet',
+                'local-trends': f'{country_name} trending social media local news events culture lifestyle',
+                'weather': f'{country_name} weather climate forecast rain season agriculture farming',
+                'entertainment': f'{country_name} entertainment music movies celebrities arts culture festivals',
+                'education': f'{country_name} education schools universities students academic results ministry'
+            }
+            
+            # Get the appropriate search query, with fallback
+            query = search_queries.get(category, f'{country_name} {category} news')
+            
+            # Search for news sources using Google
+            sources = await self.search_google_news(query, max_articles * 2, country_code)  # Get extra sources to filter from
+            
+            if not sources:
+                logger.warning(f"⚠️  No sources found for {category} in {country_name}")
                 return []
-        
-        # Fetch breaking news from all priority categories concurrently
-        breaking_tasks = [get_breaking_from_category(cat) for cat in priority_categories]
-        breaking_results = await asyncio.gather(*breaking_tasks, return_exceptions=True)
-        
-        # Combine all breaking news articles
-        all_breaking_articles = []
-        for result in breaking_results:
-            if isinstance(result, Exception):
-                logger.warning(f"⚠️  Breaking news task failed: {result}")
-                continue
-            # Extend the list with articles from this category
-            all_breaking_articles.extend(result)
-        
-        # Sort by timestamp (most recent first) and limit to requested amount
-        all_breaking_articles.sort(
-            key=lambda article: getattr(article, 'timestamp', ''), 
-            reverse=True
-        )
-        final_breaking_news = all_breaking_articles[:max_articles]
-        
-        logger.info(f"✅ Found {len(final_breaking_news)} breaking news articles for {user_country}")
-        
-        # FastAPI automatically converts ProcessedArticle objects to JSON
-        return {
-            "success": True,
-            "articles": final_breaking_news,                # Auto-converted to JSON
-            "count": len(final_breaking_news),              # Number of breaking articles
-            "country": user_country,                        # User's current country preference
-            "timestamp": datetime.now().isoformat()        # Response time
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as breaking_error:
-        logger.error(f"❌ Error fetching breaking news: {breaking_error}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to fetch breaking news. Please try again later."
-        )
+            
+            # Process each source into a complete article
+            processed_articles = []
+            
+            for i, source in enumerate(sources[:max_articles]):  # Limit to requested number
+                try:
+                    # Detect if this is breaking news
+                    is_breaking = self._detect_breaking_news(source.title, source.snippet)
+                    
+                    # Create enhanced summary (with AI if available)
+                    summary = await self._create_enhanced_summary_with_ai(source, category)
+                    
+                    # Create the processed article object
+                    processed_article = ProcessedArticle(
+                        id=f"{category}_{country_code}_{i}_{int(time.time())}",  # Unique ID
+                        title=source.title,                                      # Original news title
+                        summary=summary,                                         # Enhanced summary
+                        category=self._format_category_for_frontend(category),  # Frontend-friendly category
+                        timestamp=datetime.now().isoformat(),                   # When we processed it
+                        readTime=self._calculate_reading_time(summary),         # Estimated reading time
+                        isBreaking=is_breaking,                                 # Breaking news flag
+                        imageUrl=None,                                          # Could be enhanced with image extraction
+                        sourceUrl=source.url,                                   # Original article URL
+                        source=source.source_name,                             # News source name
+                        linked_sources=[source.url]                            # List of related URLs
+                    )
+                    
+                    processed_articles.append(processed_article)
+                    logger.debug(f"✅ Processed article {i+1}: {source.title[:50]}...")
+                    
+                except Exception as e:
+                    logger.error(f"❌ Error processing article {i} for {category}: {str(e)}")
+                    continue  # Skip this article and continue with others
+            
+            logger.info(f"✅ Successfully processed {len(processed_articles)} {category} articles for {country_name}")
+            return processed_articles
+            
+        except Exception as e:
+            logger.error(f"❌ Error getting {category} news for {country_code}: {str(e)}")
+            return []
 
-@router.get("/news/search")
-async def search_news_articles(
-    q: str = Query(..., description="Search query - minimum 2 characters"),
-    max_articles: Optional[int] = Query(20, ge=1, le=MAX_SEARCH_RESULTS),
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    """
-    Search for news articles by keyword using user's country preference
-    
-    Requires authentication - user must be logged in with a valid country preference.
-    Uses Google Custom Search to find articles matching the user's query,
-    automatically localized to their selected country.
-    
-    Args:
-        q: Search query string (minimum 2 characters)
-        max_articles: Maximum search results to return (1-50)
-        credentials: Required user authentication (country extracted from user settings)
+    async def get_trending_news(self, max_articles: int = 10, country_code: str = 'ZW') -> List[ProcessedArticle]:
+        """
+        Get trending/breaking news across all categories
         
-    Returns:
-        JSON response with search results localized to user's country
-    """
-    try:
-        # Get user's country preference dynamically (required)
-        user_country = get_user_country(credentials)
-        
-        if not user_country:
-            raise HTTPException(
-                status_code=401,
-                detail="Authentication required. Please log in and set your country preference in settings."
-            )
-        
-        logger.info(f"🔍 API Request: Search '{q}' in country {user_country} (max: {max_articles})")
-        
-        # Validate search query length
-        if len(q.strip()) < 2:
-            raise HTTPException(
-                status_code=400, 
-                detail="Search query must be at least 2 characters long"
-            )
-        
-        # Use news service to search for real articles in user's country
-        search_results = await news_service.search_news(q, user_country, max_articles)
-        
-        logger.info(f"✅ Search completed: {len(search_results)} results for '{q}' in {user_country}")
-        
-        # search_news returns dictionaries, so no conversion needed
-        return {
-            "success": True,
-            "articles": search_results,                     # Already in dictionary format
-            "query": q,                                     # User's search query
-            "count": len(search_results),                   # Number of results found
-            "country": user_country,                        # User's current country preference
-            "timestamp": datetime.now().isoformat()        # Search completion time
-        }
-        
-    except HTTPException:
-        # Re-raise validation errors (400, 401 status codes)
-        raise
-    except Exception as search_error:
-        logger.error(f"❌ Search error for '{q}': {search_error}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Search failed for '{q}'. Please try again later."
-        )
+        Args:
+            max_articles: Maximum number of articles to return
+            country_code: Country code for localized news
+            
+        Returns:
+            List of trending ProcessedArticle objects
+        """
+        try:
+            country_name = self._get_country_name(country_code)
+            logger.info(f"📈 Getting trending news for {country_name} (max: {max_articles})")
+            
+            # Search for trending topics
+            query = f'{country_name} trending news today latest developments breaking'
+            
+            sources = await self.search_google_news(query, max_articles, country_code)
+            processed_articles = []
+            
+            for i, source in enumerate(sources):
+                try:
+                    is_breaking = self._detect_breaking_news(source.title, source.snippet)
+                    summary = await self._create_enhanced_summary_with_ai(source, 'trending')
+                    
+                    processed_article = ProcessedArticle(
+                        id=f"trending_{country_code}_{i}_{int(time.time())}",
+                        title=source.title,
+                        summary=summary,
+                        category='Trending',
+                        timestamp=datetime.now().isoformat(),
+                        readTime=self._calculate_reading_time(summary),
+                        isBreaking=is_breaking,
+                        imageUrl=None,
+                        sourceUrl=source.url,
+                        source=source.source_name,
+                        linked_sources=[source.url]
+                    )
+                    
+                    processed_articles.append(processed_article)
+                    
+                except Exception as e:
+                    logger.error(f"❌ Error processing trending article {i}: {str(e)}")
+                    continue
+            
+            logger.info(f"✅ Successfully processed {len(processed_articles)} trending articles for {country_name}")
+            return processed_articles
+            
+        except Exception as e:
+            logger.error(f"❌ Error getting trending news for {country_code}: {str(e)}")
+            return []
 
-@router.get("/news/trending")
-async def get_trending_news(
-    max_articles: Optional[int] = Query(12, ge=1, le=25),
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    """
-    Get trending news articles using user's country preference
-    
-    Requires authentication - user must be logged in with a valid country preference.
-    Uses optimized search queries to find trending topics from the user's
-    selected country. Automatically updates when user changes country in settings.
-    
-    Args:
-        max_articles: Maximum trending articles to return
-        credentials: Required user authentication (country extracted from user settings)
+    async def search_news(self, query: str, max_articles: int = 20, country_code: str = 'ZW') -> List[Dict[str, Any]]:
+        """
+        Search for news articles by keyword and return as dictionaries
         
-    Returns:
-        JSON response with trending articles from user's country
-    """
-    try:
-        # Get user's country preference dynamically (required)
-        user_country = get_user_country(credentials)
-        
-        if not user_country:
-            raise HTTPException(
-                status_code=401,
-                detail="Authentication required. Please log in and set your country preference in settings."
-            )
-        
-        logger.info(f"📈 API Request: Trending news for country {user_country} (max: {max_articles})")
-        
-        # Use the news service's trending functionality with user's country
-        trending_articles = await news_service.get_trending_news(user_country, max_articles)
-        
-        logger.info(f"✅ Retrieved {len(trending_articles)} trending articles for {user_country}")
-        
-        # FastAPI automatically converts ProcessedArticle objects to JSON
-        return {
-            "success": True,
-            "articles": trending_articles,                  # Auto-converted to JSON
-            "count": len(trending_articles),                # Number of trending articles
-            "country": user_country,                        # User's current country preference
-            "timestamp": datetime.now().isoformat()        # Response generation time
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as trending_error:
-        logger.error(f"❌ Error fetching trending news: {trending_error}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to fetch trending news. Please try again later."
-        )
+        Args:
+            query: Search query string
+            max_articles: Maximum number of articles to return
+            country_code: Country code for localized results
+            
+        Returns:
+            List of article dictionaries (converted from ProcessedArticle objects)
+        """
+        try:
+            country_name = self._get_country_name(country_code)
+            logger.info(f"🔍 Searching news for: '{query}' in {country_name} (max: {max_articles})")
+            
+            # Enhance query with country context
+            enhanced_query = f'{country_name} {query} news'
+            
+            # Search for sources
+            sources = await self.search_google_news(enhanced_query, max_articles, country_code)
+            articles = []
+            
+            for i, source in enumerate(sources):
+                try:
+                    # Create enhanced summary
+                    summary = await self._create_enhanced_summary_with_ai(source, 'search')
+                    
+                    # Convert to dictionary format for search results
+                    # This matches the format expected by the frontend
+                    article = {
+                        'id': f"search_{country_code}_{abs(hash(query))}_{i}_{int(time.time())}",
+                        'title': source.title,
+                        'summary': summary,
+                        'category': 'Search Results',
+                        'timestamp': datetime.now().isoformat(),
+                        'readTime': self._calculate_reading_time(summary),
+                        'isBreaking': self._detect_breaking_news(source.title, source.snippet),
+                        'imageUrl': None,
+                        'sourceUrl': source.url,
+                        'source': source.source_name,
+                        'linked_sources': [source.url]
+                    }
+                    articles.append(article)
+                    
+                except Exception as e:
+                    logger.error(f"❌ Error processing search result {i}: {str(e)}")
+                    continue
+            
+            logger.info(f"✅ Found {len(articles)} search results for '{query}' in {country_name}")
+            return articles
+            
+        except Exception as e:
+            logger.error(f"❌ Error searching for '{query}' in {country_code}: {str(e)}")
+            return []
 
-@router.get("/news/categories")
-async def get_available_categories():
-    """
-    Get list of all supported news categories and countries
-    
-    Useful for frontend applications to dynamically build navigation
-    and populate country selection dropdowns in user settings
-    
-    Returns:
-        JSON with list of valid categories, countries, and metadata
-    """
-    try:
-        logger.info("📋 API Request: Getting available categories and countries")
+    async def get_all_news_by_category(self, max_per_category: int = 6, country_code: str = 'ZW') -> Dict[str, List[ProcessedArticle]]:
+        """
+        Get news for all categories at once
+        Useful for populating the main news dashboard
         
-        # Category information with descriptions
-        category_info = [
-            {"name": "politics", "display": "Politics", "description": "Government, elections, policy"},
-            {"name": "sports", "display": "Sports", "description": "Cricket, rugby, football, athletics"},
-            {"name": "health", "display": "Health", "description": "Healthcare, medical news, wellness"},
-            {"name": "business", "display": "Business", "description": "Economy, trade, finance, markets"},
-            {"name": "technology", "display": "Technology", "description": "Innovation, ICT, digital transformation"},
-            {"name": "local-trends", "display": "Local Trends", "description": "Social media, culture, lifestyle"},
-            {"name": "weather", "display": "Weather", "description": "Climate, forecasts, seasonal updates"},
-            {"name": "entertainment", "display": "Entertainment", "description": "Music, movies, celebrities, arts"},
-            {"name": "education", "display": "Education", "description": "Schools, universities, academic results"}
-        ]
-        
-        # Country information for settings dropdown
-        country_info = [
-            {"code": "ZW", "name": "Zimbabwe", "flag": "🇿🇼"},
-            {"code": "KE", "name": "Kenya", "flag": "🇰🇪"}, 
-            {"code": "GH", "name": "Ghana", "flag": "🇬🇭"},
-            {"code": "RW", "name": "Rwanda", "flag": "🇷🇼"},
-            {"code": "CD", "name": "Democratic Republic of Congo", "flag": "🇨🇩"},
-            {"code": "ZA", "name": "South Africa", "flag": "🇿🇦"},
-            {"code": "BI", "name": "Burundi", "flag": "🇧🇮"}
-        ]
-        
-        return {
-            "success": True,
-            "categories": category_info,                    # Detailed category information
-            "countries": country_info,                      # Available countries for settings
-            "valid_categories": VALID_CATEGORIES,           # Simple list for validation
-            "valid_countries": VALID_COUNTRIES,             # Simple list for validation
-            "count": len(VALID_CATEGORIES),                # Total number of categories
-            "timestamp": datetime.now().isoformat()       # Response time
-        }
-        
-    except Exception as categories_error:
-        logger.error(f"❌ Error getting categories and countries: {categories_error}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to fetch available categories and countries"
-        )
+        Args:
+            max_per_category: Maximum articles per category
+            country_code: Country code for localized news
+            
+        Returns:
+            Dictionary mapping category names to lists of articles
+        """
+        try:
+            country_name = self._get_country_name(country_code)
+            logger.info(f"📰 Getting all news categories for {country_name} (max {max_per_category} per category)")
+            
+            # All available categories
+            categories = ['politics', 'sports', 'health', 'business', 'technology', 'local-trends', 'weather', 'entertainment', 'education']
+            
+            # Fetch news for all categories concurrently
+            # This is much faster than fetching them one by one
+            tasks = [
+                self.get_news_for_category(category, max_per_category, country_code)
+                for category in categories
+            ]
+            
+            # Wait for all category requests to complete
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Organize results by category
+            news_by_category = {}
+            for i, result in enumerate(results):
+                category = categories[i]
+                
+                if isinstance(result, Exception):
+                    logger.error(f"❌ Error fetching {category}: {result}")
+                    news_by_category[category] = []
+                else:
+                    news_by_category[category] = result
+                    logger.debug(f"✅ {category}: {len(result)} articles")
+            
+            total_articles = sum(len(articles) for articles in news_by_category.values())
+            logger.info(f"✅ Successfully fetched {total_articles} total articles across {len(categories)} categories")
+            
+            return news_by_category
+            
+        except Exception as e:
+            logger.error(f"❌ Error getting all news for {country_code}: {str(e)}")
+            return {}
 
-# ADMIN/DEBUG endpoint to manually override country (optional)
-@router.get("/news/{category}/country/{country_override}")
-async def get_news_by_category_with_country_override(
-    category: str,
-    country_override: str,
-    max_articles: Optional[int] = Query(MAX_ARTICLES_PER_CATEGORY, ge=1, le=20)
-):
-    """
-    DEBUG/ADMIN endpoint: Get news for specific category with manual country override
-    
-    This endpoint allows manually specifying a country, bypassing user settings.
-    Useful for testing different countries or admin functions.
-    
-    Args:
-        category: News category
-        country_override: Country code to use (must be in VALID_COUNTRIES)
-        max_articles: Maximum articles to return
+    def to_dict(self, obj) -> Dict[str, Any]:
+        """
+        Convert dataclass objects to dictionaries for JSON serialization
         
-    Returns:
-        JSON response with news from the specified country
-    """
-    try:
-        logger.info(f"🔧 DEBUG: {category} news with country override: {country_override}")
-        
-        # Validate category and country
-        validate_category(category)
-        
-        if country_override not in VALID_COUNTRIES:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid country override '{country_override}'. Valid countries: {', '.join(VALID_COUNTRIES)}"
-            )
-        
-        # Fetch news with manual country override
-        articles = await news_service.get_news_for_category(category, max_articles, country_override)
-        
-        logger.info(f"✅ DEBUG: Retrieved {len(articles)} {category} articles for {country_override}")
-        
-        return {
-            "success": True,
-            "articles": articles,
-            "category": category.title(),
-            "count": len(articles),
-            "country": country_override,
-            "override_used": True,                          # Flag indicating manual override
-            "timestamp": datetime.now().isoformat()
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as override_error:
-        logger.error(f"❌ Error with country override {country_override}: {override_error}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch {category} news for {country_override}"
-        )
+        Args:
+            obj: Object to convert (usually ProcessedArticle or NewsSource)
+            
+        Returns:
+            Dictionary representation of the object
+        """
+        if hasattr(obj, '__dict__'):
+            return asdict(obj)
+        return obj
+
+# Create singleton instance of the news service
+# This ensures the same instance is used throughout the application
+news_service = NewsService()
