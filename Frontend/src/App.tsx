@@ -118,9 +118,9 @@
 
 // export default App
 
-
 // Frontend/src/App.tsx
-// Main application component with authentication and routing
+// Main application component with proper routing - WELCOME PAGE FIRST
+// FIXED: Welcome page is now the default, user data comes from database not hardcoded
 
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
@@ -131,13 +131,13 @@ import Home from './pages/home'
 import ViewProfile from './pages/ViewProfile'
 import Account from './pages/Account'
 import Settings from './pages/Settings'
-import Welcome from './pages/Welcome'  // Import our new Welcome page
-import { authService, type User } from './services/authService'  // Import authentication
+import Welcome from './pages/Welcome'
+import { authService, type User } from './services/authService'
 
-// Import global styles and layout styles
+// Import global styles
 import './index.css'
 
-// Define story interface for bottom bar
+// Define story interface for bottom bar functionality
 interface Story {
   id: string
   title: string
@@ -146,131 +146,187 @@ interface Story {
 }
 
 /**
- * ProtectedRoute component
- * This component protects routes that require authentication
- * If user is not logged in, redirects to welcome page
+ * Protected Route Component
+ * Only allows access to main app if user is authenticated
+ * Otherwise redirects to welcome page
  */
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const [isChecking, setIsChecking] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  
   useEffect(() => {
     const checkAuth = async () => {
-      // Check if user has a stored token
-      if (authService.isLoggedIn()) {
-        // Verify the token with the backend
-        const authResult = await authService.verifyAuth();
-        setIsAuthenticated(authResult.valid);
-      } else {
-        setIsAuthenticated(false);
+      try {
+        console.log('🔒 ProtectedRoute: Checking authentication...')
+        
+        // Check if user has a stored authentication token
+        if (authService.isLoggedIn()) {
+          console.log('🔑 ProtectedRoute: Token found, verifying with backend...')
+          
+          // Verify the token is still valid with the backend
+          const authResult = await authService.verifyAuth()
+          setIsAuthenticated(authResult.valid)
+          
+          if (authResult.valid) {
+            console.log('✅ ProtectedRoute: Authentication valid, allowing access')
+          } else {
+            console.log('❌ ProtectedRoute: Token invalid, redirecting to welcome')
+          }
+        } else {
+          console.log('🚫 ProtectedRoute: No token found, redirecting to welcome')
+          setIsAuthenticated(false)
+        }
+      } catch (error) {
+        console.error('💥 ProtectedRoute: Auth check failed:', error)
+        setIsAuthenticated(false)
+      } finally {
+        setIsChecking(false)
       }
-    };
-    
-    checkAuth();
-  }, []);
-  
-  // Show loading while checking authentication
-  if (isAuthenticated === null) {
+    }
+
+    checkAuth()
+  }, [])
+
+  // Show loading spinner while checking authentication
+  if (isChecking) {
     return (
       <div style={{ 
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
         height: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: '#1a1a1a',
         color: 'white',
-        fontFamily: 'Inter, sans-serif'
+        flexDirection: 'column',
+        gap: '20px'
       }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ 
-            width: '40px', 
-            height: '40px', 
-            border: '3px solid rgba(255,255,255,0.3)', 
-            borderTop: '3px solid white', 
-            borderRadius: '50%', 
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 1rem auto'
-          }}></div>
-          <p>Checking authentication...</p>
-        </div>
+        <div style={{ fontSize: '48px', animation: 'bounce 1s infinite' }}>🫖</div>
+        <div style={{ fontSize: '18px' }}>Checking authentication...</div>
       </div>
-    );
+    )
   }
-  
-  // If authenticated, render the protected content
-  // If not authenticated, redirect to welcome page
-  return isAuthenticated ? <>{children}</> : <Navigate to="/welcome" replace />;
+
+  // If authenticated, show protected content; otherwise redirect to welcome
+  return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />
 }
 
 function App() {
-  // State for the currently playing story in bottom bar
+  // State for bottom bar media player functionality
   const [currentStory, setCurrentStory] = useState<Story | null>(null)
   const [isBottomBarVisible, setIsBottomBarVisible] = useState(false)
   
-  // State for user authentication
+  // State for user authentication - gets REAL user data from database
   const [currentUser, setCurrentUser] = useState<User | null>(null)
-  
+  const [isLoadingUser, setIsLoadingUser] = useState(true)
+
   /**
-   * Check authentication status when app starts
-   * This ensures we have the current user information available
+   * Initialize authentication and get current user data from database
+   * This runs when the app starts and fetches REAL user info (not hardcoded)
    */
   useEffect(() => {
     const initializeAuth = async () => {
-      if (authService.isLoggedIn()) {
-        const authResult = await authService.verifyAuth();
-        if (authResult.valid) {
-          setCurrentUser(authResult.user);
-          console.log('✅ User authenticated:', authResult.user.username);
+      try {
+        console.log('🚀 App: Initializing authentication...')
+        
+        if (authService.isLoggedIn()) {
+          console.log('🔍 App: Token found, fetching user data from database...')
+          
+          // Get current user data from database via API call
+          const authResult = await authService.verifyAuth()
+          
+          if (authResult.valid && authResult.user) {
+            // Set REAL user data from database (not hardcoded!)
+            setCurrentUser(authResult.user)
+            console.log('✅ App: User data loaded from database:', {
+              id: authResult.user.id,
+              username: authResult.user.username,
+              email: authResult.user.email,
+              fullName: `${authResult.user.first_name} ${authResult.user.last_name}`,
+              country: authResult.user.country_of_interest,
+              lastLogin: authResult.user.last_login
+            })
+          } else {
+            console.log('❌ App: Authentication failed, clearing user data')
+            setCurrentUser(null)
+            // Clear invalid authentication data
+            await authService.logout()
+          }
         } else {
-          console.log('❌ Stored token is invalid');
-          setCurrentUser(null);
+          console.log('🔓 App: No authentication token found')
+          setCurrentUser(null)
         }
+      } catch (error) {
+        console.error('💥 App: Error during authentication initialization:', error)
+        setCurrentUser(null)
+        // Clear any corrupted authentication data
+        try {
+          await authService.logout()
+        } catch (logoutError) {
+          console.error('💥 App: Error during cleanup logout:', logoutError)
+        }
+      } finally {
+        setIsLoadingUser(false)
+        console.log('🏁 App: Authentication initialization complete')
       }
-    };
-    
-    initializeAuth();
-  }, []);
+    }
 
-  // Function to play a story (called when story card play button is clicked)
+    initializeAuth()
+  }, [])
+
+  /**
+   * Function to play a story (called when story card play button is clicked)
+   * This handles the bottom bar media player functionality
+   */
   const playStory = (story: Story) => {
-    console.log('Playing story:', story) // Debug log
+    console.log('🎵 App: Playing story:', story.title)
     setCurrentStory(story)
     setIsBottomBarVisible(true)
   }
 
-  // Function to close the bottom bar
+  /**
+   * Function to close the bottom bar media player
+   */
   const closeBottomBar = () => {
+    console.log('❌ App: Closing bottom bar media player')
     setIsBottomBarVisible(false)
-    // Delay clearing the story to allow animation to complete
+    // Delay clearing the story to allow close animation to complete
     setTimeout(() => setCurrentStory(null), 300)
   }
-  
+
   /**
    * Handle user logout
-   * This function is called from the Topbar or other components
+   * This clears user data and redirects to welcome page
    */
   const handleLogout = async () => {
     try {
-      console.log('🚪 Logging out user...');
-      await authService.logout();
-      setCurrentUser(null);
-      console.log('✅ User logged out successfully');
+      console.log('🚪 App: User logging out...')
+      
+      // Call backend logout and clear local storage
+      await authService.logout()
+      
+      // Clear user state
+      setCurrentUser(null)
+      
+      console.log('✅ App: Logout completed successfully')
     } catch (error) {
-      console.error('💥 Error during logout:', error);
+      console.error('💥 App: Error during logout:', error)
+      // Still clear user state even if logout API call fails
+      setCurrentUser(null)
     }
-  };
+  }
 
   return (
     <Router>
       <Routes>
-        {/* Welcome/Login page - accessible without authentication */}
-        <Route path="/welcome" element={<Welcome />} />
+        {/* FIXED: Welcome page is now the DEFAULT route that users see first */}
+        <Route path="/" element={<Welcome />} />
         
-        {/* All other routes require authentication */}
-        <Route path="/*" element={
+        {/* Login page alias - redirects to welcome */}
+        <Route path="/welcome" element={<Navigate to="/" replace />} />
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        
+        {/* Protected routes - require authentication to access */}
+        <Route path="/home" element={
           <ProtectedRoute>
             {/* Main application layout - only renders when authenticated */}
             <div className="app-container">
@@ -279,22 +335,22 @@ function App() {
               
               {/* Main content area */}
               <div className="main-content">
-                {/* Top header with search and profile - pass user and logout function */}
+                {/* Top header with search and profile - passes REAL user data */}
                 <Topbar 
                   currentUser={currentUser} 
                   onLogout={handleLogout}
                 />
                 
-                {/* Main page content where all pages are displayed */}
+                {/* Main page content area */}
                 <main className={`body-content ${isBottomBarVisible ? 'with-bottom-bar' : ''}`}>
                   <Routes>
-                    {/* Home page route - passes playStory function to handle story clicks */}
+                    {/* Home/Dashboard - default protected route */}
                     <Route 
-                      path="/" 
+                      path="/home" 
                       element={<Home onPlayStory={playStory} />} 
                     />
                     
-                    {/* Profile-related routes - pass current user information */}
+                    {/* Profile-related routes - pass REAL current user data from database */}
                     <Route 
                       path="/profile" 
                       element={<ViewProfile currentUser={currentUser} />} 
@@ -308,7 +364,7 @@ function App() {
                       element={<Settings currentUser={currentUser} />} 
                     />
 
-                    {/* News category routes (you can add these later) */}
+                    {/* News category routes */}
                     <Route path="/sip" element={
                       <div className="page-container">
                         <h1 className="page-title">🫖 General Sip</h1>
@@ -323,7 +379,7 @@ function App() {
                       </div>
                     } />
 
-                    {/* Search and Saved pages */}
+                    {/* Utility routes */}
                     <Route path="/search" element={
                       <div className="page-container">
                         <h1 className="page-title">🔍 Search</h1>
@@ -346,13 +402,13 @@ function App() {
                           <h1 className="error-title">Page Not Found</h1>
                           <p className="error-message">
                             The page you're looking for doesn't exist. 
-                            Head back to the homepage to continue reading the news.
+                            Head back to the home page to continue reading news.
                           </p>
                           <button 
                             className="error-button"
-                            onClick={() => window.location.href = '/'}
+                            onClick={() => window.location.href = '/home'}
                           >
-                            Go to Homepage
+                            Go to Home
                           </button>
                         </div>
                       </div>
@@ -370,6 +426,52 @@ function App() {
             </div>
           </ProtectedRoute>
         } />
+
+        {/* All other protected routes */}
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <div className="app-container">
+              <Sidebar />
+              <div className="main-content">
+                <Topbar currentUser={currentUser} onLogout={handleLogout} />
+                <main className="body-content">
+                  <ViewProfile currentUser={currentUser} />
+                </main>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/account" element={
+          <ProtectedRoute>
+            <div className="app-container">
+              <Sidebar />
+              <div className="main-content">
+                <Topbar currentUser={currentUser} onLogout={handleLogout} />
+                <main className="body-content">
+                  <Account currentUser={currentUser} />
+                </main>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <div className="app-container">
+              <Sidebar />
+              <div className="main-content">
+                <Topbar currentUser={currentUser} onLogout={handleLogout} />
+                <main className="body-content">
+                  <Settings currentUser={currentUser} />
+                </main>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } />
+
+        {/* Catch-all redirect to welcome for any unmatched routes */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   )
