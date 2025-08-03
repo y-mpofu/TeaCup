@@ -1,9 +1,9 @@
 // Frontend/src/pages/Welcome.tsx
-// Welcome page with login and registration functionality
+// Enhanced Welcome page that works with the new authentication gate in App.tsx
+// No longer needs to check existing auth since App.tsx handles all routing logic
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, User, Mail, Lock, UserPlus, LogIn, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Eye, EyeOff, User, Mail, Lock, UserPlus, LogIn, AlertCircle, Globe } from 'lucide-react';
 import { authService, type RegisterRequest } from '../services/authService';
 import '../styles/Welcome.css';
 
@@ -15,6 +15,7 @@ interface FormErrors {
   confirmPassword?: string;
   firstName?: string;
   lastName?: string;
+  country?: string;
   general?: string;
 }
 
@@ -30,11 +31,21 @@ interface RegisterForm {
   confirmPassword: string;
   firstName: string;
   lastName: string;
+  country: string;
 }
 
+// Country options for registration
+const COUNTRY_OPTIONS = [
+  { code: 'ZW', name: 'Zimbabwe', flag: '🇿🇼' },
+  { code: 'KE', name: 'Kenya', flag: '🇰🇪' },
+  { code: 'GH', name: 'Ghana', flag: '🇬🇭' },
+  { code: 'RW', name: 'Rwanda', flag: '🇷🇼' },
+  { code: 'CD', name: 'Democratic Republic of Congo', flag: '🇨🇩' },
+  { code: 'ZA', name: 'South Africa', flag: '🇿🇦' },
+  { code: 'BI', name: 'Burundi', flag: '🇧🇮' }
+];
+
 export default function Welcome() {
-  const navigate = useNavigate();
-  
   // State for switching between login and registration modes
   const [isLoginMode, setIsLoginMode] = useState(true);
   
@@ -50,7 +61,8 @@ export default function Welcome() {
     password: '',
     confirmPassword: '',
     firstName: '',
-    lastName: ''
+    lastName: '',
+    country: '' // User must select their country
   });
   
   // State for UI management
@@ -58,28 +70,6 @@ export default function Welcome() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
-  
-  /**
-   * Check if user is already logged in when component mounts
-   * If they are, redirect them to the home page
-   */
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      if (authService.isLoggedIn()) {
-        console.log('🔍 User already logged in, verifying with backend...');
-        
-        const authResult = await authService.verifyAuth();
-        if (authResult.valid) {
-          console.log('✅ User authentication verified, redirecting to home');
-          navigate('/');
-        } else {
-          console.log('❌ Stored token is invalid, staying on welcome page');
-        }
-      }
-    };
-    
-    checkAuthStatus();
-  }, [navigate]);
   
   /**
    * Validate login form data
@@ -135,6 +125,11 @@ export default function Welcome() {
       newErrors.lastName = 'Last name is required';
     }
     
+    // Check country selection
+    if (!registerForm.country) {
+      newErrors.country = 'Please select your country';
+    }
+    
     // Check password
     if (!registerForm.password) {
       newErrors.password = 'Password is required';
@@ -157,6 +152,7 @@ export default function Welcome() {
   
   /**
    * Handle login form submission
+   * On success, App.tsx will automatically detect the login and redirect
    */
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,20 +168,22 @@ export default function Welcome() {
     setIsLoading(true);
     
     try {
-      console.log('🔐 Attempting login...');
+      console.log('🔐 Welcome: Attempting login...');
       
       // Call the authentication service
       const result = await authService.login(loginForm.username, loginForm.password);
       
       if (result.success) {
-        console.log('✅ Login successful, redirecting to home page');
-        navigate('/');
+        console.log('✅ Welcome: Login successful - App.tsx will handle redirect');
+        // App.tsx will detect the authentication change and redirect automatically
+        // We trigger a page reload to ensure App.tsx re-runs its auth check
+        window.location.href = '/';
       } else {
         // Show the error message from the backend
         setErrors({ general: result.error.message });
       }
     } catch (error) {
-      console.error('💥 Unexpected login error:', error);
+      console.error('💥 Welcome: Unexpected login error:', error);
       setErrors({ general: 'An unexpected error occurred. Please try again.' });
     } finally {
       setIsLoading(false);
@@ -209,25 +207,26 @@ export default function Welcome() {
     setIsLoading(true);
     
     try {
-      console.log('📝 Attempting registration...');
+      console.log('📝 Welcome: Attempting registration...');
       
-      // Prepare registration data
-      const registrationData: RegisterRequest = {
+      // Prepare registration data with country preference
+      const registrationData: RegisterRequest & { country_of_interest: string } = {
         username: registerForm.username,
         email: registerForm.email,
         password: registerForm.password,
         first_name: registerForm.firstName,
-        last_name: registerForm.lastName
+        last_name: registerForm.lastName,
+        country_of_interest: registerForm.country // Include country selection
       };
       
       // Call the authentication service
       const result = await authService.register(registrationData);
       
       if (result.success) {
-        console.log('✅ Registration successful');
+        console.log('✅ Welcome: Registration successful');
         
         // Show success message and switch to login mode
-        alert('Registration successful! You can now log in with your credentials.');
+        alert(`Registration successful! Welcome to TeaCup. You can now log in with your credentials.`);
         setIsLoginMode(true);
         
         // Pre-fill login form with the registered username
@@ -243,177 +242,177 @@ export default function Welcome() {
           password: '',
           confirmPassword: '',
           firstName: '',
-          lastName: ''
+          lastName: '',
+          country: ''
         });
       } else {
         // Show the error message from the backend
         setErrors({ general: result.error.message });
       }
     } catch (error) {
-      console.error('💥 Unexpected registration error:', error);
+      console.error('💥 Welcome: Unexpected registration error:', error);
       setErrors({ general: 'An unexpected error occurred. Please try again.' });
     } finally {
       setIsLoading(false);
     }
   };
-  
-  /**
-   * Switch between login and registration modes
-   */
-  const toggleMode = () => {
-    setIsLoginMode(!isLoginMode);
-    setErrors({}); // Clear any existing errors
-    setShowPassword(false);
-    setShowConfirmPassword(false);
-  };
-  
+
   /**
    * Handle input changes for login form
    */
-  const handleLoginInputChange = (field: keyof LoginForm, value: string) => {
+  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setLoginForm(prev => ({
       ...prev,
-      [field]: value
+      [name]: value
     }));
     
-    // Clear field-specific error when user starts typing
-    if (errors[field]) {
+    // Clear error for this field when user starts typing
+    if (errors[name as keyof FormErrors]) {
       setErrors(prev => ({
         ...prev,
-        [field]: undefined
+        [name]: undefined
       }));
     }
   };
-  
+
   /**
    * Handle input changes for registration form
    */
-  const handleRegisterInputChange = (field: keyof RegisterForm, value: string) => {
+  const handleRegisterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
     setRegisterForm(prev => ({
       ...prev,
-      [field]: value
+      [name]: value
     }));
     
-    // Clear field-specific error when user starts typing
-    if (errors[field]) {
+    // Clear error for this field when user starts typing
+    if (errors[name as keyof FormErrors]) {
       setErrors(prev => ({
         ...prev,
-        [field]: undefined
+        [name]: undefined
       }));
     }
   };
 
   return (
     <div className="welcome-container">
-      {/* Background with TeaCup branding */}
-      <div className="welcome-background">
-        <div className="logo-block">
-        <div className="logo-title-row">
-            <img
-            src="./TeaCup_Logo.png"
-            className="section-icon"
-            width={200}
-            height={200}
-            />
-            <h1 className="brand-title">TeaCup</h1>
-        </div>
-        
-        <p className="brand-subtitle">
-            News that finds you. Bringing verified, real-time stories to your doorstep
-        </p>
-        </div>
+      {/* Background decoration */}
+      <div className="welcome-bg">
+        <div className="teacup-pattern">🫖</div>
       </div>
-      
-      {/* Main form section */}
-      <div className="form-section">
-        <div className="form-container">
-          {/* Form header */}
-          <div className="form-header">
-            <h2 className="form-title">
-              {isLoginMode ? 'Welcome Back' : 'Join TeaCup'}
-            </h2>
-            <p className="form-subtitle">
-              {isLoginMode 
-                ? 'Sign in to continue reading the latest news' 
-                : 'Create your account to get started'
-              }
-            </p>
+
+      {/* Main content */}
+      <div className="welcome-content">
+        {/* Header */}
+        <div className="welcome-header">
+          <div className="logo">
+            <image className="logo-icon">
+                <img src="/TeaCup_Logo.png" alt="TeaCup Logo"
+                width={200} height={200}
+                />
+            </image>
           </div>
-          
-          {/* Error message display */}
+          <span className='logo-text'>TeaCup</span>
+          <p>News that finds you. Bringing verified, real-time stories to your doorstep.</p>
+        </div>
+
+        {/* Authentication Form */}
+        <div className="auth-card">
+          {/* Mode Toggle */}
+          <div className="auth-toggle">
+            <button
+              type="button"
+              className={`toggle-btn ${isLoginMode ? 'active' : ''}`}
+              onClick={() => {
+                setIsLoginMode(true);
+                setErrors({});
+              }}
+            >
+              <LogIn size={18} />
+              Sign In
+            </button>
+            <button
+              type="button"
+              className={`toggle-btn ${!isLoginMode ? 'active' : ''}`}
+              onClick={() => {
+                setIsLoginMode(false);
+                setErrors({});
+              }}
+            >
+              <UserPlus size={18} />
+              Create Account
+            </button>
+          </div>
+
+          {/* General Error Message */}
           {errors.general && (
             <div className="error-banner">
-              <AlertCircle size={20} />
-              <span>{errors.general}</span>
+              <AlertCircle size={18} />
+              {errors.general}
             </div>
           )}
-          
+
           {/* Login Form */}
           {isLoginMode ? (
             <form onSubmit={handleLogin} className="auth-form">
-              {/* Username/Email field */}
               <div className="form-group">
-                <label htmlFor="username" className="form-label">
-                  Username or Email
-                </label>
+                <label htmlFor="username">Username or Email</label>
                 <div className="input-wrapper">
-                  <User size={20} className="input-icon" />
+                  <User size={18} className="input-icon" />
                   <input
-                    id="username"
                     type="text"
+                    id="username"
+                    name="username"
                     value={loginForm.username}
-                    onChange={(e) => handleLoginInputChange('username', e.target.value)}
-                    placeholder="Enter your username or email"
+                    onChange={handleLoginChange}
                     className={`form-input ${errors.username ? 'error' : ''}`}
+                    placeholder="Enter your username or email"
                     disabled={isLoading}
                   />
                 </div>
-                {errors.username && (
-                  <span className="error-text">{errors.username}</span>
-                )}
+                {errors.username && <span className="error-text">{errors.username}</span>}
               </div>
-              
-              {/* Password field */}
+
               <div className="form-group">
-                <label htmlFor="password" className="form-label">
-                  Password
-                </label>
+                <label htmlFor="password">Password</label>
                 <div className="input-wrapper">
-                  <Lock size={20} className="input-icon" />
+                  <Lock size={18} className="input-icon" />
                   <input
-                    id="password"
                     type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
                     value={loginForm.password}
-                    onChange={(e) => handleLoginInputChange('password', e.target.value)}
-                    placeholder="Enter your password"
+                    onChange={handleLoginChange}
                     className={`form-input ${errors.password ? 'error' : ''}`}
+                    placeholder="Enter your password"
                     disabled={isLoading}
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
                     className="password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
                   >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {errors.password && (
-                  <span className="error-text">{errors.password}</span>
-                )}
+                {errors.password && <span className="error-text">{errors.password}</span>}
               </div>
-              
-              {/* Login button */}
+
               <button
                 type="submit"
-                className="submit-button"
+                className="auth-submit-btn"
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <span className="loading-spinner"></span>
+                  <>
+                    <div className="loading-spinner"></div>
+                    Signing In...
+                  </>
                 ) : (
                   <>
-                    <LogIn size={20} />
+                    <LogIn size={18} />
                     Sign In
                   </>
                 )}
@@ -422,187 +421,192 @@ export default function Welcome() {
           ) : (
             /* Registration Form */
             <form onSubmit={handleRegister} className="auth-form">
-              {/* Name fields row */}
+              {/* Name Fields */}
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="firstName" className="form-label">
-                    First Name
-                  </label>
-                  <input
-                    id="firstName"
-                    type="text"
-                    value={registerForm.firstName}
-                    onChange={(e) => handleRegisterInputChange('firstName', e.target.value)}
-                    placeholder="First name"
-                    className={`form-input ${errors.firstName ? 'error' : ''}`}
-                    disabled={isLoading}
-                  />
-                  {errors.firstName && (
-                    <span className="error-text">{errors.firstName}</span>
-                  )}
+                  <label htmlFor="firstName">First Name</label>
+                  <div className="input-wrapper">
+                    <User size={18} className="input-icon" />
+                    <input
+                      type="text"
+                      id="firstName"
+                      name="firstName"
+                      value={registerForm.firstName}
+                      onChange={handleRegisterChange}
+                      className={`form-input ${errors.firstName ? 'error' : ''}`}
+                      placeholder="First name"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  {errors.firstName && <span className="error-text">{errors.firstName}</span>}
                 </div>
-                
+
                 <div className="form-group">
-                  <label htmlFor="lastName" className="form-label">
-                    Last Name
-                  </label>
-                  <input
-                    id="lastName"
-                    type="text"
-                    value={registerForm.lastName}
-                    onChange={(e) => handleRegisterInputChange('lastName', e.target.value)}
-                    placeholder="Last name"
-                    className={`form-input ${errors.lastName ? 'error' : ''}`}
-                    disabled={isLoading}
-                  />
-                  {errors.lastName && (
-                    <span className="error-text">{errors.lastName}</span>
-                  )}
+                  <label htmlFor="lastName">Last Name</label>
+                  <div className="input-wrapper">
+                    <User size={18} className="input-icon" />
+                    <input
+                      type="text"
+                      id="lastName"
+                      name="lastName"
+                      value={registerForm.lastName}
+                      onChange={handleRegisterChange}
+                      className={`form-input ${errors.lastName ? 'error' : ''}`}
+                      placeholder="Last name"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  {errors.lastName && <span className="error-text">{errors.lastName}</span>}
                 </div>
               </div>
-              
-              {/* Username field */}
+
+              {/* Username Field */}
               <div className="form-group">
-                <label htmlFor="regUsername" className="form-label">
-                  Username
-                </label>
+                <label htmlFor="regUsername">Username</label>
                 <div className="input-wrapper">
-                  <User size={20} className="input-icon" />
+                  <User size={18} className="input-icon" />
                   <input
+                    type="text"
                     id="regUsername"
-                    type="text"
+                    name="username"
                     value={registerForm.username}
-                    onChange={(e) => handleRegisterInputChange('username', e.target.value)}
-                    placeholder="Choose a username"
+                    onChange={handleRegisterChange}
                     className={`form-input ${errors.username ? 'error' : ''}`}
+                    placeholder="Choose a username"
                     disabled={isLoading}
                   />
                 </div>
-                {errors.username && (
-                  <span className="error-text">{errors.username}</span>
-                )}
+                {errors.username && <span className="error-text">{errors.username}</span>}
               </div>
-              
-              {/* Email field */}
+
+              {/* Email Field */}
               <div className="form-group">
-                <label htmlFor="email" className="form-label">
-                  Email
-                </label>
+                <label htmlFor="email">Email Address</label>
                 <div className="input-wrapper">
-                  <Mail size={20} className="input-icon" />
+                  <Mail size={18} className="input-icon" />
                   <input
-                    id="email"
                     type="email"
+                    id="email"
+                    name="email"
                     value={registerForm.email}
-                    onChange={(e) => handleRegisterInputChange('email', e.target.value)}
-                    placeholder="Enter your email"
+                    onChange={handleRegisterChange}
                     className={`form-input ${errors.email ? 'error' : ''}`}
+                    placeholder="Enter your email"
                     disabled={isLoading}
                   />
                 </div>
-                {errors.email && (
-                  <span className="error-text">{errors.email}</span>
-                )}
+                {errors.email && <span className="error-text">{errors.email}</span>}
               </div>
-              
-              {/* Password field */}
+
+              {/* Country Selection */}
               <div className="form-group">
-                <label htmlFor="regPassword" className="form-label">
-                  Password
-                </label>
+                <label htmlFor="country">Country</label>
                 <div className="input-wrapper">
-                  <Lock size={20} className="input-icon" />
-                  <input
-                    id="regPassword"
-                    type={showPassword ? 'text' : 'password'}
-                    value={registerForm.password}
-                    onChange={(e) => handleRegisterInputChange('password', e.target.value)}
-                    placeholder="Create a password"
-                    className={`form-input ${errors.password ? 'error' : ''}`}
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="password-toggle"
+                  <Globe size={18} className="input-icon" />
+                  <select
+                    id="country"
+                    name="country"
+                    value={registerForm.country}
+                    onChange={handleRegisterChange}
+                    className={`form-input form-select ${errors.country ? 'error' : ''}`}
                     disabled={isLoading}
                   >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
+                    <option value="">Select your country</option>
+                    {COUNTRY_OPTIONS.map(country => (
+                      <option key={country.code} value={country.code}>
+                        {country.flag} {country.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                {errors.password && (
-                  <span className="error-text">{errors.password}</span>
-                )}
-              </div>
-              
-              {/* Confirm password field */}
-              <div className="form-group">
-                <label htmlFor="confirmPassword" className="form-label">
-                  Confirm Password
-                </label>
-                <div className="input-wrapper">
-                  <Lock size={20} className="input-icon" />
-                  <input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={registerForm.confirmPassword}
-                    onChange={(e) => handleRegisterInputChange('confirmPassword', e.target.value)}
-                    placeholder="Confirm your password"
-                    className={`form-input ${errors.confirmPassword ? 'error' : ''}`}
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="password-toggle"
-                    disabled={isLoading}
-                  >
-                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
+                {errors.country && <span className="error-text">{errors.country}</span>}
+                <div className="field-hint">
+                  This helps us provide relevant local news for your region
                 </div>
-                {errors.confirmPassword && (
-                  <span className="error-text">{errors.confirmPassword}</span>
-                )}
               </div>
-              
-              {/* Register button */}
+
+              {/* Password Fields */}
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="regPassword">Password</label>
+                  <div className="input-wrapper">
+                    <Lock size={18} className="input-icon" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      id="regPassword"
+                      name="password"
+                      value={registerForm.password}
+                      onChange={handleRegisterChange}
+                      className={`form-input ${errors.password ? 'error' : ''}`}
+                      placeholder="Create password"
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={isLoading}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.password && <span className="error-text">{errors.password}</span>}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="confirmPassword">Confirm Password</label>
+                  <div className="input-wrapper">
+                    <Lock size={18} className="input-icon" />
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      value={registerForm.confirmPassword}
+                      onChange={handleRegisterChange}
+                      className={`form-input ${errors.confirmPassword ? 'error' : ''}`}
+                      placeholder="Confirm password"
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      disabled={isLoading}
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
+                </div>
+              </div>
+
               <button
                 type="submit"
-                className="submit-button"
+                className="auth-submit-btn"
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <span className="loading-spinner"></span>
+                  <>
+                    <div className="loading-spinner"></div>
+                    Creating Account...
+                  </>
                 ) : (
                   <>
-                    <UserPlus size={20} />
+                    <UserPlus size={18} />
                     Create Account
                   </>
                 )}
               </button>
             </form>
           )}
-          
-          {/* Mode toggle */}
-          <div className="form-footer">
-            <p>
-              {isLoginMode ? "Don't have an account? " : "Already have an account? "}
-              <button
-                type="button"
-                onClick={toggleMode}
-                className="toggle-button"
-                disabled={isLoading}
-              >
-                {isLoginMode ? 'Sign up' : 'Sign in'}
-              </button>
-            </p>
-          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="welcome-footer">
+          <p>🌍 Serving news from across Africa</p>
+          <p>Stay informed with TeaCup's personalized news experience</p>
         </div>
       </div>
     </div>
   );
 }
-
-
-
-
