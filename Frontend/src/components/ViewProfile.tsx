@@ -1,101 +1,153 @@
-import React from 'react'
-import '../styles/pages.css'
+// Frontend/src/pages/ViewProfile.tsx
+// Fixed ViewProfile component interface to accept currentUser prop
 
-export default function ViewProfile() {
-  return (
-    <div className="page-container">
-      {/* Page header */}
-      <div className="page-header">
-        <h1 className="page-title">My Profile</h1>
-        <p className="page-subtitle">View and manage your profile information</p>
+import React from 'react';
+import { User, Mail, Calendar, MapPin, Clock, Shield, Settings as SettingsIcon } from 'lucide-react';
+import { getCountryName, getCountryFlag } from '../services/authService';
+import type { User as AuthUser } from '../services/authService';
+import '../styles/pages.css';
+
+// Define the component props interface - receives real user data
+interface ViewProfileProps {
+  currentUser: AuthUser | null;  // Real user data from App.tsx authentication
+}
+
+/**
+ * ViewProfile component that displays user profile information
+ * Now properly typed to receive currentUser prop from App.tsx
+ */
+export default function ViewProfile({ currentUser }: ViewProfileProps) {
+  
+  /**
+   * Format date for display
+   * Converts ISO date string to readable format
+   */
+  const formatDate = (dateString: string): string => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Unknown';
+    }
+  };
+
+  /**
+   * Get user's full name from database data
+   */
+  const getUserFullName = (): string => {
+    if (!currentUser) return 'Loading...';
+    
+    const firstName = currentUser.first_name?.trim() || '';
+    const lastName = currentUser.last_name?.trim() || '';
+    
+    if (firstName && lastName) {
+      return `${firstName} ${lastName}`;
+    } else if (firstName) {
+      return firstName;
+    } else {
+      return currentUser.username || 'User';
+    }
+  };
+
+  /**
+   * Get user initials for avatar display
+   */
+  const getUserInitials = (): string => {
+    if (!currentUser) return 'U';
+    
+    const firstInitial = currentUser.first_name?.charAt(0)?.toUpperCase() || '';
+    const lastInitial = currentUser.last_name?.charAt(0)?.toUpperCase() || '';
+    
+    return firstInitial + lastInitial || currentUser.username?.charAt(0)?.toUpperCase() || 'U';
+  };
+
+  // Show loading state if no user data
+  if (!currentUser) {
+    return (
+      <div className="profile-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading profile...</p>
       </div>
+    );
+  }
 
-      {/* Profile content */}
-      <div className="profile-content">
-        {/* Profile picture section */}
-        <div className="profile-picture-section">
-          <div className="large-avatar">
-            <span className="large-initial">JD</span>
+  return (
+    <div className="view-profile-page">
+      <div className="profile-container">
+        {/* Profile Header */}
+        <div className="profile-header">
+          <div className="profile-avatar">
+            {currentUser.profile_picture ? (
+              <img 
+                src={currentUser.profile_picture} 
+                alt={`${getUserFullName()}'s profile`}
+                className="avatar-image"
+              />
+            ) : (
+              <div className="avatar-placeholder">
+                {getUserInitials()}
+              </div>
+            )}
           </div>
-          <button className="change-picture-btn">
-             Change Picture
-          </button>
-        </div>
-
-        {/* User information cards */}
-        <div className="info-grid">
-          {/* Personal Information Card */}
-          <div className="info-card">
-            <h3 className="card-title">Personal Information</h3>
-            <div className="info-item">
-              <label>Full Name</label>
-              <p>John Doe</p>
-            </div>
-            <div className="info-item">
-              <label>Email</label>
-              <p>john@example.com</p>
-            </div>
-            <div className="info-item">
-              <label>Phone</label>
-              <p>+1 (555) 123-4567</p>
-            </div>
-            <div className="info-item">
-              <label>Location</label>
-              <p>Harare, Zimbabwe</p>
-            </div>
-          </div>
-
-          {/* News Preferences Card */}
-          <div className="info-card">
-            <h3 className="card-title">News Preferences</h3>
-            <div className="info-item">
-              <label>Favorite Categories</label>
-              <div className="preference-tags">
-                <span className="tag">Politics</span>
-                <span className="tag">Sports</span>
-                <span className="tag">Technology</span>
-              </div>
-            </div>
-            <div className="info-item">
-              <label>Language</label>
-              <p>English</p>
-            </div>
-            <div className="info-item">
-              <label>Reading Time</label>
-              <p>Morning (7:00 - 9:00 AM)</p>
-            </div>
-          </div>
-
-          {/* Account Statistics Card */}
-          <div className="info-card">
-            <h3 className="card-title">Account Statistics</h3>
-            <div className="stats-grid">
-              <div className="stat-item">
-                <span className="stat-number">127</span>
-                <span className="stat-label">Articles Read</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">23</span>
-                <span className="stat-label">Saved Articles</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">45</span>
-                <span className="stat-label">Days Active</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">8</span>
-                <span className="stat-label">Categories Followed</span>
-              </div>
+          
+          <div className="profile-info">
+            <h1 className="profile-name">{getUserFullName()}</h1>
+            <p className="profile-username">@{currentUser.username}</p>
+            <div className="profile-country">
+              <MapPin size={16} />
+              <span>
+                {getCountryFlag(currentUser.country_of_interest)} {getCountryName(currentUser.country_of_interest)}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="profile-actions">
-          <button className="btn-primary">Edit Profile</button>
-          <button className="btn-secondary">Download Data</button>
+        {/* Profile Details */}
+        <div className="profile-details">
+          <div className="detail-card">
+            <div className="detail-item">
+              <Mail size={18} />
+              <div className="detail-content">
+                <label>Email Address</label>
+                <span>{currentUser.email}</span>
+              </div>
+            </div>
+
+            <div className="detail-item">
+              <Calendar size={18} />
+              <div className="detail-content">
+                <label>Member Since</label>
+                <span>{formatDate(currentUser.created_at)}</span>
+              </div>
+            </div>
+
+            <div className="detail-item">
+              <Clock size={18} />
+              <div className="detail-content">
+                <label>Last Login</label>
+                <span>{formatDate(currentUser.last_login)}</span>
+              </div>
+            </div>
+
+            <div className="detail-item">
+              <Shield size={18} />
+              <div className="detail-content">
+                <label>Account Status</label>
+                <span className={`status ${currentUser.is_active ? 'active' : 'inactive'}`}>
+                  {currentUser.is_active ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
