@@ -269,9 +269,9 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
 
       // First, tell the backend to refresh its data
       const refreshResult = await newsApiService.refreshBackendNews();
-      
-      if (!refreshResult.success) {
-        throw new Error(refreshResult.message);
+
+      if (!refreshResult) {
+        throw new Error("Failed to refresh backend news");
       }
 
       console.log("✅ Backend refresh completed, now fetching updated data");
