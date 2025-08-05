@@ -1,6 +1,7 @@
 // Frontend/src/services/newsApiService.ts
 // Updated news API service - requires authentication, no country defaults
 
+import { abort } from 'process';
 import { authService } from './authService';
 
 // NewsArticle interface matching backend ProcessedArticle structure
@@ -136,6 +137,93 @@ export class NewsApiService {
       return false;
     }
   }
+
+/**
+ * Triggers backend to refresh its news data cache and fetch fresh articles
+ * Requires user authentication - calls backend refresh endpoint
+ * 
+ * @returns Promise<boolean> - true if refresh successful, false if failed
+ */
+async refreshBackendNews(): Promise<boolean> {
+  try {
+    // Step 1: Validate user authentication before proceeding
+    // Uses existing authentication validation method from the class
+    const authCheck = this.validateAuthentication();
+    if (!authCheck.valid) {
+      // If user not authenticated, log error and return failure
+      console.error("❌ Authentication required for backend refresh:", authCheck.message);
+      return false;
+    }
+
+    // Step 2: Log the refresh attempt for debugging purposes
+    // Follows existing logging pattern used in other service methods
+    console.log("🔄 Triggering backend news refresh...");
+
+    // Step 3: Set up request timeout to prevent hanging requests
+    // Creates abort controller for timeout management (matches existing pattern)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    // Step 4: Make HTTP POST request to backend refresh endpoint
+    // Uses existing base URL and authentication headers from the class
+    const response = await fetch(
+      `${this.baseUrl}/admin/refresh-news`, // Backend endpoint for news refresh
+      {
+        method: 'POST',                    // POST method since we're triggering server action
+        signal: controller.signal,         // Attach abort signal for timeout handling
+        headers: this.getAuthHeaders()     // Include authentication headers using class method
+      }
+    );
+
+    // Step 5: Clear timeout since request completed (prevents unnecessary abort)
+    clearTimeout(timeoutId);
+
+    // Step 6: Check if request was successful
+    if (response.ok) {
+      // Success case: log completion and return true
+      console.log("✅ Backend news refresh completed successfully");
+      return true;
+    } else {
+      // Step 7: Handle different types of HTTP errors
+      if (response.status === 401) {
+        // Authentication failed - clear stored auth and force re-login
+        console.error("❌ Authentication expired during refresh");
+        authService.logout(); // Clear invalid session data
+        throw new Error("Session expired. Please log in again.");
+      } else {
+        // Other server errors (500, 403, etc.)
+        console.error(`❌ Backend refresh failed with status: ${response.status}`);
+        throw new Error(`Server error: ${response.status}. Please try again later.`);
+      }
+    }
+
+  } catch (error) {
+    // Step 8: Handle different types of exceptions that can occur
+    if (error instanceof Error && error.name === 'AbortError') {
+      // Request timed out
+      console.error("❌ Backend refresh timed out");
+    } else if (error instanceof Error) {
+      // Other errors (network issues, server errors, etc.)
+      console.error("❌ Backend refresh failed:", error.message);
+    } else {
+      // Unexpected error types
+      console.error("❌ Unexpected error during backend refresh:", error);
+    }
+    
+    // Step 9: Return false for all error cases
+    // Calling components can check this return value to show appropriate UI
+    return false;
+  }
+}
+
+
+
+
+
+
+
+
+
 
   /**
    * Fetch news articles for a specific category using user's country
