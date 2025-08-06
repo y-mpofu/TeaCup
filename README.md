@@ -9,28 +9,26 @@ TeaCup is your personal AI-powered news companion that serves up the hottest, mo
 
 ## Why TeaCup?
 
-Just like tea brings people together and energizes communities, TeaCup connects you to the stories that matter most. We believe everyone deserves access to reliable, engaging news that fits their taste - whether you prefer it strong and bold or light and informative.
+TeaCup was born from observing how difficult it is, particularly in parts of Southern Africa, for people to easily access reliable, up-to-date, and locally relevant news. In many of these areas, news ecosystems are algorithmically skewed and poorly structured. This leaves communities disconnected from information that directly impacts their daily lives. And leaves people getting their news from things like unverified posts by people on social media. TeaCup is my direct response to that reality—a platform designed to make personalized, quality news accessible, engaging,  and impactful using artificial intelligence and a thoughtfully engineered system.
 
-**Our Promise**: No bitter aftertaste from fake news, just pure, authentic stories served at the perfect temperature.
+**Our Promise**: To bring verified, real-time stories to your doorstep.
 
 ---
-
-## What's Brewing
 
 ### **Smart News Curation**
 - Location-based stories that matter to your community
 - Personalized by your interests and reading habits
-- Daily "Morning Brew" - essential news to start your day
+- "Daily spills" - essential news to start your day
 
 ### **AI-Powered Audio Experience**
-- News narrated in multiple languages (English, Shona, Ndebele)
-- Podcast-style delivery perfect for your commute
-- Adjustable pace and tone preferences
+- News narrated in the English language
+- Podcast-style discussion option on your story of choice, perfect for your commute
 
 ### **Trust & Authenticity**
 - Built-in source verification
 - Clear flagging of questionable content
 - Transparency about news origins
+- Fake-News predictor, to predict false rumours that may come up for chosen news stories, and verification as to why that would be fake
 
 ### **Categories We Serve**
 - **Politics** - The decisions shaping your world
@@ -42,14 +40,13 @@ Just like tea brings people together and energizes communities, TeaCup connects 
 
 ---
 
-## The Tech Behind Your Cup
+## The Tech Behind the Cup
 
 ### Frontend (The Beautiful Interface)
 ```
 React with TypeScript - Modern, fast, reliable
 TailwindCSS - Clean, responsive design
 ```
-*Think of this as your tea cup - elegant, functional, comfortable to hold*
 
 ### Backend (The Brewing Process)
 ```
@@ -60,18 +57,17 @@ Firebase - Secure user accounts and real-time updates
 
 ### AI Engine (The Tea Master)
 ```
-GPT-3.5 Turbo - Intelligent summarization and insights
+GPT-3.5 Turbo - Intelligent summarization and insights, and text to speech
 Google/Bing News APIs - Fresh content from reliable sources
 BeautifulSoup - Local news harvesting
-Text-to-Speech - Multiple provider options for quality audio
+
 ```
-*Our master tea blender - knows exactly how to mix the perfect cup*
 
 ---
 
-## Brewing Schedule (Development Roadmap)
+## Development Roadmap
 
-### First Steep (MVP)
+### First version (MVP)
 - [ ] **News Harvesting System** - Web scraping for local sources
 - [ ] **AI Summarization** - GPT integration for story condensing
 - [ ] **User Interface** - Clean, intuitive React frontend
@@ -80,7 +76,7 @@ Text-to-Speech - Multiple provider options for quality audio
 - [ ] **Basic Personalization** - Category-based preferences
 - [ ] **Source Verification** - Basic credibility checking
 
-### Full Roast (Future Features)
+### Future Features
 - Advanced AI personalization
 - Community discussion features
 - Offline reading capabilities
@@ -113,45 +109,13 @@ TeaCup/
 
 ---
 
-## Getting Started (Setting Up Your Tea Station)
+## Getting Started
 
 ### Prerequisites
 - Node.js 18+ (for the frontend)
 - Python 3.9+ (for the backend)
 - A good internet connection (for fresh news)
 
-### Quick Setup
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/teacup
-
-# Install frontend dependencies
-cd teacup/frontend
-npm install
-
-# Install backend dependencies
-cd ../backend
-pip install -r requirements.txt
-
-# Start brewing (development mode)
-npm run dev  # Frontend
-python main.py  # Backend
-```
-
----
-
-## Contributing to TeaCup
-
-We welcome contributors who share our passion for accessible, reliable news! Whether you're fixing bugs, adding features, or improving documentation - every contribution helps brew a better experience.
-
-**How to Contribute:**
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
 
 ## Technical Configuration
 
