@@ -1,3 +1,180 @@
+// // src/App.tsx
+// // DEBUGGING VERSION - This will help us see exactly what's happening
+// // Replace your current App.tsx with this temporarily to diagnose the issue
+
+// import { useState, useEffect } from 'react'
+// import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+
+// // Import styles - making sure they load
+// import './index.css'
+
+// // Define the different app states for better UX
+// type AppState = 'checking' | 'unauthenticated' | 'authenticated' | 'server_down' | 'debug'
+
+// function App() {
+//   // === DEBUGGING STATE ===
+//   const [appState, setAppState] = useState<AppState>('debug') // Start in debug mode
+//   const [debugInfo, setDebugInfo] = useState<string[]>([])
+//   const [currentUser, setCurrentUser] = useState<any>(null)
+//   const [authError, setAuthError] = useState<string | null>(null)
+
+//   // Helper function to add debug messages
+//   const addDebugMessage = (message: string) => {
+//     console.log(message) // Also log to console
+//     setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`])
+//   }
+
+//   // === INITIAL DEBUGGING CHECK ===
+//   useEffect(() => {
+//     const debugInitialization = async () => {
+//       addDebugMessage('🔍 Starting app initialization...')
+      
+//       try {
+//         // Test 1: Check if basic imports work
+//         addDebugMessage('✅ React and useState working')
+        
+//         // Test 2: Check if we can import services
+//         addDebugMessage('🔄 Attempting to import authService...')
+        
+//         try {
+//           const { authService } = await import('./services/authService')
+//           addDebugMessage('✅ authService imported successfully')
+//         } catch (error) {
+//           addDebugMessage(`❌ authService import failed: ${error}`)
+//         }
+
+//         // Test 3: Check if we can import newsApiService
+//         addDebugMessage('🔄 Attempting to import newsApiService...')
+        
+//         try {
+//           const { newsApiService } = await import('./services/newsApiService')
+//           addDebugMessage('✅ newsApiService imported successfully')
+          
+//           // Test 4: Check backend connection
+//           addDebugMessage('🔄 Testing backend connection...')
+//           const isHealthy = await newsApiService.checkBackendHealth()
+//           addDebugMessage(`🏥 Backend health check: ${isHealthy ? '✅ Healthy' : '❌ Failed'}`)
+          
+//         } catch (error) {
+//           addDebugMessage(`❌ newsApiService import failed: ${error}`)
+//         }
+
+//         // Test 5: Check if we can import page components
+//         addDebugMessage('🔄 Attempting to import Welcome component...')
+        
+//         try {
+//           const Welcome = await import('./pages/Welcome')
+//           addDebugMessage('✅ Welcome component imported successfully')
+//         } catch (error) {
+//           addDebugMessage(`❌ Welcome component import failed: ${error}`)
+//         }
+
+//         addDebugMessage('🎯 All tests completed - check results above')
+        
+//       } catch (error) {
+//         addDebugMessage(`💥 Critical error: ${error}`)
+//       }
+//     }
+
+//     debugInitialization()
+//   }, [])
+
+//   // === RENDER DEBUG INTERFACE ===
+//   return (
+//     <div style={{
+//       backgroundColor: '#000000',
+//       color: '#ffffff',
+//       minHeight: '100vh',
+//       padding: '2rem',
+//       fontFamily: 'monospace'
+//     }}>
+//       <div style={{
+//         maxWidth: '800px',
+//         margin: '0 auto'
+//       }}>
+//         <h1 style={{ color: '#00ff00' }}>🔧 TeaCup Debug Mode</h1>
+        
+//         <div style={{
+//           backgroundColor: '#1a1a1a',
+//           padding: '1rem',
+//           borderRadius: '8px',
+//           marginBottom: '2rem'
+//         }}>
+//           <h2 style={{ color: '#ffff00' }}>Current Status:</h2>
+//           <p>App State: <strong style={{ color: '#00ffff' }}>{appState}</strong></p>
+//           <p>Current User: <strong style={{ color: '#00ffff' }}>{currentUser ? 'Loaded' : 'None'}</strong></p>
+//           <p>Auth Error: <strong style={{ color: '#ff6666' }}>{authError || 'None'}</strong></p>
+//         </div>
+
+//         <div style={{
+//           backgroundColor: '#1a1a1a',
+//           padding: '1rem',
+//           borderRadius: '8px',
+//           marginBottom: '2rem'
+//         }}>
+//           <h2 style={{ color: '#ffff00' }}>Debug Messages:</h2>
+//           <div style={{
+//             backgroundColor: '#000000',
+//             padding: '1rem',
+//             borderRadius: '4px',
+//             maxHeight: '400px',
+//             overflowY: 'auto',
+//             fontSize: '0.9rem'
+//           }}>
+//             {debugInfo.length === 0 ? (
+//               <p style={{ color: '#888888' }}>No debug messages yet...</p>
+//             ) : (
+//               debugInfo.map((message, index) => (
+//                 <div key={index} style={{ 
+//                   marginBottom: '0.5rem',
+//                   color: message.includes('❌') ? '#ff6666' : 
+//                          message.includes('✅') ? '#66ff66' : 
+//                          message.includes('🔄') ? '#ffaa00' : '#ffffff'
+//                 }}>
+//                   {message}
+//                 </div>
+//               ))
+//             )}
+//           </div>
+//         </div>
+
+//         <div style={{
+//           backgroundColor: '#1a1a1a',
+//           padding: '1rem',
+//           borderRadius: '8px'
+//         }}>
+//           <h2 style={{ color: '#ffff00' }}>Next Steps:</h2>
+//           <ol style={{ lineHeight: '1.6' }}>
+//             <li>Check the debug messages above for any ❌ errors</li>
+//             <li>Open browser Developer Tools (F12) and check Console tab</li>
+//             <li>Look for any red error messages in the console</li>
+//             <li>Once you identify the issue, replace this debug version with your original App.tsx</li>
+//           </ol>
+          
+//           <button 
+//             onClick={() => window.location.reload()}
+//             style={{
+//               backgroundColor: '#667eea',
+//               color: 'white',
+//               border: 'none',
+//               padding: '1rem 2rem',
+//               borderRadius: '8px',
+//               fontSize: '1rem',
+//               cursor: 'pointer',
+//               marginTop: '1rem'
+//             }}
+//           >
+//             🔄 Reload Page
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   )
+// }
+
+// export default App
+
+
 // src/App.tsx
 // Enhanced App.tsx with authentication gate - checks server health and user auth before rendering app components
 // Redirects to Welcome page if server is down or user is not authenticated

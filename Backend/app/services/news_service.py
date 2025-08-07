@@ -727,7 +727,6 @@
 
 
 
-
 # Backend/app/services/news_service.py
 # FIXED VERSION - Resolves Google API parsing errors
 
