@@ -518,12 +518,12 @@ VALID_CATEGORIES = [
 # Valid countries that users can select in their settings
 VALID_COUNTRIES = [
     'ZW',  # Zimbabwe
-    'KE',  # Kenya  
-    'GH',  # Ghana
-    'RW',  # Rwanda
-    'CD',  # Democratic Republic of Congo
-    'ZA',  # South Africa
-    'BI'   # Burundi
+    # 'KE',  # Kenya  
+    # 'GH',  # Ghana
+    # 'RW',  # Rwanda
+    # 'CD',  # Democratic Republic of Congo
+    # 'ZA',  # South Africa
+    # 'BI'   # Burundi
 ]
 
 # Create router and security instances

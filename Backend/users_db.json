@@ -10,7 +10,7 @@
       "country_of_interest": "ZW",
       "profile_picture": null,
       "created_at": "2025-08-03T11:20:54.420452",
-      "last_login": "2025-08-03T11:37:14.304970",
+      "last_login": "2025-08-18T13:59:51.615892",
       "is_active": true,
       "settings": {
         "notifications": {
@@ -86,6 +86,27 @@
       "created_at": "2025-08-03T11:37:14.305650",
       "expires_at": "2025-08-10T11:37:14.305632",
       "is_active": false
+    },
+    {
+      "session_id": "sess_PxVrND2p-p-t91fFoQ32IgSN-iTvSnBgzLrx7puwMs4",
+      "user_id": "1",
+      "created_at": "2025-08-17T16:52:30.048187",
+      "expires_at": "2025-08-24T16:52:30.048175",
+      "is_active": false
+    },
+    {
+      "session_id": "sess_7ettTqXjQhGa8s4PgQjzQ7UUMV3cJsapl1uwgWN4SAM",
+      "user_id": "1",
+      "created_at": "2025-08-18T13:58:34.118393",
+      "expires_at": "2025-08-25T13:58:34.118382",
+      "is_active": false
+    },
+    {
+      "session_id": "sess_IOsQaN9LWLtvwpJiyEMeR33b5eLIY-9Iz58q9t7PFLA",
+      "user_id": "1",
+      "created_at": "2025-08-18T13:59:51.623291",
+      "expires_at": "2025-08-25T13:59:51.623279",
+      "is_active": true
     }
   ]
 }

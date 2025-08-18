@@ -235,22 +235,22 @@
 
 
 
-
 // src/components/NewsCard.tsx
-// Enhanced news card with Spotify-style visual design and Pan-African aesthetic
+// FIXED: NewsCard component with working topbar color changes
+// Simplified event dispatch and improved color mapping
 
 import React from 'react'
 import { Clock, Bookmark, Share2, Play, Pause } from 'lucide-react'
-import type { NewsArticle } from '../data/mockNews'
+import type { NewsArticle } from '../services/newsApiService'
 
-// Define the props that this component expects
+// Define component props
 interface NewsCardProps {
   article: NewsArticle
   onReadStory?: (articleId: string) => void
   onSaveStory?: (articleId: string) => void
   onPlayAudio?: (articleId: string) => void
-  isPlaying?: boolean // Track if this story is currently playing
-  variant?: 'default' | 'hero' | 'compact' // Different card styles
+  isPlaying?: boolean
+  variant?: 'default' | 'hero' | 'compact'
 }
 
 export default function NewsCard({ 
@@ -262,66 +262,117 @@ export default function NewsCard({
   variant = 'default'
 }: NewsCardProps) {
   
-  // Get category color scheme (Pan-African inspired)
+  /**
+   * Get category-specific colors for news cards
+   * Each category has its own distinct color scheme
+   */
   const getCategoryColors = (category: string) => {
-    const colorMap: { [key: string]: { bg: string; accent: string; text: string } } = {
-      'Politics': { bg: 'bg-emerald-900', accent: 'border-emerald-500', text: 'text-emerald-300' },
-      'Local Trends': { bg: 'bg-slate-700', accent: 'border-slate-400', text: 'text-slate-200' },
-      'Health': { bg: 'bg-amber-900', accent: 'border-amber-500', text: 'text-amber-300' },
-      'Sports': { bg: 'bg-red-900', accent: 'border-red-500', text: 'text-red-300' },
-      'Business': { bg: 'bg-blue-900', accent: 'border-blue-500', text: 'text-blue-300' },
-      'Technology': { bg: 'bg-purple-900', accent: 'border-purple-500', text: 'text-purple-300' },
-      'Entertainment': { bg: 'bg-pink-900', accent: 'border-pink-500', text: 'text-pink-300' },
-      'Weather': { bg: 'bg-cyan-900', accent: 'border-cyan-500', text: 'text-cyan-300' },
-      'Education': { bg: 'bg-indigo-900', accent: 'border-indigo-500', text: 'text-indigo-300' }
+    const colorMap: { [key: string]: { bg: string; accent: string; text: string; hex: string } } = {
+      'Politics': { 
+        bg: 'bg-emerald-900', 
+        accent: 'border-emerald-500', 
+        text: 'text-emerald-300',
+        hex: '#064e3b' // Dark emerald for politics
+      },
+      'Local Trends': { 
+        bg: 'bg-slate-700', 
+        accent: 'border-slate-400', 
+        text: 'text-slate-200',
+        hex: '#334155' // Dark slate for local trends
+      },
+      'Health': { 
+        bg: 'bg-amber-900', 
+        accent: 'border-amber-500', 
+        text: 'text-amber-300',
+        hex: '#78350f' // Dark amber for health
+      },
+      'Sports': { 
+        bg: 'bg-red-900', 
+        accent: 'border-red-500', 
+        text: 'text-red-300',
+        hex: '#7f1d1d' // Dark red for sports
+      },
+      'Business': { 
+        bg: 'bg-blue-900', 
+        accent: 'border-blue-500', 
+        text: 'text-blue-300',
+        hex: '#1e3a8a' // Dark blue for business
+      },
+      'Technology': { 
+        bg: 'bg-purple-900', 
+        accent: 'border-purple-500', 
+        text: 'text-purple-300',
+        hex: '#581c87' // Dark purple for technology
+      },
+      'Entertainment': { 
+        bg: 'bg-pink-900', 
+        accent: 'border-pink-500', 
+        text: 'text-pink-300',
+        hex: '#831843' // Dark pink for entertainment
+      },
+      'Weather': { 
+        bg: 'bg-cyan-900', 
+        accent: 'border-cyan-500', 
+        text: 'text-cyan-300',
+        hex: '#164e63' // Dark cyan for weather
+      },
+      'Education': { 
+        bg: 'bg-indigo-900', 
+        accent: 'border-indigo-500', 
+        text: 'text-indigo-300',
+        hex: '#312e81' // Dark indigo for education
+      }
     }
-    return colorMap[category] || { bg: 'bg-gray-800', accent: 'border-gray-500', text: 'text-gray-300' }
+    
+    return colorMap[category] || { 
+      bg: 'bg-gray-800', 
+      accent: 'border-gray-500', 
+      text: 'text-gray-300',
+      hex: '#1f2937' // Default dark gray
+    }
   }
 
-  // Function to handle mouse entering the card
+  /**
+   * Handle mouse entering the card
+   * Sends color change event to topbar
+   */
   const handleMouseEnter = () => {
-    // Get the background color for this card's category
     const colors = getCategoryColors(article.category)
     
-    // Convert Tailwind CSS classes to actual hex color values
-    const colorMap: { [key: string]: string } = {
-      'bg-emerald-900': '#064e3b',   // Dark green for Politics
-      'bg-slate-700': '#334155',     // Dark gray for Local Trends
-      'bg-amber-900': '#78350f',     // Dark orange for Health
-      'bg-red-900': '#7f1d1d',       // Dark red for Sports
-      'bg-blue-900': '#1e3a8a',      // Dark blue for Business
-      'bg-purple-900': '#581c87',    // Dark purple for Technology
-      'bg-pink-900': '#831843',      // Dark pink for Entertainment
-      'bg-cyan-900': '#164e63',      // Dark cyan for Weather
-      'bg-indigo-900': '#312e81',    // Dark indigo for Education
-      'bg-gray-800': '#1f2937'       // Default dark gray
-    }
+    console.log(`🎨 NewsCard: Hovering ${article.category} card, sending color:`, colors.hex)
     
-    // Get the actual color value for this card's background
-    const actualColor = colorMap[colors.bg] || '#1f2937'
-    
-    // Send custom event to topbar with the card's color
-    const event = new CustomEvent('card-hover', {
-      detail: { color: actualColor }
+    // Create and dispatch custom event with color information
+    const colorEvent = new CustomEvent('card-hover', {
+      detail: { 
+        color: colors.hex,
+        category: article.category 
+      }
     })
-    window.dispatchEvent(event)
+    
+    window.dispatchEvent(colorEvent)
   }
 
-  // Function to handle mouse leaving the card
+  /**
+   * Handle mouse leaving the card
+   * Tells topbar to return to default color
+   */
   const handleMouseLeave = () => {
-    // Send event to tell topbar to return to original orange color
-    const event = new CustomEvent('card-leave')
-    window.dispatchEvent(event)
+    console.log('🎨 NewsCard: Left card, resetting topbar color')
+    
+    // Create and dispatch leave event
+    const leaveEvent = new CustomEvent('card-leave')
+    window.dispatchEvent(leaveEvent)
   }
 
-  // Handle when user clicks to read the story
+  /**
+   * Handle click events for different card actions
+   */
   const handleReadClick = () => {
     if (onReadStory) {
       onReadStory(article.id)
     }
   }
 
-  // Handle when user clicks to save the story
   const handleSaveClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (onSaveStory) {
@@ -329,7 +380,6 @@ export default function NewsCard({
     }
   }
 
-  // Handle when user clicks to play audio
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (onPlayAudio) {
@@ -337,6 +387,7 @@ export default function NewsCard({
     }
   }
 
+  // Get colors for this card's category
   const colors = getCategoryColors(article.category)
 
   // Hero variant for featured stories
@@ -345,10 +396,10 @@ export default function NewsCard({
       <div 
         className={`news-card-hero ${colors.bg} ${colors.accent} relative overflow-hidden group cursor-pointer`}
         onClick={handleReadClick}
-        onMouseEnter={handleMouseEnter}  // Send color to topbar when hovering
-        onMouseLeave={handleMouseLeave}  // Reset topbar color when leaving
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
-        {/* Background pattern overlay */}
+        {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="w-full h-full bg-gradient-to-br from-yellow-400 via-red-500 to-green-600"></div>
         </div>
@@ -362,7 +413,7 @@ export default function NewsCard({
           </div>
         )}
 
-        {/* Action buttons - moved to top right */}
+        {/* Action buttons */}
         <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
           <button 
             className="action-btn-hero" 
@@ -381,7 +432,7 @@ export default function NewsCard({
           </button>
         </div>
 
-        {/* Content */}
+        {/* Main content */}
         <div className="relative z-10 p-6 h-full flex flex-col justify-end">
           <div className="mb-4">
             <span className={`${colors.text} text-sm font-medium uppercase tracking-wide`}>
@@ -408,24 +459,24 @@ export default function NewsCard({
     )
   }
 
-  // Default card variant
+  // Default Spotify-style card variant
   return (
     <div 
       className={`news-card-spotify ${colors.bg} border-l-4 ${colors.accent} group`}
       onClick={handleReadClick}
-      onMouseEnter={handleMouseEnter}  // Send color to topbar when hovering
-      onMouseLeave={handleMouseLeave}  // Reset topbar color when leaving
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       role="button"
       tabIndex={0}
     >
       {/* Breaking news badge */}
       {article.isBreaking && (
         <div className="breaking-badge-spotify">
-           BREAKING
+          🔴 BREAKING
         </div>
       )}
 
-      {/* Main content area */}
+      {/* Main content */}
       <div className="p-4 flex-1">
         {/* Category tag */}
         <div className="mb-2">
@@ -455,7 +506,7 @@ export default function NewsCard({
           
           {/* Action buttons */}
           <div className="flex items-center gap-1">
-            {/* Play/Pause button with Spotify-style design */}
+            {/* Play/Pause button */}
             <button 
               className={`play-btn-spotify ${isPlaying ? 'playing' : ''}`}
               onClick={handlePlayClick}
@@ -468,6 +519,7 @@ export default function NewsCard({
               )}
             </button>
             
+            {/* Save button */}
             <button 
               className="action-btn-spotify" 
               onClick={handleSaveClick}
@@ -476,6 +528,7 @@ export default function NewsCard({
               <Bookmark size={14} />
             </button>
             
+            {/* Share button */}
             <button 
               className="action-btn-spotify" 
               onClick={(e) => e.stopPropagation()}

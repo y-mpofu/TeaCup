@@ -1,0 +1,7 @@
+.env
+.env.local
+*/.env
+*/.env.local
+.DS_Store
+*.log
+users_db.json
