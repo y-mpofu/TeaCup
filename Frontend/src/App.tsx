@@ -193,6 +193,7 @@ import ViewProfile from './pages/ViewProfile'
 import Account from './pages/Account'
 import Settings from './pages/Settings'
 import Welcome from './pages/Welcome'
+import NewsDialogue from './pages/news_dialogue'
 
 // Services
 import { authService, type User } from './services/authService'
@@ -445,6 +446,8 @@ function App() {
               
               {/* Redirect any unrecognized routes to home */}
               <Route path="*" element={<Navigate to="/" replace />} />
+              {/* route to news dialogue page */}
+              <Route path="/news/:id" element={<NewsDialogue />} />
             </Routes>
           </main>
         </div>

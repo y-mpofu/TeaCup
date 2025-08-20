@@ -1,0 +1,400 @@
+/* Frontend/src/styles/news-sidebar.css */
+/* NewsSidebar component styling */
+
+/* === MAIN SIDEBAR CONTAINER === */
+.news-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: fit-content;
+}
+
+/* === SIDEBAR SECTIONS === */
+.sidebar-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.sidebar-section:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+  padding: 1.5rem 1.5rem 0 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* === SOURCES SECTION === */
+.sources-section .section-title {
+  color: #60a5fa;
+}
+
+.source-card {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.source-main {
+  margin-bottom: 1rem;
+}
+
+.source-link {
+  color: #60a5fa;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.source-link:hover {
+  color: #93c5fd;
+}
+
+.source-type {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.source-meta {
+  margin-bottom: 1rem;
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.meta-row:last-child {
+  margin-bottom: 0;
+}
+
+.read-original-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(96, 165, 250, 0.2);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  color: #60a5fa;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.read-original-button:hover {
+  background: rgba(96, 165, 250, 0.3);
+  transform: translateY(-1px);
+}
+
+/* === FACT CHECK SECTION === */
+.fact-check-section .section-title {
+  color: #34d399;
+}
+
+.fact-check-card {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.fact-check-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.status-verified {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.status-questionable {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+}
+
+.status-unverified {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.status-info {
+  flex: 1;
+}
+
+.status-label {
+  display: block;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.confidence-score {
+  display: block;
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin-top: 0.25rem;
+}
+
+.confidence-bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.confidence-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.fact-warnings {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.warning-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fbbf24;
+  font-size: 0.9rem;
+}
+
+.verification-sources {
+  margin-bottom: 1rem;
+}
+
+.verification-sources h4 {
+  color: #ffffff;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.verification-sources ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.verification-sources li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.verification-sources li:last-child {
+  margin-bottom: 0;
+}
+
+.last-checked {
+  color: #64748b;
+  font-size: 0.8rem;
+  text-align: center;
+  font-style: italic;
+}
+
+/* === RELATED ARTICLES SECTION === */
+.related-section .section-title {
+  color: #fb7185;
+}
+
+.related-articles {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.related-article {
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.related-article:last-child {
+  margin-bottom: 0;
+}
+
+.related-article:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.related-title {
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+}
+
+.related-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.related-source {
+  font-weight: 500;
+}
+
+.related-time {
+  opacity: 0.8;
+}
+
+/* === CHAT SECTION === */
+.chat-section .section-title {
+  color: #c084fc;
+}
+
+.chat-prompt {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.chat-prompt p {
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.chat-trigger-button {
+  width: 100%;
+  background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 15px rgba(192, 132, 252, 0.3);
+}
+
+.chat-trigger-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(192, 132, 252, 0.4);
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+}
+
+.button-content {
+  flex: 1;
+  text-align: left;
+}
+
+.button-title {
+  display: block;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.button-subtitle {
+  display: block;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+}
+
+.chat-features {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.feature-item:last-child {
+  margin-bottom: 0;
+}
+
+.feature-item svg {
+  color: #10b981;
+}
+
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 768px) {
+  .news-sidebar {
+    gap: 1rem;
+  }
+  
+  .sidebar-section {
+    border-radius: 12px;
+  }
+  
+  .section-title {
+    padding: 1rem 1rem 0 1rem;
+    font-size: 1rem;
+  }
+  
+  .source-card,
+  .fact-check-card,
+  .related-articles,
+  .chat-prompt {
+    padding: 0 1rem 1rem 1rem;
+  }
+  
+  .related-meta {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .fact-check-status {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .button-content {
+    text-align: center;
+  }
+  
+  .chat-trigger-button {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}

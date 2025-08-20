@@ -242,6 +242,7 @@
 import React from 'react'
 import { Clock, Bookmark, Share2, Play, Pause } from 'lucide-react'
 import type { NewsArticle } from '../services/newsApiService'
+import { useNavigate } from 'react-router-dom'
 
 // Define component props
 interface NewsCardProps {
@@ -261,6 +262,7 @@ export default function NewsCard({
   isPlaying = false,
   variant = 'default'
 }: NewsCardProps) {
+  const navigate = useNavigate();
   
   /**
    * Get category-specific colors for news cards
@@ -368,17 +370,12 @@ export default function NewsCard({
    * Handle click events for different card actions
    */
   const handleReadClick = () => {
-    if (onReadStory) {
-      onReadStory(article.id)
-    }
-  }
+  navigate(`/news/${article.id}`, { 
+    state: { article } 
+  })
+}
 
-  const handleSaveClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (onSaveStory) {
-      onSaveStory(article.id)
-    }
-  }
+  
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -413,24 +410,6 @@ export default function NewsCard({
           </div>
         )}
 
-        {/* Action buttons */}
-        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-          <button 
-            className="action-btn-hero" 
-            onClick={handleSaveClick}
-            title="Save article"
-          >
-            <Bookmark size={18} />
-          </button>
-          
-          <button 
-            className="action-btn-hero" 
-            onClick={(e) => e.stopPropagation()}
-            title="Share article"
-          >
-            <Share2 size={18} />
-          </button>
-        </div>
 
         {/* Main content */}
         <div className="relative z-10 p-6 h-full flex flex-col justify-end">
@@ -502,40 +481,6 @@ export default function NewsCard({
             <span>{article.timestamp}</span>
             <span className="text-gray-600">•</span>
             <span>{article.readTime}</span>
-          </div>
-          
-          {/* Action buttons */}
-          <div className="flex items-center gap-1">
-            {/* Play/Pause button */}
-            <button 
-              className={`play-btn-spotify ${isPlaying ? 'playing' : ''}`}
-              onClick={handlePlayClick}
-              title={isPlaying ? "Pause audio" : "Listen to article"}
-            >
-              {isPlaying ? (
-                <Pause size={16} />
-              ) : (
-                <Play size={16} className="ml-0.5" />
-              )}
-            </button>
-            
-            {/* Save button */}
-            <button 
-              className="action-btn-spotify" 
-              onClick={handleSaveClick}
-              title="Save article"
-            >
-              <Bookmark size={14} />
-            </button>
-            
-            {/* Share button */}
-            <button 
-              className="action-btn-spotify" 
-              onClick={(e) => e.stopPropagation()}
-              title="Share article"
-            >
-              <Share2 size={14} />
-            </button>
           </div>
         </div>
       </div>
