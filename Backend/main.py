@@ -113,7 +113,9 @@ import os
 from datetime import datetime
 
 # Import route modules
-from app.routes import news_routes, health_routes, auth_routes, article_routes
+from app.routes import news_routes, health_routes, auth_routes
+from app.routes import article_routes
+
 
 # Set up comprehensive logging
 logging.basicConfig(
