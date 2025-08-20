@@ -113,7 +113,7 @@ import os
 from datetime import datetime
 
 # Import route modules
-from app.routes import news_routes, health_routes, auth_routes
+from app.routes import news_routes, health_routes, auth_routes, article_routes
 
 # Set up comprehensive logging
 logging.basicConfig(
@@ -192,6 +192,12 @@ app.include_router(
     auth_routes.router,
     prefix="/api/auth",
     tags=["User Authentication"]
+)
+
+app.include_router(
+    article_routes.router,
+    prefix="/api",
+    tags=["Articles"]
 )
 
 # Global exception handler

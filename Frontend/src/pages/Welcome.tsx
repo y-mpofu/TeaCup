@@ -37,12 +37,12 @@ interface RegisterForm {
 // Country options for registration
 const COUNTRY_OPTIONS = [
   { code: 'ZW', name: 'Zimbabwe', flag: '🇿🇼' },
-  { code: 'KE', name: 'Kenya', flag: '🇰🇪' },
-  { code: 'GH', name: 'Ghana', flag: '🇬🇭' },
-  { code: 'RW', name: 'Rwanda', flag: '🇷🇼' },
-  { code: 'CD', name: 'Democratic Republic of Congo', flag: '🇨🇩' },
-  { code: 'ZA', name: 'South Africa', flag: '🇿🇦' },
-  { code: 'BI', name: 'Burundi', flag: '🇧🇮' }
+  // { code: 'KE', name: 'Kenya', flag: '🇰🇪' },
+  // { code: 'GH', name: 'Ghana', flag: '🇬🇭' },
+  // { code: 'RW', name: 'Rwanda', flag: '🇷🇼' },
+  // { code: 'CD', name: 'Democratic Republic of Congo', flag: '🇨🇩' },
+  // { code: 'ZA', name: 'South Africa', flag: '🇿🇦' },
+  // { code: 'BI', name: 'Burundi', flag: '🇧🇮' }
 ];
 
 export default function Welcome() {

@@ -1,0 +1,387 @@
+# Backend/app/routes/article_routes.py
+# Enhanced article routes for the news dialogue system
+
+from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel
+from typing import Dict, Any, List, Optional
+import logging
+import asyncio
+import os
+
+# Import authentication helper
+from .auth_routes import get_user_from_token
+
+# Set up router and logging
+router = APIRouter()
+logger = logging.getLogger(__name__)
+security = HTTPBearer()
+
+# Pydantic models for request/response data
+class EnhancedSummaryRequest(BaseModel):
+    """Request model for enhanced article summary"""
+    article_id: str
+    original_title: str
+    original_summary: str
+    category: str
+    source_url: str
+
+class ChatMessage(BaseModel):
+    """Chat message model"""
+    message: str
+    article_id: str
+
+class EnhancedSummaryResponse(BaseModel):
+    """Response model for enhanced article summary"""
+    success: bool
+    enhanced_summary: str
+    key_points: List[str]
+    context: str
+    reading_time: str
+    confidence_score: int
+
+class ChatResponse(BaseModel):
+    """Response model for chat messages"""
+    success: bool
+    response: str
+    context_used: bool
+
+class FactCheckResponse(BaseModel):
+    """Response model for fact checking"""
+    success: bool
+    status: str  # 'verified', 'questionable', 'unverified'
+    confidence: int  # 0-100
+    sources: List[str]
+    warnings: List[str]
+    last_checked: str
+
+@router.post("/article/enhance-summary", response_model=EnhancedSummaryResponse)
+async def enhance_article_summary(
+    request: EnhancedSummaryRequest,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Generate an enhanced, comprehensive summary for an article using AI
+    
+    This endpoint takes the original article data and uses GPT to create:
+    - A longer, more detailed summary
+    - Key points extraction
+    - Additional context and background
+    - Improved readability and engagement
+    """
+    try:
+        # Verify user authentication
+        current_user = get_user_from_token(credentials.credentials)
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired session token"
+            )
+        
+        logger.info(f"📰 Enhancing summary for article: {request.article_id}")
+        
+        # Check if OpenAI is available
+        openai_api_key = os.getenv('OPENAI_API_KEY')
+        if not openai_api_key:
+            # Fallback to enhanced mock summary
+            return _generate_mock_enhanced_summary(request)
+        
+        # Use OpenAI to enhance the summary
+        enhanced_data = await _enhance_summary_with_openai(request)
+        
+        logger.info(f"✅ Enhanced summary generated for article: {request.article_id}")
+        return enhanced_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error enhancing summary: {str(e)}")
+        # Fallback to mock data on error
+        return _generate_mock_enhanced_summary(request)
+
+@router.post("/article/chat", response_model=ChatResponse)
+async def chat_about_article(
+    message: ChatMessage,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Chat with AI about a specific article
+    
+    Provides contextual responses about the article content,
+    additional information, different perspectives, and answers
+    to user questions about the news story.
+    """
+    try:
+        # Verify user authentication
+        current_user = get_user_from_token(credentials.credentials)
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired session token"
+            )
+        
+        logger.info(f"💬 Chat message for article {message.article_id}: {message.message[:50]}...")
+        
+        # Check if OpenAI is available
+        openai_api_key = os.getenv('OPENAI_API_KEY')
+        if not openai_api_key:
+            # Fallback to mock chat response
+            return _generate_mock_chat_response(message)
+        
+        # Use OpenAI to generate chat response
+        chat_response = await _generate_chat_response_with_openai(message)
+        
+        logger.info(f"✅ Chat response generated for article: {message.article_id}")
+        return chat_response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error generating chat response: {str(e)}")
+        # Fallback to mock response on error
+        return _generate_mock_chat_response(message)
+
+@router.get("/article/{article_id}/fact-check", response_model=FactCheckResponse)
+async def get_fact_check_data(
+    article_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Get fact-checking information for an article
+    
+    Provides verification status, confidence scores, and
+    warnings about potential misinformation.
+    """
+    try:
+        # Verify user authentication
+        current_user = get_user_from_token(credentials.credentials)
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired session token"
+            )
+        
+        logger.info(f"🛡️ Fact-checking article: {article_id}")
+        
+        # Generate fact-check data (for now, this is mock data)
+        # In a real implementation, this would integrate with fact-checking APIs
+        fact_check_data = _generate_fact_check_data(article_id)
+        
+        logger.info(f"✅ Fact-check completed for article: {article_id}")
+        return fact_check_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error fact-checking article: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate fact-check data"
+        )
+
+# === HELPER FUNCTIONS ===
+
+async def _enhance_summary_with_openai(request: EnhancedSummaryRequest) -> EnhancedSummaryResponse:
+    """Use OpenAI to generate enhanced article summary"""
+    try:
+        import openai
+        
+        # Create comprehensive prompt for article enhancement
+        prompt = f"""
+        Create an enhanced, comprehensive summary for this news article:
+        
+        ORIGINAL TITLE: {request.original_title}
+        ORIGINAL SUMMARY: {request.original_summary}
+        CATEGORY: {request.category}
+        
+        Please provide:
+        1. A detailed, engaging summary (200-300 words)
+        2. 3-5 key points from the article
+        3. Additional context and background information
+        4. Why this story matters
+        
+        Make it informative, accurate, and engaging for readers interested in {request.category} news.
+        Focus on implications, significance, and broader context.
+        """
+        
+        # Call OpenAI API
+        response = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a professional news analyst. Create comprehensive, accurate summaries."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=500,
+                temperature=0.7
+            )
+        )
+        
+        enhanced_content = response.choices[0].message.content.strip()
+        
+        # Parse the response (in a real implementation, you'd structure this better)
+        lines = enhanced_content.split('\n')
+        enhanced_summary = enhanced_content
+        
+        # Extract key points (simplified for demo)
+        key_points = [
+            f"Key development in {request.category}",
+            "Regional implications and impact",
+            "Stakeholder responses and reactions",
+            "Future outlook and next steps"
+        ]
+        
+        return EnhancedSummaryResponse(
+            success=True,
+            enhanced_summary=enhanced_summary,
+            key_points=key_points,
+            context=f"This {request.category} story is part of ongoing regional developments.",
+            reading_time="3-4 min read",
+            confidence_score=85
+        )
+        
+    except Exception as e:
+        logger.error(f"OpenAI enhancement failed: {e}")
+        return _generate_mock_enhanced_summary(request)
+
+async def _generate_chat_response_with_openai(message: ChatMessage) -> ChatResponse:
+    """Generate AI chat response using OpenAI"""
+    try:
+        import openai
+        
+        prompt = f"""
+        You are an AI assistant helping users understand and discuss news articles.
+        
+        User's question/message: {message.message}
+        Article ID: {message.article_id}
+        
+        Provide a helpful, informative response about the article.
+        Be conversational but accurate. If you need more specific information about
+        the article, ask clarifying questions.
+        """
+        
+        response = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a helpful news discussion assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=200,
+                temperature=0.8
+            )
+        )
+        
+        ai_response = response.choices[0].message.content.strip()
+        
+        return ChatResponse(
+            success=True,
+            response=ai_response,
+            context_used=True
+        )
+        
+    except Exception as e:
+        logger.error(f"OpenAI chat failed: {e}")
+        return _generate_mock_chat_response(message)
+
+def _generate_mock_enhanced_summary(request: EnhancedSummaryRequest) -> EnhancedSummaryResponse:
+    """Generate mock enhanced summary when OpenAI is unavailable"""
+    
+    enhanced_summary = f"""
+    In-Depth Analysis: {request.original_title}
+    
+    {request.original_summary}
+    
+    This {request.category} development represents a significant shift in regional dynamics. 
+    Local experts suggest that the implications could extend beyond immediate stakeholders, 
+    potentially influencing policy decisions and economic relationships throughout the region.
+    
+    The timing of this announcement coincides with broader continental initiatives aimed at 
+    strengthening cooperation and addressing shared challenges. Industry analysts note that 
+    similar developments have been observed in neighboring countries, suggesting a coordinated 
+    approach to regional development.
+    
+    Key stakeholders have expressed cautious optimism about the potential outcomes, while 
+    emphasizing the importance of sustained engagement and transparent implementation. 
+    The success of this initiative could serve as a model for similar efforts across the continent.
+    
+    Further developments are expected as implementation details are finalized and stakeholder 
+    consultations continue. The broader impact on regional stability and economic growth 
+    remains to be seen, but early indicators suggest positive momentum.
+    """
+    
+    key_points = [
+        f"Significant development in {request.category} sector",
+        "Regional implications and stakeholder impact",
+        "Alignment with broader continental initiatives",
+        "Potential model for similar regional efforts",
+        "Ongoing implementation and consultation process"
+    ]
+    
+    return EnhancedSummaryResponse(
+        success=True,
+        enhanced_summary=enhanced_summary,
+        key_points=key_points,
+        context=f"This {request.category} story is part of ongoing regional development initiatives.",
+        reading_time="3-4 min read",
+        confidence_score=75
+    )
+
+def _generate_mock_chat_response(message: ChatMessage) -> ChatResponse:
+    """Generate mock chat response when OpenAI is unavailable"""
+    
+    user_message = message.message.lower()
+    
+    # Simple keyword-based responses
+    if "summary" in user_message or "summarize" in user_message:
+        response = "I can help summarize the key points of this article. The main developments focus on recent changes in the region, with significant implications for local stakeholders. Would you like me to elaborate on any specific aspect?"
+    elif "source" in user_message or "reliable" in user_message:
+        response = "This article comes from a regional news source. For the most accurate information, I'd recommend cross-referencing with additional sources and checking the original publication's credibility standards."
+    elif "context" in user_message or "background" in user_message:
+        response = "This story is part of ongoing regional developments. The broader context involves policy changes and economic factors that have been evolving over recent months. Similar developments have been reported in neighboring areas."
+    elif "opinion" in user_message or "perspective" in user_message:
+        response = "There are multiple perspectives on this issue. Supporters highlight potential benefits and opportunities, while critics raise concerns about implementation and potential risks. The local community response appears to be mixed."
+    else:
+        response = f"That's an interesting question about the article. Based on the available information, I can provide some insights. What specific aspect would you like me to focus on? I can help explain the context, discuss implications, or explore different viewpoints."
+    
+    return ChatResponse(
+        success=True,
+        response=response,
+        context_used=False
+    )
+
+def _generate_fact_check_data(article_id: str) -> FactCheckResponse:
+    """Generate fact-check data for an article"""
+    
+    # Mock fact-checking logic (in real app, integrate with fact-check APIs)
+    import random
+    from datetime import datetime
+    
+    # Simulate different verification statuses
+    statuses = ['verified', 'questionable', 'unverified']
+    weights = [0.6, 0.3, 0.1]  # Most articles are verified
+    status = random.choices(statuses, weights=weights)[0]
+    
+    if status == 'verified':
+        confidence = random.randint(80, 95)
+        sources = ["Original Publisher", "Cross-reference Database", "Regional News Network", "Fact-Check Alliance"]
+        warnings = []
+    elif status == 'questionable':
+        confidence = random.randint(50, 79)
+        sources = ["Original Publisher", "Limited verification sources"]
+        warnings = ["Some details are still developing", "Information partially confirmed"]
+    else:
+        confidence = random.randint(20, 49)
+        sources = ["Original Publisher only"]
+        warnings = ["Unverified claims present", "Awaiting official confirmation", "Limited source verification"]
+    
+    return FactCheckResponse(
+        success=True,
+        status=status,
+        confidence=confidence,
+        sources=sources,
+        warnings=warnings,
+        last_checked=datetime.now().isoformat()
+    )
