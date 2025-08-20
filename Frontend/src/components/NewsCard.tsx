@@ -256,10 +256,7 @@ interface NewsCardProps {
 
 export default function NewsCard({ 
   article, 
-  onReadStory, 
-  onSaveStory, 
   onPlayAudio,
-  isPlaying = false,
   variant = 'default'
 }: NewsCardProps) {
   const navigate = useNavigate();
@@ -401,14 +398,6 @@ export default function NewsCard({
           <div className="w-full h-full bg-gradient-to-br from-yellow-400 via-red-500 to-green-600"></div>
         </div>
         
-        {/* Breaking news badge */}
-        {article.isBreaking && (
-          <div className="absolute top-4 left-4 z-10">
-            <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold pulse">
-              🔴 LIVE
-            </span>
-          </div>
-        )}
 
 
         {/* Main content */}
@@ -448,12 +437,6 @@ export default function NewsCard({
       role="button"
       tabIndex={0}
     >
-      {/* Breaking news badge */}
-      {article.isBreaking && (
-        <div className="breaking-badge-spotify">
-          🔴 BREAKING
-        </div>
-      )}
 
       {/* Main content */}
       <div className="p-4 flex-1">
@@ -477,10 +460,6 @@ export default function NewsCard({
         {/* Footer with metadata and actions */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-gray-400 text-xs">
-            <Clock size={12} />
-            <span>{article.timestamp}</span>
-            <span className="text-gray-600">•</span>
-            <span>{article.readTime}</span>
           </div>
         </div>
       </div>

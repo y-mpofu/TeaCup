@@ -216,26 +216,6 @@ export default function NewsSidebar({ article, onChatOpen }: NewsSidebarProps) {
         </div>
       </section>
 
-      {/* Related Articles Section */}
-      <section className="sidebar-section related-section">
-        <h3 className="section-title">
-          <TrendingUp size={20} />
-          Related Coverage
-        </h3>
-        
-        <div className="related-articles">
-          {relatedArticles.map((relatedArticle, index) => (
-            <div key={index} className="related-article">
-              <h4 className="related-title">{relatedArticle.title}</h4>
-              <div className="related-meta">
-                <span className="related-source">{relatedArticle.source}</span>
-                <span className="related-time">{relatedArticle.time}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Chat Discussion Section */}
       <section className="sidebar-section chat-section">
         <h3 className="section-title">
@@ -252,8 +232,8 @@ export default function NewsSidebar({ article, onChatOpen }: NewsSidebarProps) {
           >
             <MessageCircle size={24} />
             <div className="button-content">
-              <span className="button-title">Ask AI Assistant</span>
-              <span className="button-subtitle">Discuss this article</span>
+              <span className="button-title">Ask Mam'gobozi</span>
+              <span className="button-subtitle">Discuss this article with our top NewsQueen Mamgobozi</span>
             </div>
           </button>
           

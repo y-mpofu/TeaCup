@@ -169,19 +169,6 @@ export default function NewsDialogue({ article }: NewsDialogueProps) {
           )}
         </div>
 
-        {/* Original Source Link */}
-        <div className="source-link-container">
-          <h3>Original Source</h3>
-          <a 
-            href={article.sourceUrl} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="source-link"
-          >
-            <ExternalLink size={16} />
-            Read full article at {article.source}
-          </a>
-        </div>
       </main>
 
       {/* Action Buttons */}

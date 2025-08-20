@@ -1081,53 +1081,53 @@ class NewsService:
         Returns:
             Enhanced summary text with embedded links
         """
-        try:
-            if not self.openai_available:
-                return self._create_basic_summary(source)
+        # try:
+        #     if not self.openai_available:
+        #         return self._create_basic_summary(source)
             
-            # Import OpenAI here to avoid import errors if not installed
-            import openai
+        #     # Import OpenAI here to avoid import errors if not installed
+        #     import openai
             
-            # Create a prompt for GPT to enhance the summary
-            prompt = f"""
-            Create an engaging news summary for this article:
+        #     # Create a prompt for GPT to enhance the summary
+        #     prompt = f"""
+        #     Create an engaging news summary for this article:
             
-            Title: {source.title}
-            Snippet: {source.snippet}
-            Source: {source.source_name}
-            Category: {category}
+        #     Title: {source.title}
+        #     Snippet: {source.snippet}
+        #     Source: {source.source_name}
+        #     Category: {category}
             
-            Requirements:
-            1. Write 2-3 informative sentences (80-120 words)
-            2. Make it engaging and newsworthy
-            3. Include key facts from the snippet
-            4. End with: "Read the full article at [{source.source_name}]({source.url})"
-            5. Focus on what readers need to know
+        #     Requirements:
+        #     1. Write 2-3 informative sentences (80-120 words)
+        #     2. Make it engaging and newsworthy
+        #     3. Include key facts from the snippet
+        #     4. End with: "Clic) the card to learn more about this story and have a discussion with Mam'gobozi"
+        #     5. Focus on what readers need to know
             
-            Write the summary now:
-            """
+        #     Write the summary now:
+        #     """
             
             # Call OpenAI API
-            response = await asyncio.get_event_loop().run_in_executor(
-                None,  # Use default executor
-                lambda: openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": "You are a professional news editor. Create clear, engaging summaries."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    max_tokens=150,
-                    temperature=0.7
-                )
-            )
+            # response = await asyncio.get_event_loop().run_in_executor(
+            #     None,  # Use default executor
+            #     lambda: openai.ChatCompletion.create(
+            #         model="gpt-3.5-turbo",
+            #         messages=[
+            #             {"role": "system", "content": "You are a professional news editor. Create clear, engaging summaries that make one want to know more about the news article, kind of like newspaper fromnt page summaries."},
+            #             {"role": "user", "content": prompt}
+            #         ],
+            #         max_tokens=150,
+            #         temperature=0.7
+            #     )
+            # )
             
-            enhanced_summary = response.choices[0].message.content.strip()
-            logger.debug(f"✅ AI-enhanced summary created for: {source.title}")
-            return enhanced_summary
+            # enhanced_summary = response.choices[0].message.content.strip()
+            # logger.debug(f"✅ AI-enhanced summary created for: {source.title}")
+            # return enhanced_summary
             
-        except Exception as e:
-            logger.warning(f"⚠️  AI enhancement failed for '{source.title}': {e}")
-            return self._create_basic_summary(source)
+        # except Exception as e:
+        #     logger.warning(f"⚠️  AI enhancement failed for '{source.title}': {e}")
+        return self._create_basic_summary(source)
 
     def _create_basic_summary(self, source: NewsSource) -> str:
         """
@@ -1144,12 +1144,12 @@ class NewsService:
             logger.error(f"Expected NewsSource object, got {type(source)}")
             return "Summary unavailable"
         
-        # If snippet is good length, use it directly with a source link
+       # If snippet is good length, use it directly with a source link
         if len(source.snippet) > 50:
-            return f"{source.snippet}\n\nRead the full article at [{source.source_name}]({source.url})"
+            return f"{source.snippet})"
         else:
             # If snippet is too short, enhance it slightly
-            return f"{source.title}: {source.snippet}\n\nRead more at [{source.source_name}]({source.url})"
+            return f"{source.title}: {source.snippet})"
 
     def _calculate_reading_time(self, text: str) -> str:
         """
@@ -1189,9 +1189,7 @@ class NewsService:
         
         # Keywords that indicate breaking news
         breaking_keywords = [
-            'breaking', 'urgent', 'just in', 'developing', 'live', 
-            'alert', 'update', 'emergency', 'major', 'significant',
-            'exclusive', 'confirmed', 'announced', 'reports'
+            'breaking news'
         ]
         
         # Check both title and snippet for breaking news indicators
