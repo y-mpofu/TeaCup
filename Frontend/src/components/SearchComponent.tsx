@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, ExternalLink, Clock, TrendingUp, AlertCircle } from 'lucide-react';
-import './SearchComponent.css';
+import '../styles/SearchComponent.css';
 
 // TypeScript interfaces for search results
 interface SearchResult {

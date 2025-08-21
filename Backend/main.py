@@ -97,37 +97,25 @@
 #         log_level="info"  # Logging level
 #     )
 
-
 # Backend/main.py
-# Main FastAPI application with authentication routes included
-# Backend/main.py
-# Main FastAPI application - no country defaults, requires user authentication
+# FIXED: Add search routes to the main FastAPI application
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import logging
-import uvicorn
-import json
-import os
 from datetime import datetime
+import logging
 
-# Import route modules
-from app.routes import news_routes, health_routes, auth_routes
-from app.routes import article_routes
+# Import all route modules - INCLUDING search routes
+from app.routes import health_routes, news_routes, auth_routes, article_routes, search_routes
 
-
-# Set up comprehensive logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Create FastAPI application instance
+# Create FastAPI application
 app = FastAPI(
-    title="TeaCup News API",
-    description="Multi-country news aggregation API with user authentication",
+    title="TeaCup Multi-Country News API",
+    description="News aggregation API with search and authentication",
     version="2.0.0",
     docs_url="/docs",  # Swagger UI available at /docs
     redoc_url="/redoc"  # ReDoc available at /redoc
@@ -159,7 +147,8 @@ async def root():
         "version": "2.0.0",
         "features": [
             "Multi-country news aggregation",
-            "User authentication required",
+            "User authentication required", 
+            "Article search functionality",  # <-- Added search feature
             "Dynamic country preferences",
             "Real-time news from 7 African countries"
         ],
@@ -172,6 +161,7 @@ async def root():
             "docs": "/docs",
             "health": "/api/health",
             "news": "/api/news/* (authentication required)",
+            "search": "/api/search (authentication optional)",  # <-- Added search endpoint info
             "auth": "/api/auth/*"
         },
         "timestamp": datetime.now().isoformat()
@@ -186,7 +176,7 @@ app.include_router(
 
 app.include_router(
     news_routes.router,
-    prefix="/api",
+    prefix="/api", 
     tags=["News - Authentication Required"]
 )
 
@@ -199,140 +189,41 @@ app.include_router(
 app.include_router(
     article_routes.router,
     prefix="/api",
-    tags=["Articles"]
+    tags=["Article Processing"]
 )
 
-# Global exception handler
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    """
-    Handle unexpected errors consistently
-    """
-    logger.error(f"💥 Unhandled exception: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content={
-            "success": False,
-            "message": "An internal server error occurred",
-            "timestamp": datetime.now().isoformat()
-        }
-    )
+# **CRITICAL FIX: Include search routes**
+app.include_router(
+    search_routes.router,
+    prefix="/api",  # This makes search available at /api/search
+    tags=["Search Functionality"]
+)
 
-# Startup event handler
-@app.on_event("startup")
-async def startup_event():
+# Debug endpoint to check what routes are available
+@app.get("/debug/routes")
+async def debug_routes():
     """
-    Initialize the application on startup
-    Creates database if needed but with no default users
+    Debug endpoint to see all available routes
+    Useful for troubleshooting routing issues
     """
-    logger.info("🚀 TeaCup Multi-Country News API starting up...")
-    logger.info("🔧 Initializing authentication system...")
+    routes = []
+    for route in app.routes:
+        if hasattr(route, 'methods') and hasattr(route, 'path'):
+            routes.append({
+                "path": route.path,
+                "methods": list(route.methods),
+                "name": getattr(route, 'name', 'Unknown')
+            })
     
-    # Check for required dependencies
-    try:
-        import bcrypt
-        logger.info("✅ bcrypt available for password hashing")
-    except ImportError:
-        logger.error("❌ bcrypt not installed - required for authentication")
-        logger.error("   Install with: pip install bcrypt")
-        raise Exception("bcrypt is required for authentication")
-    
-    # Initialize database if needed
-    try:
-        if os.path.exists("users_db.json"):
-            logger.info("✅ User database file found")
-            
-            # Validate existing database structure
-            with open("users_db.json", 'r') as f:
-                db_data = json.load(f)
-            
-            # Check if any users exist
-            if db_data.get("users"):
-                user_count = len(db_data["users"])
-                logger.info(f"👥 Found {user_count} existing users in database")
-                
-                # Log countries represented in database (for admin visibility)
-                countries_in_use = set()
-                for user in db_data["users"]:
-                    country = user.get("country_of_interest")
-                    if country:
-                        countries_in_use.add(country)
-                
-                if countries_in_use:
-                    logger.info(f"🌍 Countries represented: {', '.join(sorted(countries_in_use))}")
-                else:
-                    logger.warning("⚠️  No users have country preferences set")
-            else:
-                logger.info("📝 Database exists but no users registered yet")
-        else:
-            logger.info("📝 Creating new user database...")
-            
-            # Create empty database structure (no default users)
-            initial_db = {
-                "users": [],        # Empty - users must register with country selection
-                "sessions": []      # Empty sessions array
-            }
-            
-            # Save empty database
-            with open("users_db.json", "w") as f:
-                json.dump(initial_db, f, indent=2)
-            
-            logger.info("✅ Empty user database created")
-            logger.info("📝 Users must register and select a country to access news")
-            
-    except Exception as e:
-        logger.error(f"❌ Database initialization error: {e}")
-        raise Exception(f"Failed to initialize user database: {e}")
-    
-    # Validate API credentials - FIXED: Don't re-import os
-    try:
-        # Use the os module that's already imported at the top
-        google_key = os.getenv("GOOGLE_SEARCH_API_KEY")
-        google_cse = os.getenv("GOOGLE_CSE_ID")
-        openai_key = os.getenv("OPENAI_API_KEY")
-        
-        if google_key and google_cse:
-            logger.info("✅ Google Custom Search API configured")
-        else:
-            logger.error("❌ Google Search API credentials missing")
-            logger.error("   News service requires GOOGLE_SEARCH_API_KEY and GOOGLE_CSE_ID")
-        
-        if openai_key:
-            logger.info("✅ OpenAI API configured for enhanced summaries")
-        else:
-            logger.info("ℹ️  OpenAI API not configured - using basic summaries")
-            
-    except Exception as e:
-        logger.error(f"❌ API validation error: {e}")
-    
-    # Log startup completion
-    logger.info("🌍 Multi-country news system ready!")
-    logger.info("🔐 All news endpoints require user authentication")
-    logger.info("📍 Supported countries: ZW, KE, GH, RW, CD, ZA, BI")
-    logger.info("🫖 TeaCup API ready to serve personalized news!")
+    return {
+        "total_routes": len(routes),
+        "routes": routes,
+        "search_routes": [r for r in routes if 'search' in r['path'].lower()],
+        "timestamp": datetime.now().isoformat()
+    }
 
-# Shutdown event handler
-@app.on_event("shutdown")
-async def shutdown_event():
-    """
-    Clean shutdown of the application
-    """
-    logger.info("🛑 TeaCup API shutting down...")
-    logger.info("👋 Goodbye from the multi-country news service!")
-
-# Development server entry point
+# If running directly with python (not recommended for production)
 if __name__ == "__main__":
-    """
-    Start the development server
-    For production, use: uvicorn main:app --host 0.0.0.0 --port 8000
-    """
-    logger.info("🔧 Starting development server...")
-    logger.info("🌍 Multi-country news API with authentication")
-    
-    uvicorn.run(
-        "main:app",                    # Application module and variable
-        host="0.0.0.0",               # Listen on all network interfaces
-        port=8000,                    # Standard port
-        reload=True,                  # Auto-reload on code changes (dev only)
-        log_level="info"              # Detailed logging
-    )
+    import uvicorn
+    logger.info("🚀 Starting TeaCup News API...")
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

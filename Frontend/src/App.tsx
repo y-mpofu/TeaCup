@@ -202,6 +202,7 @@ import { newsApiService } from './services/newsApiService'
 // Styles
 import './index.css'
 import './styles/loading.css' // We'll need this for loading states
+import SearchComponent from './components/SearchComponent'
 
 // Define story interface for bottom bar audio functionality
 interface Story {
@@ -418,9 +419,12 @@ function App() {
           {/* Top header with search and profile - pass real user data */}
           <Topbar 
             currentUser={currentUser}
+            
             onLogout={handleLogout}
           />
-          
+          <SearchComponent 
+          />
+          <div className="divider"></div>
           {/* Main page content area */}
           <main className={`body-content ${isBottomBarVisible ? 'with-bottom-bar' : ''}`}>
             <Routes>

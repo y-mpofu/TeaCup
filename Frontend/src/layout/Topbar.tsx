@@ -136,29 +136,6 @@ export default function Topbar({ currentUser, onLogout }: TopbarProps) {
         top: 0
       }}
     >
-      {/* Search form */}
-      <form onSubmit={handleSearch} className="search-form">
-        <div className="search-container">
-          <Search className="search-icon" size={20} />
-          <input 
-            type="text"
-            placeholder="Search news, topics, or categories..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
-          />
-          {searchQuery && (
-            <button 
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="clear-search"
-              aria-label="Clear search"
-            >
-              ×
-            </button>
-          )}
-        </div>
-      </form>
 
       {/* Profile section */}
       <div className="profile-container">
