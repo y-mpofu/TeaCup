@@ -1,0 +1,364 @@
+/* Frontend/src/styles/SearchIntegration.css */
+/* Styles for integrating search component into your existing app */
+
+/* Header Integration Styles */
+.app-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logo h1 {
+  color: white;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.header-search {
+  flex: 1;
+  max-width: 500px;
+  margin: 0 20px;
+}
+
+.header-search-input {
+  /* Use default SearchComponent styles */
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Search Page Styles */
+.search-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+}
+
+.search-container {
+  max-width: 800px;
+  margin: 0 auto;
+  color: white;
+}
+
+.search-container h1 {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.search-container p {
+  text-align: center;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+  font-size: 1.1rem;
+}
+
+.main-search {
+  margin: 2rem 0;
+}
+
+/* Search History Styles */
+.search-history {
+  margin-top: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.search-history h3 {
+  margin: 0 0 1rem 0;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.search-history-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.search-history-item {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  padding: 6px 12px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.search-history-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Selected Article Display */
+.selected-article {
+  margin-top: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 1.5rem;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.selected-article h2 {
+  margin: 0 0 1rem 0;
+  color: white;
+  font-size: 1.3rem;
+}
+
+.article-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  color: #1f2937;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.article-card h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.4rem;
+  line-height: 1.4;
+  color: #1f2937;
+}
+
+.article-card p {
+  margin: 0 0 1rem 0;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.article-meta {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+  flex-wrap: wrap;
+}
+
+.article-meta span {
+  background: rgba(107, 114, 128, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+
+.read-full-article {
+  display: inline-block;
+  background: #3b82f6;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.read-full-article:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Article Modal Styles */
+.article-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.article-modal {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  margin: 1rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.close-modal {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0.25rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-modal:hover {
+  background: rgba(107, 114, 128, 0.1);
+  color: #374151;
+}
+
+.article-modal h2 {
+  margin: 0 2rem 1rem 0;
+  font-size: 1.5rem;
+  line-height: 1.4;
+  color: #1f2937;
+}
+
+.article-content {
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.article-content p {
+  margin-bottom: 1rem;
+}
+
+.article-actions {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.read-original {
+  background: #059669;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.read-original:hover {
+  background: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 1rem;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .header-search {
+    order: 2;
+    margin: 0;
+    width: 100%;
+  }
+  
+  .logo {
+    order: 1;
+  }
+  
+  .header-actions {
+    order: 3;
+  }
+  
+  .search-page {
+    padding: 1rem;
+  }
+  
+  .search-container h1 {
+    font-size: 2rem;
+  }
+  
+  .article-meta {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .article-modal {
+    margin: 0.5rem;
+    padding: 1.5rem;
+    max-height: 90vh;
+  }
+  
+  .article-modal h2 {
+    margin-right: 1rem;
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-history-items {
+    flex-direction: column;
+  }
+  
+  .search-history-item {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .article-modal {
+    border-radius: 15px;
+    padding: 1rem;
+  }
+  
+  .close-modal {
+    top: 0.75rem;
+    right: 1rem;
+  }
+}
