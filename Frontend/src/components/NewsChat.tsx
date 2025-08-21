@@ -46,7 +46,7 @@ export default function NewsChat({ isOpen, onClose, article }: NewsChatProps) {
     if (isOpen && messages.length === 0) {
       const welcomeMessage: ChatMessage = {
         id: 'welcome',
-        text: `Hi! I'm here to help you discuss and understand this article: "${article.title}". You can ask me questions about the content, request additional context, or explore different perspectives. What would you like to know?`,
+        text: `Hi! Mamgobhozi here, you know I got you on all the tea on : "${article.title}". You can ask me questions about the content, request additional context, or explore different perspectives. What would you like to know?`,
         sender: 'ai',
         timestamp: new Date()
       }

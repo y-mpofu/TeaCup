@@ -462,7 +462,6 @@ export default function NewsDialogue({ article }: NewsDialogueProps) {
           <div className="enhancement-status">
             {enhancedData.success ? (
               <span className="status-success">
-                ✅ AI Enhanced ({enhancedData.confidence_score}% confidence)
               </span>
             ) : (
               <span className="status-fallback">

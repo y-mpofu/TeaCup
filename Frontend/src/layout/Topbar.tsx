@@ -1,11 +1,12 @@
-// src/layout/Topbar.tsx 
-// FIXED: Topbar component with properly working color changes on news card hover
-// Simplified event handling and fixed event listener issues
+// Frontend/src/layout/Topbar.tsx 
+// ENHANCED: Topbar component with integrated SearchComponent that navigates to article dialogue
+// Now includes working search functionality with the same navigation behavior as NewsCard clicks
 
 import React, { useState, useEffect } from 'react'
-import { Search } from 'lucide-react'
 import Profile from '../components/Profile'
+import SearchComponent from '../components/SearchComponent' // Import our enhanced SearchComponent
 import type { User as AuthUser } from '../services/authService'
+import type { NewsArticle } from '../services/newsApiService'
 
 // Define the component props
 interface TopbarProps {
@@ -14,7 +15,8 @@ interface TopbarProps {
 }
 
 /**
- * Convert hex color to RGB values
+ * Convert hex color to RGB values for background transitions
+ * Used when news cards are hovered to change topbar color
  */
 const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
@@ -26,19 +28,17 @@ const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
 }
 
 /**
- * Topbar Component with Dynamic Color Changes
+ * Enhanced Topbar Component with Integrated Search
  * 
  * Features:
- * - Search functionality
+ * - Integrated SearchComponent that navigates to article dialogue
  * - Dynamic background that changes color when hovering over news cards
  * - Smooth color transitions with proper timing
  * - User profile dropdown
+ * - Search results that behave exactly like NewsCard clicks
  */
 export default function Topbar({ currentUser, onLogout }: TopbarProps) {
-  // Search state
-  const [searchQuery, setSearchQuery] = useState('')
-  
-  // Color transition state
+  // Color transition state for dynamic background
   const [backgroundColor, setBackgroundColor] = useState('rgb(75, 75, 75)') // Default dark gray
   const [isTransitioning, setIsTransitioning] = useState(false)
 
@@ -57,6 +57,7 @@ export default function Topbar({ currentUser, onLogout }: TopbarProps) {
     /**
      * Handle when a news card is hovered
      * Changes topbar background to match the card's category color
+     * NEW: Color persists until another card is hovered (no reset on card leave)
      */
     const handleCardHover = (event: any) => {
       if (isTransitioning) return // Prevent rapid color changes
@@ -83,43 +84,45 @@ export default function Topbar({ currentUser, onLogout }: TopbarProps) {
     }
 
     /**
-     * Handle when mouse leaves a news card
-     * Returns topbar to default gray color
+     * REMOVED: handleCardLeave function 
+     * 
+     * Previously, this would reset the topbar to gray when leaving a card.
+     * Now we want the topbar to retain the last card's color until a new card is hovered.
+     * This eliminates the annoying "flicker" effect when moving cursor between cards.
      */
-    const handleCardLeave = () => {
-      if (isTransitioning) return
-      
-      console.log('🎨 Topbar: Card left, returning to default color')
-      
-      setIsTransitioning(true)
-      
-      // Return to default gray
-      setBackgroundColor('rgb(75, 75, 75)')
-      
-      // Reset transition lock
-      setTimeout(() => setIsTransitioning(false), 500)
-    }
 
-    // Add event listeners
+    // Only add event listener for card hover (not card leave)
     window.addEventListener('card-hover', handleCardHover)
-    window.addEventListener('card-leave', handleCardLeave)
 
-    // Cleanup function
+    // Cleanup function - only remove the hover listener
     return () => {
       window.removeEventListener('card-hover', handleCardHover)
-      window.removeEventListener('card-leave', handleCardLeave)
     }
   }, [isTransitioning]) // Re-run when transition state changes
 
   /**
-   * Handle search form submission
+   * 🎯 KEY FEATURE: Handle article selection from search results
+   * 
+   * This function receives the selected article from SearchComponent
+   * and ensures it navigates to the article dialogue page.
+   * 
+   * Since SearchComponent already handles the navigation internally,
+   * this is primarily for logging and any additional processing.
    */
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      console.log('🔍 Topbar: Searching for:', searchQuery)
-      // TODO: Implement actual search functionality
-    }
+  const handleSearchArticleSelect = (article: NewsArticle) => {
+    console.log('🔍 Topbar: Search article selected:', article.title)
+    console.log('🚀 SearchComponent will handle navigation to article dialogue')
+    
+    // The SearchComponent already handles navigation via useNavigate,
+    // so we don't need to do anything else here.
+    // This callback is available for any additional processing if needed.
+    
+    // Example: Track search interactions for analytics
+    // analytics.track('search_article_selected', {
+    //   article_id: article.id,
+    //   article_title: article.title,
+    //   search_source: 'topbar'
+    // })
   }
 
   return (
@@ -133,12 +136,42 @@ export default function Topbar({ currentUser, onLogout }: TopbarProps) {
         // Ensure topbar stays on top
         zIndex: 1000,
         position: 'sticky',
-        top: 0
+        top: 0,
+        // Additional styling for better layout
+        padding: '1rem 2rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        minHeight: '80px'
       }}
     >
+      {/* Left side: Logo/Brand */}
+      <div className="topbar-brand">
+        <h1 style={{
+          color: 'white',
+          margin: 0,
+          fontSize: '1.5rem',
+          fontWeight: '600'
+        }}>
+           TeaCup
+        </h1>
+      </div>
 
-      {/* Profile section */}
-      <div className="profile-container">
+      {/* 🎯 CENTER: INTEGRATED SEARCH COMPONENT */}
+      <div className="topbar-search" style={{
+        flex: 1,
+        maxWidth: '500px',
+        margin: '0 2rem'
+      }}>
+        <SearchComponent
+          onArticleSelect={handleSearchArticleSelect}
+          placeholder="Search news articles..."
+          className="topbar-search-component"
+        />
+      </div>
+
+      {/* Right side: Profile section */}
+      <div className="topbar-profile">
         <Profile 
           currentUser={currentUser}
           onLogout={onLogout}

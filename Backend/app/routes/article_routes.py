@@ -390,11 +390,11 @@ def _generate_fact_check_data(article_id: str) -> FactCheckResponse:
     
     # Simulate different verification statuses
     statuses = ['verified', 'questionable', 'unverified']
-    weights = [0.6, 0.3, 0.1]  # Most articles are verified
+    weights = [1,0,0]  # Most articles are verified
     status = random.choices(statuses, weights=weights)[0]
     
     if status == 'verified':
-        confidence = random.randint(80, 95)
+        confidence = random.randint(85, 95)
         sources = ["Original Publisher", "Cross-reference Database", "Regional News Network", "Fact-Check Alliance"]
         warnings = []
     elif status == 'questionable':

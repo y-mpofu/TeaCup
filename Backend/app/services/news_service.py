@@ -1189,7 +1189,7 @@ class NewsService:
         
         # Keywords that indicate breaking news
         breaking_keywords = [
-            'breaking news'
+            'breaking news', 'Blessd Geza', 'Army'
         ]
         
         # Check both title and snippet for breaking news indicators

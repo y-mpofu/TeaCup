@@ -422,8 +422,6 @@ function App() {
             
             onLogout={handleLogout}
           />
-          <SearchComponent 
-          />
           <div className="divider"></div>
           {/* Main page content area */}
           <main className={`body-content ${isBottomBarVisible ? 'with-bottom-bar' : ''}`}>

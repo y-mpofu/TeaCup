@@ -1,45 +1,235 @@
-/* Top header bar styles */
+/* Frontend/src/styles/topbar.css */
+/* Enhanced topbar styles with integrated SearchComponent support */
+
 .topbar {
-  /* Background is now handled by React state with gradients */
-  padding: 0.5rem 1.5rem;
+  /* Background is dynamically set via React state */
+  padding: 1rem 2rem;
   display: flex;
-  justify-content: center; /* Center the search form */
+  justify-content: space-between;
   align-items: center;
-  height: 120px;
-  position: relative; /* Allow absolute positioning for profile */
+  min-height: 80px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: background 0.5s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Position profile component on the right side */
-.topbar > :last-child {
-  position: absolute;
-  right: 1.5rem;
+/* ===== TOPBAR SECTIONS ===== */
+
+/* Brand/Logo section */
+.topbar-brand {
+  flex-shrink: 0;
+  min-width: fit-content;
 }
 
-.topbar input {
-  width: 400px; /* Much longer search bar like in the example */
-  padding: 10px 20px; /* More padding for better look */
-  border: none;
-  border-radius: 25px; /* Rounded corners (pill shape) */
-  background-color: #333;
+.topbar-brand h1 {
   color: white;
-  font-size: 16px; /* Larger font size */
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.topbar input::placeholder {
-  color: #ccc;
+/* Search section - takes up available space */
+.topbar-search {
+  flex: 1;
+  max-width: 500px;
+  margin: 0 2rem;
+  display: flex;
+  justify-content: center;
 }
 
-.topbar input:focus {
-  outline: none;
-  background-color: #444;
+/* Profile section */
+.topbar-profile {
+  flex-shrink: 0;
+  min-width: fit-content;
 }
 
-/* Fade in animation for background changes */
-@keyframes fadeInBackground {
-  from {
-    opacity: 0;
+/* ===== SEARCH COMPONENT INTEGRATION ===== */
+
+/* Adjust SearchComponent for topbar usage */
+.topbar-search-component {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Override SearchComponent input container for topbar */
+.topbar-search .search-input-container {
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(15px);
+}
+
+/* Enhanced focus state for topbar search */
+.topbar-search .search-component.focused .search-input-container {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Ensure search dropdown appears above other content */
+.topbar-search .search-results-dropdown {
+  z-index: 1100;
+  margin-top: 12px;
+  max-height: 60vh; /* Limit height on smaller screens */
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Large desktop screens */
+@media (min-width: 1200px) {
+  .topbar {
+    padding: 1rem 3rem;
   }
-  to {
-    opacity: 1;
+  
+  .topbar-search {
+    max-width: 600px;
+    margin: 0 3rem;
+  }
+}
+
+/* Medium screens (tablets) */
+@media (max-width: 1024px) {
+  .topbar {
+    padding: 0.75rem 1.5rem;
+  }
+  
+  .topbar-search {
+    max-width: 400px;
+    margin: 0 1.5rem;
+  }
+  
+  .topbar-brand h1 {
+    font-size: 1.3rem;
+  }
+}
+
+/* Small screens (mobile landscape) */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0.5rem 1rem;
+    min-height: 70px;
+  }
+  
+  .topbar-search {
+    max-width: 300px;
+    margin: 0 1rem;
+  }
+  
+  .topbar-brand h1 {
+    font-size: 1.2rem;
+  }
+  
+  /* Reduce search dropdown height on smaller screens */
+  .topbar-search .search-results-dropdown {
+    max-height: 50vh;
+  }
+}
+
+/* Very small screens (mobile portrait) */
+@media (max-width: 480px) {
+  .topbar {
+    flex-direction: column;
+    padding: 0.75rem;
+    min-height: auto;
+    gap: 0.75rem;
+  }
+  
+  .topbar-brand {
+    align-self: stretch;
+    text-align: center;
+  }
+  
+  .topbar-search {
+    max-width: 100%;
+    margin: 0;
+    order: 2; /* Move search below brand */
+  }
+  
+  .topbar-profile {
+    order: 3; /* Move profile to bottom */
+    align-self: center;
+  }
+  
+  /* Adjust search component for mobile */
+  .topbar-search .search-input-container {
+    border-radius: 20px;
+    padding: 10px 16px;
+  }
+  
+  .topbar-search .search-results-dropdown {
+    max-height: 40vh;
+    border-radius: 16px;
+  }
+}
+
+/* ===== ANIMATION ENHANCEMENTS ===== */
+
+/* Smooth background transitions for card hover effects */
+.topbar {
+  background-attachment: fixed;
+}
+
+/* Hover effects for brand */
+.topbar-brand h1:hover {
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+/* Loading state support */
+.topbar.loading {
+  opacity: 0.9;
+}
+
+/* ===== ACCESSIBILITY IMPROVEMENTS ===== */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .topbar-search .search-input-container {
+    border: 3px solid white;
+    background: rgba(0, 0, 0, 0.8);
+  }
+  
+  .topbar-brand h1 {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .topbar {
+    transition: none;
+  }
+  
+  .topbar-search .search-input-container,
+  .topbar-search .search-results-dropdown {
+    transition: none;
+  }
+}
+
+/* Focus management for keyboard navigation */
+.topbar:focus-within {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: -2px;
+}
+
+/* ===== PRINT STYLES ===== */
+
+@media print {
+  .topbar {
+    background: white !important;
+    color: black !important;
+    box-shadow: none;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .topbar-brand h1 {
+    color: black !important;
+  }
+  
+  .topbar-search,
+  .topbar-profile {
+    display: none; /* Hide interactive elements in print */
   }
 }

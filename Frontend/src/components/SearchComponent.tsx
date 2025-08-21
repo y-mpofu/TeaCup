@@ -1,9 +1,10 @@
 // Frontend/src/components/SearchComponent.tsx
-// SIMPLIFIED SearchComponent - Works WITHOUT authentication required
-// Uses /api/search endpoint that accepts optional authentication
+// ENHANCED SearchComponent - Now supports article dialogue navigation
+// When search results are clicked, they open the same dialogue as regular article cards
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Clock, ExternalLink, AlertCircle, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // Added for navigation
 import '../styles/SearchComponent.css';
 
 // ===== INTERFACES =====
@@ -48,11 +49,15 @@ interface SearchComponentProps {
   className?: string;
 }
 
-// ===== SIMPLE SEARCH FUNCTION =====
+// ===== SEARCH API FUNCTION =====
 
 /**
- * Simple search function that calls the backend without requiring authentication
- * Uses the /api/search endpoint which works for everyone
+ * Search function that calls the backend search endpoint
+ * Works without authentication - uses /api/search endpoint
+ * 
+ * @param query - Search term (minimum 2 characters)
+ * @param maxResults - Maximum number of results to return
+ * @returns Promise<SearchResponse> - Search results from backend
  */
 const searchArticles = async (query: string, maxResults: number = 20): Promise<SearchResponse> => {
   try {
@@ -124,18 +129,19 @@ const searchArticles = async (query: string, maxResults: number = 20): Promise<S
 
 /**
  * Get category color for display
+ * Same color mapping as used in NewsCard component for consistency
  */
 const getCategoryColor = (category: string): string => {
   const colors: Record<string, string> = {
-    politics: '#dc2626',      // Red
-    sports: '#059669',        // Green  
-    health: '#7c3aed',        // Purple
-    business: '#2563eb',      // Blue
-    technology: '#ea580c',    // Orange
-    entertainment: '#db2777', // Pink
-    education: '#0891b2',     // Cyan
-    'local-trends': '#65a30d', // Lime
-    weather: '#0284c7'        // Sky blue
+    politics: '#064e3b',        // Dark emerald
+    sports: '#7f1d1d',          // Dark red
+    health: '#78350f',          // Dark amber
+    business: '#1e3a8a',        // Dark blue
+    technology: '#581c87',      // Dark purple
+    entertainment: '#be185d',   // Dark pink
+    education: '#0891b2',       // Cyan
+    'local-trends': '#334155',  // Dark slate
+    weather: '#0284c7'          // Sky blue
   };
   
   return colors[category.toLowerCase()] || '#6b7280'; // Default gray
@@ -143,6 +149,7 @@ const getCategoryColor = (category: string): string => {
 
 /**
  * Format timestamp for display
+ * Converts ISO timestamps to human-readable format (e.g., "2h ago")
  */
 const formatTimestamp = (timestamp: string): string => {
   try {
@@ -168,21 +175,26 @@ const formatTimestamp = (timestamp: string): string => {
 // ===== MAIN COMPONENT =====
 
 /**
- * SearchComponent - Simple search that works WITHOUT authentication
+ * SearchComponent - Enhanced search that navigates to article dialogue
  * 
- * Features:
+ * Key Features:
  * - Real-time search with debouncing
  * - NO authentication required
  * - Cached and web search results
  * - Error handling and loading states
- * - Responsive design with animations
+ * - CLICK TO NAVIGATE - Same behavior as NewsCard clicks
+ * 
+ * When a search result is clicked, it navigates to the article dialogue page
+ * using the same mechanism as regular article cards
  */
 const SearchComponent: React.FC<SearchComponentProps> = ({
   onArticleSelect,
   placeholder = "Search news articles...",
   className = ""
 }) => {
-  // ===== STATE MANAGEMENT =====
+  // ===== HOOKS AND STATE =====
+  
+  const navigate = useNavigate(); // Router navigation hook
   
   // Search input and UI state
   const [query, setQuery] = useState('');
@@ -203,6 +215,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
 
   /**
    * Handle clicks outside component to close dropdown
+   * Closes the search results when user clicks elsewhere
    */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -220,6 +233,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
 
   /**
    * Debounced search effect - performs search when query changes
+   * Waits 500ms after user stops typing before executing search
    */
   useEffect(() => {
     // Clear previous timeout
@@ -227,20 +241,19 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
       clearTimeout(debounceTimeoutRef.current);
     }
 
-    // Only search if query is not empty and meets minimum length
-    if (query.trim().length >= 2) {
-      // Set up debounced search (500ms delay)
-      debounceTimeoutRef.current = setTimeout(() => {
-        performSearch(query.trim());
-      }, 500);
-    } else {
-      // Clear results if query is too short
+    // Don't search for very short queries
+    if (query.trim().length < 2) {
       setSearchResults(null);
-      setShowResults(false);
       setError(null);
+      return;
     }
 
-    // Cleanup timeout on unmount
+    // Set up new debounced search
+    debounceTimeoutRef.current = setTimeout(() => {
+      performSearch(query.trim());
+    }, 500); // 500ms debounce delay
+
+    // Cleanup timeout on unmount or query change
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
@@ -248,35 +261,40 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
     };
   }, [query]);
 
-  // ===== SEARCH FUNCTIONALITY =====
+  // ===== SEARCH EXECUTION =====
 
   /**
-   * Perform the actual search - NO AUTHENTICATION REQUIRED
+   * Execute the search operation
+   * Calls the backend search API and updates component state
    */
   const performSearch = async (searchQuery: string) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      console.log(`🔍 Performing search for: "${searchQuery}"`);
+      console.log(`🔄 Performing search for: "${searchQuery}"`);
       
-      // Call the simple search function (no auth needed)
-      const results = await searchArticles(searchQuery, 20);
+      // Call the search API
+      const results = await searchArticles(searchQuery);
       
       // Update state with results
       setSearchResults(results);
-      setShowResults(true);
       
-      console.log(`✅ Search completed: ${results.results_found} results`);
-      
-    } catch (error) {
-      console.error('❌ Search failed:', error);
-      
-      // Handle different types of errors
-      if (error instanceof Error) {
-        setError(error.message);
+      // Log results summary
+      if (results.success) {
+        console.log(`✅ Search successful: ${results.results_found} results from ${results.source}`);
       } else {
-        setError('An unexpected error occurred during search.');
+        console.warn('⚠️ Search completed but returned no results');
+      }
+      
+    } catch (err) {
+      // Handle search errors
+      console.error('❌ Search failed:', err);
+      
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Search failed. Please try again.');
       }
       
       // Clear results on error
@@ -292,6 +310,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
 
   /**
    * Handle input changes
+   * Updates query state and shows dropdown when user types
    */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQuery = e.target.value;
@@ -305,6 +324,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
 
   /**
    * Handle input focus
+   * Shows results dropdown if we have cached results
    */
   const handleInputFocus = () => {
     setIsFocused(true);
@@ -317,6 +337,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
 
   /**
    * Handle input blur (with small delay to allow clicks)
+   * Hides focus state but allows dropdown clicks to register
    */
   const handleInputBlur = () => {
     // Small delay to allow dropdown clicks to register
@@ -326,35 +347,67 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
   };
 
   /**
-   * Handle article selection - Same behavior as clicking a news card
-   * This should navigate to the dialogue page with the selected article
+   * Get category color for the article (same mapping as NewsCard)
+   * This ensures consistent colors between cards and dialogue backgrounds
+   */
+  const getArticleCategoryColor = (category: string): string => {
+    const colorMap: Record<string, string> = {
+      'politics': '#064e3b',        // Dark emerald
+      'sports': '#7f1d1d',          // Dark red
+      'health': '#78350f',          // Dark amber
+      'business': '#1e3a8a',        // Dark blue
+      'technology': '#581c87',      // Dark purple
+      'entertainment': '#be185d',   // Dark pink
+      'education': '#0891b2',       // Cyan
+      'local-trends': '#334155',    // Dark slate
+      'weather': '#0284c7'          // Sky blue
+    };
+    
+    return colorMap[category.toLowerCase()] || '#6b7280'; // Default gray
+  };
+
+  /**
+   * 🎯 MAIN FEATURE: Handle article selection from search results
+   * 
+   * This function implements the SAME behavior as clicking a NewsCard:
+   * - Navigates to /news/{articleId} 
+   * - Passes article data AND category color via router state
+   * - Opens the article dialogue page with matching background color
+   * 
+   * This ensures search results and regular articles have identical behavior
    */
   const handleArticleClick = (article: NewsArticle) => {
-    console.log('📰 Article selected:', article.title);
+    console.log('📰 Search result clicked:', article.title);
+    console.log('🚀 Navigating to article dialogue...');
     
     // Close dropdown
     setShowResults(false);
     setIsFocused(false);
     
-    // Clear search input
+    // Clear search input for better UX
     setQuery('');
     
-    // Navigate to dialogue page with the selected article
-    // This mimics the same behavior as clicking a news card
+    // Get the category color for the dialogue background
+    const categoryColor = getArticleCategoryColor(article.category);
+    console.log('🎨 Article category color:', categoryColor);
+    
+    // 🎯 NAVIGATE TO ARTICLE DIALOGUE - Same as NewsCard behavior
+    // This uses React Router to navigate to the article page and pass the article data + color
+    navigate(`/news/${article.id}`, { 
+      state: { 
+        article,              // Pass full article data
+        categoryColor         // 🎨 NEW: Pass category color for dialogue background
+      }
+    });
+    
+    // Also call the optional callback if provided
     if (onArticleSelect) {
       onArticleSelect(article);
-    } else {
-      // Fallback: Emit custom event that the app can listen to
-      // This allows the app to handle navigation to dialogue page
-      const articleClickEvent = new CustomEvent('article-selected', {
-        detail: { article }
-      });
-      window.dispatchEvent(articleClickEvent);
     }
   };
 
   /**
-   * Handle Enter key press - Just ensure dropdown stays open to show results
+   * Handle Enter key press - Show dropdown with results
    */
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -377,12 +430,13 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
 
   /**
    * Render individual search result item
+   * Each item is clickable and navigates to article dialogue when clicked
    */
   const renderSearchResult = (article: NewsArticle) => (
     <div
       key={article.id}
       className="search-result-item"
-      onClick={() => handleArticleClick(article)}
+      onClick={() => handleArticleClick(article)} // 🎯 Click handler for navigation
     >
       {/* Article Header with Category and Breaking Badge */}
       <div className="article-header">
@@ -401,21 +455,34 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
       </div>
 
       {/* Article Title */}
-      <h3 className="article-title">{article.title}</h3>
+      <h3 className="article-title">
+        {article.title}
+      </h3>
 
       {/* Article Summary */}
-      <p className="article-summary">{article.summary}</p>
+      <p className="article-summary">
+        {article.summary}
+      </p>
 
-      {/* Article Footer with Metadata */}
-      <div className="article-footer">
-        {article.source && (
-          <span className="article-source">{article.source}</span>
-        )}
-        <span className="article-time">
+      {/* Article Metadata */}
+      <div className="article-metadata">
+        <div className="metadata-left">
           <Clock size={12} />
-          {formatTimestamp(article.timestamp)}
-        </span>
-        <span className="article-read-time">{article.readTime}</span>
+          <span>{formatTimestamp(article.timestamp)}</span>
+          <span className="separator">•</span>
+          <span>{article.readTime}</span>
+        </div>
+        
+        {article.source && (
+          <div className="source-info">
+            <span className="source-name">{article.source}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Click hint */}
+      <div className="click-hint">
+        <span>Click to read full article</span>
       </div>
     </div>
   );
@@ -430,97 +497,81 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
 
     return (
       <div className="web-search-suggestions">
-        <div className="no-results-message">
-          <Search size={16} />
-          {suggestion.message}
+        <div className="suggestion-header">
+          <AlertCircle size={16} />
+          <span>No cached results found</span>
         </div>
-
-        <div className="web-search-links">
-          <a
-            href={suggestion.google_url}
-            target="_blank"
+        
+        <p className="suggestion-message">{suggestion.message}</p>
+        
+        <div className="suggestion-links">
+          <a 
+            href={suggestion.google_url} 
+            target="_blank" 
             rel="noopener noreferrer"
-            className="web-search-link google"
+            className="suggestion-link"
           >
-            <ExternalLink size={16} />
-            Search on Google
+            <ExternalLink size={14} />
+            Search Google
           </a>
-          <a
-            href={suggestion.bing_url}
-            target="_blank"
+          <a 
+            href={suggestion.bing_url} 
+            target="_blank" 
             rel="noopener noreferrer"
-            className="web-search-link bing"
+            className="suggestion-link"
           >
-            <ExternalLink size={16} />
-            Search on Bing
-          </a>
-          <a
-            href={suggestion.duckduckgo_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="web-search-link duckduckgo"
-          >
-            <ExternalLink size={16} />
-            Search on DuckDuckGo
+            <ExternalLink size={14} />
+            Search Bing
           </a>
         </div>
-
-        <div className="search-tip">
-          <strong>Tip:</strong> {suggestion.tip}
+        
+        <div className="suggestion-tip">
+          <strong>💡 Tip:</strong> {suggestion.tip}
         </div>
       </div>
     );
   };
 
   /**
-   * Render loading state
-   */
-  const renderLoadingState = () => (
-    <div className="search-loading-state">
-      <Loader2 size={20} className="loading-spinner" />
-      Searching articles...
-    </div>
-  );
-
-  /**
-   * Render error state
-   */
-  const renderErrorState = () => (
-    <div className="search-error">
-      <AlertCircle size={16} />
-      {error}
-    </div>
-  );
-
-  /**
-   * Render search results dropdown content
+   * Render the main dropdown content
+   * Shows loading, error, results, or suggestions based on current state
    */
   const renderDropdownContent = () => {
-    // Show loading state
+    // Loading state
     if (isLoading) {
-      return renderLoadingState();
+      return (
+        <div className="search-loading-state">
+          <Loader2 size={20} className="loading-spinner" />
+          <span>Searching articles...</span>
+        </div>
+      );
     }
 
-    // Show error state
+    // Error state
     if (error) {
-      return renderErrorState();
+      return (
+        <div className="search-error">
+          <AlertCircle size={16} />
+          <span>{error}</span>
+        </div>
+      );
     }
 
-    // Show search results or web suggestions
+    // Results or suggestions
     if (searchResults) {
       return (
         <>
           {/* Results Header */}
           <div className="results-header">
-            <div className="results-count">
+            <span className="results-count">
               {searchResults.results_found} results found
-            </div>
-            <div className="results-source">
-              Source: {searchResults.source}
-            </div>
+            </span>
+            <span className="results-source">
+              {searchResults.source === 'cached' ? '📚 Cached' : '🌐 Live'}
+            </span>
           </div>
 
-          {/* Results Content */}
+          {/* Results or Suggestions */}
           {searchResults.articles.length > 0 ? (
             <div className="cached-results">
               {searchResults.articles.map(renderSearchResult)}

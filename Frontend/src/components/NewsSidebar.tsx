@@ -232,8 +232,8 @@ export default function NewsSidebar({ article, onChatOpen }: NewsSidebarProps) {
           >
             <MessageCircle size={24} />
             <div className="button-content">
-              <span className="button-title">Ask Mam'gobozi</span>
-              <span className="button-subtitle">Discuss this article with our top NewsQueen Mamgobozi</span>
+              <span className="button-title">Ask Mam'gobhozi</span>
+              <span className="button-subtitle">Discuss this article with our top NewsQueen Mamgobhozi</span>
             </div>
           </button>
           

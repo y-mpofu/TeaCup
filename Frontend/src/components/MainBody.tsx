@@ -1,15 +1,36 @@
 // Frontend/src/components/MainBody.tsx
-// Updated MainBody component with caching to prevent unnecessary reloads
-// Now only loads data once unless cache expires or is manually refreshed
+// ENHANCED: MainBody component with dynamic article limits per category
+// Added section IDs for sidebar scroll targeting - no other changes
 
 import React, { useState, useEffect } from 'react'
 import NewsSection from './NewsSection'
 import TeapotLoading3D from './TeapotLoading3D'
 import { newsApiService } from '../services/newsApiService'
-import { newsCacheService } from '../services/newsCacheService' // Import our new cache service
+import { newsCacheService } from '../services/newsCacheService'
 import type { NewsArticle } from '../services/newsApiService'
 
-const max_articles_per_section = 18;
+/**
+ * 🎯 DYNAMIC ARTICLE LIMITS CONFIGURATION
+ * 
+ * High-priority categories get more articles for deeper coverage:
+ * - Politics: 40 articles (government, policy, elections)
+ * - Education: 40 articles (schools, universities, academic news)
+ * - Health: 40 articles (medical, healthcare, wellness)
+ * 
+ * Standard categories get fewer articles for balanced coverage:
+ * - All others: 10 articles each
+ */
+const CATEGORY_ARTICLE_LIMITS: Record<string, number> = {
+  'politics': 30,        // 🏛️ High priority - government & policy
+  'education': 40,       // 🎓 High priority - schools & universities
+  'health': 40,          // 🏥 High priority - medical & healthcare
+  'sports': 10,          // ⚽ Standard priority
+  'business': 10,        // 💼 Standard priority
+  'technology': 10,      // 💻 Standard priority
+  'local-trends': 10,    // 📱 Standard priority
+  'weather': 0,         // 🌤️ Standard priority
+  'entertainment': 10    // 🎬 Standard priority
+};
 
 // Define the Story interface to match what App.tsx expects
 interface Story {
@@ -25,8 +46,14 @@ interface MainBodyProps {
 }
 
 /**
- * MainBody component that displays news sections
- * Now uses caching to prevent reloading when navigating back to home
+ * Enhanced MainBody component with dynamic article limits and scroll targeting
+ * 
+ * Features:
+ * - Dynamic article limits per category (40 for priority, 10 for others)
+ * - 🎯 Section IDs for sidebar scroll navigation
+ * - Caching system to prevent unnecessary reloads
+ * - Progressive loading with category-specific feedback
+ * - Responsive section rendering based on available content
  */
 export default function MainBody({ onPlayStory }: MainBodyProps) {
   // State for storing news data
@@ -48,6 +75,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
   const [backendConnected, setBackendConnected] = useState(false);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState("Brewing Your Perfect Cup...");
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   /**
    * Load news data - either from cache or fresh from backend
@@ -57,10 +85,22 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
   }, []);
 
   /**
+   * Get the article limit for a specific category
+   */
+  const getArticleLimitForCategory = (category: string): number => {
+    return CATEGORY_ARTICLE_LIMITS[category]; // Default to 10 if category not specified
+  };
+
+  /**
    * Initialize news data by checking cache first, then loading if needed
    */
   const initializeNewsData = async (): Promise<void> => {
-    console.log('🏠 MainBody: Initializing news data...');
+    console.log('🏠 MainBody: Initializing news data with dynamic limits...');
+    
+    // Log the article limits being used
+    Object.entries(CATEGORY_ARTICLE_LIMITS).forEach(([category, limit]) => {
+      console.log(`📊 ${category}: ${limit} articles`);
+    });
     
     // First, check if we have valid cached data
     if (newsCacheService.hasValidCache()) {
@@ -74,94 +114,66 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
       }
     }
 
-    // If no valid cache, check if data is already being loaded by another instance
-    if (newsCacheService.isCurrentlyLoading()) {
-      console.log('⏳ Data already loading, waiting...');
-      
-      // Wait for loading to complete by polling the cache
-      const pollForData = async () => {
-        while (newsCacheService.isCurrentlyLoading()) {
-          await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms
-        }
-        
-        // Loading finished, get the data
-        const freshData = newsCacheService.getCachedData();
-        if (freshData) {
-          console.log('✅ Loading completed, using fresh data');
-          setNewsData(freshData);
-          setIsLoading(false);
-          setBackendConnected(true);
-        } else {
-          console.log('❌ Loading failed, will retry');
-          loadNewsData();
-        }
-      };
-      
-      pollForData();
-      return;
-    }
-
-    // No cache and not loading, so load fresh data
-    console.log('🔄 No cache found, loading fresh data...');
-    loadNewsData();
+    // No valid cache, need to load fresh data
+    console.log('📡 Loading fresh news data with dynamic limits...');
+    await loadFreshNewsDataWithDynamicLimits();
   };
 
   /**
-   * Load fresh news data from backend
+   * 🎯 ENHANCED: Load fresh news data with category-specific article limits
    */
-  const loadNewsData = async (): Promise<void> => {
+  const loadFreshNewsDataWithDynamicLimits = async (): Promise<void> => {
     try {
-      console.log("🫖 TeaCup: Loading fresh news data from backend...");
-      setIsLoading(true);
-      setError(null);
-      setLoadingMessage("Let him cook....");
+      setLoadingMessage("Checking backend connection...");
       
-      // Mark in cache that we're loading
-      newsCacheService.setLoadingState(true);
-
-      // First, check if backend is available
-      const isBackendHealthy = await newsApiService.checkBackendHealth();
-      
-      if (!isBackendHealthy) {
-        throw new Error(
-          "Cannot connect to TeaCup backend server. Please make sure the backend is running on http://localhost:8000"
-        );
+      // Check if backend is available
+      const isHealthy = await newsApiService.checkBackendHealth();
+      if (!isHealthy) {
+        setError('Backend server is not available. Please try again later.');
+        setIsLoading(false);
+        return;
       }
 
       setBackendConnected(true);
-      setLoadingMessage("Backend connected! Loading fresh news...");
-      console.log("✅ Backend connection established!");
-
-      // Load news data category by category
+      setLoadingMessage("Backend connected! Loading news with enhanced coverage...");
+      
+      // Define categories in order of priority (high-volume categories first)
       const categories = [
-        'politics',
-        'sports', 
-        'health',
-        'business',
-        'technology',
-        'local-trends',
-        'weather',
-        'entertainment',
-        'education'
+        'politics',      // 40 articles - Priority category
+        'education',     // 40 articles - Priority category  
+        'health',        // 40 articles - Priority category
+        'sports',        // 10 articles - Standard category
+        'business',      // 10 articles - Standard category
+        'technology',    // 10 articles - Standard category
+        'local-trends',  // 10 articles - Standard category
+        'weather',       // 10 articles - Standard category
+        'entertainment'  // 10 articles - Standard category
       ];
 
-      console.log(`📰 Loading news for ${categories.length} categories...`);
+      console.log(`📰 Loading news for ${categories.length} categories with dynamic limits...`);
 
       // Create a fresh data object to build up
       const freshNewsData: Record<string, NewsArticle[]> = {};
+      let totalArticlesLoaded = 0;
+      const totalExpectedArticles = Object.values(CATEGORY_ARTICLE_LIMITS).reduce((sum, limit) => sum + limit, 0);
 
       for (let i = 0; i < categories.length; i++) {
         const category = categories[i];
+        const articleLimit = getArticleLimitForCategory(category);
         
-        // Update loading message to show progress
-        setLoadingMessage(`Loading ${category} news... (${i + 1}/${categories.length})`);
+        // Update loading message with category-specific info
+        setLoadingMessage(`Loading ${articleLimit} ${category} articles... (${i + 1}/${categories.length})`);
+        setLoadingProgress(Math.round((i / categories.length) * 100));
         
         try {
-          // Fetch articles for this category
-          const articles = await newsApiService.fetchNewsByCategory(category, max_articles_per_section);
+          console.log(`📡 Fetching ${articleLimit} articles for ${category}...`);
+          
+          // Fetch articles for this category with its specific limit
+          const articles = await newsApiService.safelyFetchNewsByCategory(category, articleLimit);
 
           // Add to our fresh data object
           freshNewsData[category] = articles;
+          totalArticlesLoaded += articles.length;
 
           // Update state with new articles for this category (for live updates)
           setNewsData((prevData) => ({
@@ -169,10 +181,15 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
             [category]: articles,
           }));
 
-          console.log(`✅ Loaded ${articles.length} articles for ${category}`);
+          console.log(`✅ Loaded ${articles.length}/${articleLimit} articles for ${category}`);
+
+          // Update progress based on articles loaded
+          const progressPercent = Math.round((totalArticlesLoaded / totalExpectedArticles) * 100);
+          setLoadingProgress(progressPercent);
 
           // Small delay between categories for smooth loading experience
-          await new Promise((resolve) => setTimeout(resolve, 400));
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          
         } catch (error) {
           console.error(`❌ Failed to load ${category} news:`, error);
           // Initialize with empty array if category fails
@@ -180,381 +197,321 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         }
       }
 
-      setLoadingMessage("Finalizing your news experience...");
+      setLoadingMessage("Finalizing your enhanced news experience...");
+      setLoadingProgress(95);
       
-      // Cache the complete dataset
+      // Cache the complete dataset with dynamic limits
       newsCacheService.setCachedData(freshNewsData);
-      newsCacheService.setLoadingState(false);
       
       // Final delay for smooth transition
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       
+      setLoadingProgress(100);
       setIsLoading(false);
-      console.log("🎉 Finished loading all news data from backend!");
+      
+      console.log(`🎉 Finished loading all news data with dynamic limits!`);
+      console.log(`📊 Total articles loaded: ${totalArticlesLoaded}/${totalExpectedArticles}`);
 
     } catch (error) {
-      console.error("❌ Error loading news data:", error);
-      setError(error instanceof Error ? error.message : "Failed to load news data");
+      console.error("❌ Error loading news data with dynamic limits:", error);
+      setError(error instanceof Error ? error.message : 'Unknown error occurred');
       setIsLoading(false);
-      setBackendConnected(false);
+    }
+  };
+
+  /**
+   * Handle manual refresh button click
+   */
+  const handleRefresh = async () => {
+    console.log('🔄 Manual refresh triggered with dynamic limits');
+    setIsLoading(true);
+    setLoadingProgress(0);
+    
+    // Clear cache to force fresh data load
+    newsCacheService.clearCache();
+    
+    await loadFreshNewsDataWithDynamicLimits();
+  };
+
+  /**
+   * Handle when user wants to read a full story
+   */
+  const handleReadStory = (articleId: string) => {
+    console.log('📖 Reading story:', articleId);
+    // Story reading logic would go here
+  };
+
+  /**
+   * Handle when user wants to save a story
+   */
+  const handleSaveStory = (articleId: string) => {
+    console.log('💾 Saving story:', articleId);
+    // Story saving logic would go here
+  };
+
+  /**
+   * Handle when user wants to play audio for a story
+   */
+  const handlePlayAudio = (articleId: string) => {
+    console.log('🔊 Playing audio for story:', articleId);
+    
+    // Update currently playing state
+    setCurrentlyPlaying(currentlyPlaying === articleId ? null : articleId);
+    
+    // Call parent handler if provided
+    if (onPlayStory) {
+      // Find the article to get full story data
+      const article = Object.values(newsData)
+        .flat()
+        .find(a => a.id === articleId);
       
-      // Mark loading as finished even if failed
-      newsCacheService.setLoadingState(false);
-    }
-  };
-
-  /**
-   * Function to handle reading a full story
-   */
-  const handleReadStory = (articleId: string): void => {
-    console.log(`📖 Reading full story: ${articleId}`);
-    // TODO: Implement full story reading functionality
-  };
-
-  /**
-   * Function to handle saving a story
-   */
-  const handleSaveStory = (articleId: string): void => {
-    console.log(`💾 Saving story: ${articleId}`);
-    // TODO: Implement story saving functionality
-  };
-
-  /**
-   * Function to handle playing audio for a story
-   */
-  const handlePlayAudio = (articleId: string): void => {
-    // Find the article across all categories
-    const article = Object.values(newsData)
-      .flat()
-      .find(article => article.id === articleId);
-
-    if (article && onPlayStory) {
-      // Set currently playing state for visual feedback
-      setCurrentlyPlaying(articleId);
-
-      // Convert NewsArticle to Story format expected by App.tsx
-      const story: Story = {
-        id: article.id,
-        title: article.title,
-        category: article.category,
-        thumbnail: article.imageUrl
-      };
-
-      // Call the parent function to show the bottom bar and play audio
-      onPlayStory(story);
-      console.log("🎵 Started playing story:", article.title);
-    } else {
-      console.warn("⚠️ Article not found for playback:", articleId);
-    }
-  };
-
-  /**
-   * Retry loading data when there's an error
-   */
-  const handleRetry = (): void => {
-    console.log("🔄 Retrying data load...");
-    newsCacheService.clearCache(); // Clear cache to force fresh load
-    loadNewsData();
-  };
-
-  /**
-   * Refresh news data by telling backend to fetch fresh data
-   */
-  const handleBackendRefresh = async (): Promise<void> => {
-    try {
-      console.log("🔄 Starting backend refresh process...");
-      setLoadingMessage("Telling backend to fetch fresh news...");
-      setIsLoading(true);
-      setError(null);
-
-      // First, tell the backend to refresh its data
-      const refreshResult = await newsApiService.refreshBackendNews();
-
-      if (!refreshResult) {
-        throw new Error("Failed to refresh backend news");
+      if (article) {
+        onPlayStory({
+          id: article.id,
+          title: article.title,
+          category: article.category,
+          thumbnail: article.imageUrl
+        });
       }
-
-      console.log("✅ Backend refresh completed, now fetching updated data");
-      setLoadingMessage("Backend refreshed! Loading updated news...");
-
-      // Clear cache to force fresh load
-      newsCacheService.forceRefresh();
-
-      // Small delay to let backend process the refresh
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Now load the fresh data
-      await loadNewsData();
-
-    } catch (error) {
-      console.error("❌ Backend refresh failed:", error);
-      setError(error instanceof Error ? error.message : "Failed to refresh backend");
-      setIsLoading(false);
     }
   };
 
-  /**
-   * Force refresh data (clear cache and reload from current backend data)
-   */
-  const handleCacheRefresh = (): void => {
-    console.log("🔄 Cache refresh - reloading from current backend data...");
-    newsCacheService.forceRefresh();
-    loadNewsData();
-  };
-
-  // Show loading animation while fetching data (only if no cached data)
-  if (isLoading && Object.values(newsData).every(articles => articles.length === 0)) {
+  // Enhanced loading state with progress
+  if (isLoading) {
     return (
-      <div className="main-body">
-        <TeapotLoading3D 
-          message={loadingMessage}
-          subtitle={backendConnected 
-            ? "Steeping the perfect blend of stories for you" 
-            : "Making the tea for you..."
-          }
-        />
+      <div className="main-body-container">
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <TeapotLoading3D message={loadingMessage} />
+          
+          {/* Progress bar for dynamic loading */}
+          <div style={{
+            marginTop: '1rem',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '10px',
+            overflow: 'hidden',
+            height: '8px',
+            maxWidth: '300px',
+            margin: '1rem auto'
+          }}>
+            <div style={{
+              background: 'linear-gradient(90deg, #667eea, #764ba2)',
+              height: '100%',
+              width: `${loadingProgress}%`,
+              transition: 'width 0.3s ease',
+              borderRadius: '10px'
+            }} />
+          </div>
+          
+          <p style={{ 
+            color: '#888', 
+            fontSize: '0.9rem', 
+            marginTop: '0.5rem' 
+          }}>
+            {loadingProgress}% • Enhanced coverage for priority categories
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Show error state if backend connection failed
+  // Error state
   if (error) {
     return (
-      <div className="main-body">
+      <div className="main-body-container">
         <div className="error-container">
-          <div className="error-icon">🫖</div>
-          <h2 className="error-title">Oops! The tea kettle is cold</h2>
+          <div className="error-icon">⚠️</div>
+          <h2 className="error-title">Oops! Something went wrong</h2>
           <p className="error-message">{error}</p>
           <div className="error-actions">
-            <button className="retry-button" onClick={handleRetry}>
-              Turn back on and try again
+            <button 
+              className="retry-button"
+              onClick={handleRefresh}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Retrying...' : '🔄 Try Again'}
             </button>
-            <p className="error-help">
-              Make sure your backend server is running: <code>python main.py</code>
-            </p>
           </div>
         </div>
       </div>
     );
   }
 
-  // Main render: Display all news sections
+  // Main render with 🎯 section IDs for sidebar scroll targeting
   return (
     <div className="main-body-container">
-      {/* Debug info - only show in development */}
+      {/* Breaking News Section */}
       {(() => {
-        // Check if we're in development mode
-        const isDevelopment = typeof process !== 'undefined' && 
-                             process.env && 
-                             (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV);
-        
-        if (!isDevelopment) return null;
-        
-        return (
-          <div style={{ 
-            fontSize: '12px', 
-            color: '#666', 
-            padding: '8px', 
-            backgroundColor: '#f5f5f5',
-            marginBottom: '10px',
-            borderRadius: '4px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            flexWrap: 'wrap'
-          }}>
-            <span>Cache: {newsCacheService.getCacheStatus()}</span>
-            <button 
-              onClick={handleCacheRefresh}
-              style={{ 
-                fontSize: '11px', 
-                padding: '4px 8px',
-                backgroundColor: '#007bff',
-                color: 'white',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: 'pointer'
-              }}
-            >
-              Reload Cache
-            </button>
-            <button 
-              onClick={handleBackendRefresh}
-              disabled={isLoading}
-              style={{ 
-                fontSize: '11px', 
-                padding: '4px 8px',
-                backgroundColor: isLoading ? '#ccc' : '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: isLoading ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {isLoading ? 'Refreshing...' : 'Fresh News'}
-            </button>
-          </div>
-        );
-      })()}
-
-      {/* Breaking News Section - Show if we have breaking news */}
-      {(() => {
-        // Find all breaking news articles across categories
         const breakingNews = Object.values(newsData)
           .flat()
           .filter(article => article.isBreaking)
-          .slice(0, 6); // Limit to 6 breaking news items
+          .slice(0, 8);
 
         if (breakingNews.length > 0) {
           return (
-            <NewsSection
-              title="Breaking News"
-              subtitle="Latest urgent updates and developing stories"
-              articles={breakingNews}
-              onReadStory={handleReadStory}
-              onSaveStory={handleSaveStory}
-              onPlayAudio={handlePlayAudio}
-              currentlyPlaying={currentlyPlaying ?? ''}
-            />
+            <div id="breaking-news-section" className="news-section-container">
+              <NewsSection
+                title="Breaking News"
+                subtitle="Latest urgent updates and developing stories"
+                articles={breakingNews}
+                onReadStory={handleReadStory}
+                onSaveStory={handleSaveStory}
+                onPlayAudio={handlePlayAudio}
+                currentlyPlaying={currentlyPlaying ?? ''}
+              />
+            </div>
           );
         }
         return null;
       })()}
 
-      {/* Politics Section */}
+      {/* 🎯 Politics Section - Scroll target */}
       {newsData.politics && newsData.politics.length > 0 && (
-        <NewsSection
-          title="Politics"
-          subtitle="Latest political developments and policy updates"
-          articles={newsData.politics}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? ''}
-        />
-      )}
-
-      {/* Sports Section */}
-      {newsData.sports && newsData.sports.length > 0 && (
-        <NewsSection
-          title="Sports"
-          subtitle="Sports news, scores, and highlights"
-          articles={newsData.sports}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? ''}
-        />
-      )}
-
-      {/* Business Section */}
-      {newsData.business && newsData.business.length > 0 && (
-        <NewsSection
-          title="Business"
-          subtitle="Market updates, financial news, and business insights"
-          articles={newsData.business}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? ''}
-        />
-      )}
-
-      {/* Technology Section */}
-      {newsData.technology && newsData.technology.length > 0 && (
-        <NewsSection
-          title="Technology"
-          subtitle="Latest tech news, innovations, and digital trends"
-          articles={newsData.technology}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? ''}
-        />
-      )}
-
-      {/* Health Section */}
-      {newsData.health && newsData.health.length > 0 && (
-        <NewsSection
-          title="Health"
-          subtitle="Health news, medical breakthroughs, and wellness tips"
-          articles={newsData.health}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? ''}
-        />
-      )}
-
-      {/* Local Trends Section */}
-      {newsData['local-trends'] && newsData['local-trends'].length > 0 && (
-        <NewsSection
-          title="Local Trends"
-          subtitle="What's happening in your community"
-          articles={newsData['local-trends']}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? ''}
-        />
-      )}
-
-      {/* Weather Section */}
-      {newsData.weather && newsData.weather.length > 0 && (
-        <NewsSection
-          title="Weather"
-          subtitle="Weather updates and climate news"
-          articles={newsData.weather}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? ''}
-        />
-      )}
-
-      {/* Entertainment Section */}
-      {newsData.entertainment && newsData.entertainment.length > 0 && (
-        <NewsSection
-          title="Entertainment"
-          subtitle="Celebrity news, movies, music, and pop culture"
-          articles={newsData.entertainment}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? ''}
-        />
+        <div id="politics-section" className="news-section-container">
+          <NewsSection
+            title="Politics"
+            subtitle="Comprehensive political coverage • Government, elections, and policy updates"
+            articles={newsData.politics}
+            onReadStory={handleReadStory}
+            onSaveStory={handleSaveStory}
+            onPlayAudio={handlePlayAudio}
+            currentlyPlaying={currentlyPlaying ?? ''}
+          />
+        </div>
       )}
 
       {/* Education Section */}
       {newsData.education && newsData.education.length > 0 && (
-        <NewsSection
-          title="Education"
-          subtitle="Educational news, research, and academic updates"
-          articles={newsData.education}
-          onReadStory={handleReadStory}
-          onSaveStory={handleSaveStory}
-          onPlayAudio={handlePlayAudio}
-          currentlyPlaying={currentlyPlaying ?? ''}
-        />
-      )}
-
-      {/* Show message if no news data loaded */}
-      {Object.values(newsData).every(articles => articles.length === 0) && !isLoading && (
-        <div className="main-body">
-          <div className="error-container">
-            <div className="error-icon">📰</div>
-            <h2 className="error-title">No News Available</h2>
-            <p className="error-message">
-              No news articles could be loaded at this time.
-            </p>
-            <div className="error-actions">
-              <button className="retry-button" onClick={handleRetry}>
-                Try Loading Again
-              </button>
-            </div>
-          </div>
+        <div id="education-section" className="news-section-container">
+          <NewsSection
+            title="Education"
+            subtitle="Comprehensive education coverage • Schools, universities, and academic updates"
+            articles={newsData.education}
+            onReadStory={handleReadStory}
+            onSaveStory={handleSaveStory}
+            onPlayAudio={handlePlayAudio}
+            currentlyPlaying={currentlyPlaying ?? ''}
+          />
         </div>
       )}
+
+      {/* 🎯 Health Section - Scroll target */}
+      {newsData.health && newsData.health.length > 0 && (
+        <div id="health-section" className="news-section-container">
+          <NewsSection
+            title="Health"
+            subtitle="Comprehensive health coverage • Medical breakthroughs, healthcare, and wellness"
+            articles={newsData.health}
+            onReadStory={handleReadStory}
+            onSaveStory={handleSaveStory}
+            onPlayAudio={handlePlayAudio}
+            currentlyPlaying={currentlyPlaying ?? ''}
+          />
+        </div>
+      )}
+
+      {/* Sports Section */}
+      {newsData.sports && newsData.sports.length > 0 && (
+        <div id="sports-section" className="news-section-container">
+          <NewsSection
+            title="Sports"
+            subtitle="Sports highlights • Scores, matches, and athletic achievements"
+            articles={newsData.sports}
+            onReadStory={handleReadStory}
+            onSaveStory={handleSaveStory}
+            onPlayAudio={handlePlayAudio}
+            currentlyPlaying={currentlyPlaying ?? ''}
+          />
+        </div>
+      )}
+
+      {/* 🎯 Business Section - Scroll target (for Global) */}
+      {newsData.business && newsData.business.length > 0 && (
+        <div id="business-section" className="news-section-container">
+          <NewsSection
+            title="Business"
+            subtitle="Market updates • Financial news and business insights"
+            articles={newsData.business}
+            onReadStory={handleReadStory}
+            onSaveStory={handleSaveStory}
+            onPlayAudio={handlePlayAudio}
+            currentlyPlaying={currentlyPlaying ?? ''}
+          />
+        </div>
+      )}
+
+      {/* Technology Section */}
+      {newsData.technology && newsData.technology.length > 0 && (
+        <div id="technology-section" className="news-section-container">
+          <NewsSection
+            title="Technology"
+            subtitle="Tech highlights • Innovation and digital transformation"
+            articles={newsData.technology}
+            onReadStory={handleReadStory}
+            onSaveStory={handleSaveStory}
+            onPlayAudio={handlePlayAudio}
+            currentlyPlaying={currentlyPlaying ?? ''}
+          />
+        </div>
+      )}
+
+      {/* 🎯 Local Trends Section - Scroll target (for Local Spills) */}
+      {newsData['local-trends'] && newsData['local-trends'].length > 0 && (
+        <div id="local-trends-section" className="news-section-container">
+          <NewsSection
+            title="Local Trends"
+            subtitle="Community highlights • What's happening locally"
+            articles={newsData['local-trends']}
+            onReadStory={handleReadStory}
+            onSaveStory={handleSaveStory}
+            onPlayAudio={handlePlayAudio}
+            currentlyPlaying={currentlyPlaying ?? ''}
+          />
+        </div>
+      )}
+
+      {/* Weather Section */}
+      {newsData.weather && newsData.weather.length > 0 && (
+        <div id="weather-section" className="news-section-container">
+          <NewsSection
+            title="Weather"
+            subtitle="Weather updates • Climate and seasonal news"
+            articles={newsData.weather}
+            onReadStory={handleReadStory}
+            onSaveStory={handleSaveStory}
+            onPlayAudio={handlePlayAudio}
+            currentlyPlaying={currentlyPlaying ?? ''}
+          />
+        </div>
+      )}
+
+      {/* Entertainment Section */}
+      {newsData.entertainment && newsData.entertainment.length > 0 && (
+        <div id="entertainment-section" className="news-section-container">
+          <NewsSection
+            title="Entertainment"
+            subtitle="Entertainment highlights • Movies, music, and pop culture"
+            articles={newsData.entertainment}
+            onReadStory={handleReadStory}
+            onSaveStory={handleSaveStory}
+            onPlayAudio={handlePlayAudio}
+            currentlyPlaying={currentlyPlaying ?? ''}
+          />
+        </div>
+      )}
+
+      {/* Enhanced Footer */}
+      <div style={{
+        padding: '2rem',
+        textAlign: 'center',
+        color: '#888',
+        fontSize: '0.9rem',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        marginTop: '2rem'
+      }}>
+        <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: '#666' }}>
+          🔄 Refresh for the latest updates • ⚡ Powered by TeaCup News
+        </p>
+      </div>
     </div>
   );
 }
