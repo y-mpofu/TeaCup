@@ -195,18 +195,19 @@ async def _enhance_summary_with_openai(request: EnhancedSummaryRequest) -> Enhan
         ORIGINAL TITLE: {request.original_title}
         ORIGINAL SUMMARY: {request.original_summary}
         CATEGORY: {request.category}
+        Write in paragraph form no less than 100 words, neatly like as essay. No more than single space lines
         
-        Please provide:
+        Please provide in your paragraphs without explicitly listing:
         1. A detailed, engaging summary (200-300 words)
         2. 5-8 key points from the article
         3. Additional context and background information
         4. Why this story matters
-        
+
+        Your voice:
+                
         You are Umamgobozi AI — a passionate news-spreader. 
         Your personality is that of a mamgobozi: excitable, fast, and dramatic, 
         but instead of gossip, you deliver accurate, verified news.
-
-        Your voice:
         - Urgent and enthusiastic, like you can’t wait to spill the tea.
         - Storytelling tone, full of energy, making news feel alive.
         - Quick to highlight the “breaking” parts of a story, with flair.
@@ -226,13 +227,13 @@ async def _enhance_summary_with_openai(request: EnhancedSummaryRequest) -> Enhan
         response = await asyncio.get_event_loop().run_in_executor(
             None,
             lambda: openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+                model="gpt-5",
                 messages=[
                     {"role": "system", "content": "You are a professional news analyst. Create comprehensive, accurate summaries."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=500,
-                temperature=0.7
+                max_completion_tokens=500,
+                temperature=1
             )
         )
         
@@ -274,32 +275,29 @@ async def _generate_chat_response_with_openai(message: ChatMessage) -> ChatRespo
         User's question/message: {message.message}
         Article ID: {message.article_id}
         
+        Write in paragraph form no less than 100 words, neatly like as essay. No more than single space lines
+        
         Provide a helpful, informative response about the article.
         Be conversational but accurate. If you need more specific information about
         the article, ask clarifying questions.
         You are Umamgobozi, an AI news companion with the vibrant, sharp, and lively energy of a “mamgobozi” — the talkative, enthusiastic town gossip. But unlike shallow gossip, you channel that energy into journalism: accurate, engaging, and deeply educational news discussions.
-
         You are fast, passionate, and urgent like breaking gossip, but every word is rooted in truth, fact-checking, and context.
-
         You make serious news feel alive, explaining political, economic, and global events in ways that hook people in, but you never distort facts.
-
         You educate through excitement: instead of just dropping headlines, you add historical background, comparisons, and clear explanations so the listener walks away smarter.
-
         You are interactive: always inviting the reader into the discussion (“What do you think this means for us?”, “Can you see the pattern here?”).
-
         Your tone = confident, witty, urgent, but trustworthy — the voice of a passionate news-lover who wants everyone to understand the world.
         """
         
         response = await asyncio.get_event_loop().run_in_executor(
             None,
             lambda: openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+                model="gpt-5",
                 messages=[
                     {"role": "system", "content": "You are a helpful news discussion assistant."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=200,
-                temperature=0.8
+                max_completion_tokens=300,
+                temperature=1
             )
         )
         
@@ -313,7 +311,12 @@ async def _generate_chat_response_with_openai(message: ChatMessage) -> ChatRespo
         
     except Exception as e:
         logger.error(f"OpenAI chat failed: {e}")
-        return _generate_mock_chat_response(message)
+        response = 'Sorry, I am offline right now, contact support for more information.'
+        return ChatResponse(
+        success=True,
+        response=response,
+        context_used=False
+    )
 
 def _generate_mock_enhanced_summary(request: EnhancedSummaryRequest) -> EnhancedSummaryResponse:
     """Generate mock enhanced summary when OpenAI is unavailable"""
@@ -364,17 +367,7 @@ def _generate_mock_chat_response(message: ChatMessage) -> ChatResponse:
     user_message = message.message.lower()
     
     # Simple keyword-based responses
-    if "summary" in user_message or "summarize" in user_message:
-        response = "I can help summarize the key points of this article. The main developments focus on recent changes in the region, with significant implications for local stakeholders. Would you like me to elaborate on any specific aspect?"
-    elif "source" in user_message or "reliable" in user_message:
-        response = "This article comes from a regional news source. For the most accurate information, I'd recommend cross-referencing with additional sources and checking the original publication's credibility standards."
-    elif "context" in user_message or "background" in user_message:
-        response = "This story is part of ongoing regional developments. The broader context involves policy changes and economic factors that have been evolving over recent months. Similar developments have been reported in neighboring areas."
-    elif "opinion" in user_message or "perspective" in user_message:
-        response = "There are multiple perspectives on this issue. Supporters highlight potential benefits and opportunities, while critics raise concerns about implementation and potential risks. The local community response appears to be mixed."
-    else:
-        response = f"That's an interesting question about the article. Based on the available information, I can provide some insights. What specific aspect would you like me to focus on? I can help explain the context, discuss implications, or explore different viewpoints."
-    
+    response = 'Sorry, I am offline right now, contact support for more information.'
     return ChatResponse(
         success=True,
         response=response,
