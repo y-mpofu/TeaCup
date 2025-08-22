@@ -808,6 +808,12 @@ class NewsService:
         self.last_request_time = 0
         self.min_request_interval = 0.1  # Minimum time between requests (100ms)
         
+        #initialize Google API availability
+        if not self.google_api_key or not self.google_cse_id:
+            logger.warning("⚠️  Google Search API not configured - using mock data")
+        else:
+            logger.info("✅ Google Search API configured")
+        
         # Initialize OpenAI if API key is available
         if self.openai_api_key:
             try:
