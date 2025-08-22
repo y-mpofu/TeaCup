@@ -170,7 +170,7 @@ async def call_openai_api(system_prompt: str, user_prompt: str, temperature: flo
         raise
 
 
-@router.post("/article/enhance", response_model=ArticleEnhanceResponse)
+@router.post("/article/enhance-summary", response_model=ArticleEnhanceResponse)
 async def enhance_article_summary(
     request: ArticleEnhanceRequest,
     credentials: HTTPAuthorizationCredentials = Depends(security)
