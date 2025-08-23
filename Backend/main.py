@@ -226,4 +226,10 @@ async def debug_routes():
 if __name__ == "__main__":
     import uvicorn
     logger.info("🚀 Starting TeaCup News API...")
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(
+        app, 
+        host="127.0.0.1", 
+        port=8000, 
+        reload=True,
+        workers=1  # Add this line
+    )

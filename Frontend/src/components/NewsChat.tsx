@@ -3,6 +3,8 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { Send, X, Bot, User, Minimize2, Loader2, AlertCircle } from 'lucide-react'
+// Import the correct NewsArticle type from your service
+// Adjust this import based on your actual file structure
 import type { NewsArticle } from '../services/newsApiService'
 import '../styles/chat.css'
 
@@ -12,14 +14,14 @@ interface ChatMessage {
   text: string
   sender: 'user' | 'ai'
   timestamp: Date
-  isError?: boolean  // Add flag for error messages
+  isError?: boolean
 }
 
 // Define component props interface
 interface NewsChatProps {
   isOpen: boolean
   onClose: () => void
-  article: NewsArticle
+  article: NewsArticle  // This uses your actual NewsArticle type
 }
 
 /**
@@ -47,13 +49,55 @@ export default function NewsChat({ isOpen, onClose, article }: NewsChatProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   /**
+   * Get the article URL from the NewsArticle object
+   * Handles different possible structures
+   */
+  const getArticleUrl = (): string => {
+    // Try different possible URL locations based on your NewsArticle structure
+    // Check if article has a source object with url
+    if (
+      article.source &&
+      typeof article.source === 'object' &&
+      !Array.isArray(article.source) &&
+      'url' in article.source &&
+      typeof (article.source as { url?: unknown }).url === 'string'
+    ) {
+      return (article.source as { url: string }).url
+    }
+    
+    // Check if article has sources array (plural)
+    if (article.source && Array.isArray(article.source) && article.source.length > 0) {
+      // Get the first source URL
+      const firstSource = article.source[0]
+      if (firstSource && typeof firstSource === 'object' && 'url' in firstSource) {
+        return firstSource.url
+      }
+    }
+    
+    // Check if article has a direct articleUrl property
+    if ('articleUrl' in article && article.articleUrl) {
+      return article.articleUrl as string
+    }
+    
+    // Check for any other URL-like properties
+    const articleAny = article as any
+    if (articleAny.url) return articleAny.url
+    if (articleAny.link) return articleAny.link
+    if (articleAny.sourceUrl) return articleAny.sourceUrl
+    
+    // Return empty string if no URL found
+    console.warn('No URL found in article object:', article)
+    return ''
+  }
+
+  /**
    * Get the API base URL based on environment
    * Simple and robust approach that works everywhere
    */
   const getApiUrl = (): string => {
     // For production, you can set this via environment variable during build
     // or configure it in your deployment
-
+    
     // Check if we have a global config object
     if (typeof window !== 'undefined' && (window as any).CONFIG && (window as any).CONFIG.API_URL) {
       return (window as any).CONFIG.API_URL
@@ -120,24 +164,19 @@ export default function NewsChat({ isOpen, onClose, article }: NewsChatProps) {
    * Send message to the backend API and get AI response
    */
   const sendMessageToAPI = async (userMessage: string): Promise<{ success: boolean; response: string; contextUsed: boolean }> => {
-    const token = getAuthToken()
-    if (!token) {
-      throw new Error('Please log in to use the chat feature')
-    }
-
     const apiUrl = getApiUrl()
     
     try {
-      // Make API call to the chat endpoint
+      // Make API call to the chat endpoint WITHOUT authentication
       const response = await fetch(`${apiUrl}/api/article/chat`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
+          // No Authorization header needed
         },
         body: JSON.stringify({
           article_id: article.id,
-          article_url: article.sourceUrl,  // Handle both url and link properties
+          article_url: getArticleUrl(),  // Use the helper function to get URL
           message: userMessage,
           context: conversationContext
         })
