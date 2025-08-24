@@ -191,6 +191,7 @@ export default function NewsChat({ isOpen, onClose, onOpen, article }: NewsChatP
         body: JSON.stringify({
           article_id: article.id,
           article_url: getArticleUrl(),  // Use the helper function to get URL
+          article_snippet: article.summary || '', // ENHANCED: Include snippet fallback
           message: userMessage,
           context: conversationContext
         })
