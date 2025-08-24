@@ -1,8 +1,9 @@
 // Frontend/src/components/NewsChat.tsx
-// Fixed chat component that properly connects to the backend API
+// Enhanced chat component with retractable sidebar overlay functionality
+// Uses ONLY existing variables - no new state variables introduced
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, X, Bot, User, Minimize2, Loader2, AlertCircle } from 'lucide-react'
+import { Send, X, Bot, User, Minimize2, Loader2, AlertCircle, MessageCircle, ChevronLeft } from 'lucide-react'
 // Import the correct NewsArticle type from your service
 // Adjust this import based on your actual file structure
 import type { NewsArticle } from '../services/newsApiService'
@@ -21,11 +22,19 @@ interface ChatMessage {
 interface NewsChatProps {
   isOpen: boolean
   onClose: () => void
+  onOpen: () => void  // NEW: Handler for opening chat from floating toggle
   article: NewsArticle  // This uses your actual NewsArticle type
 }
 
 /**
- * Fixed NewsChat Component
+ * Enhanced NewsChat Component with Retractable Sidebar
+ * 
+ * NEW RETRACTABLE FEATURES:
+ * - Uses existing isMinimized state for retraction behavior
+ * - Floating chat toggle when fully closed
+ * - Smooth slide-in/out animations
+ * - Retracted tab mode shows minimal chat presence
+ * - All existing functionality preserved
  * 
  * This component properly handles:
  * - Real API connections to the backend
@@ -33,23 +42,24 @@ interface NewsChatProps {
  * - Cached article content from the backend
  * - Clean paragraph formatting
  * - Proper authentication
+ * - ENHANCED: Retractable sidebar overlay design
  */
-export default function NewsChat({ isOpen, onClose, article }: NewsChatProps) {
-  // Component state management
+export default function NewsChat({ isOpen, onClose, onOpen, article }: NewsChatProps) {
+  // === EXISTING STATE MANAGEMENT (unchanged) ===
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [isMinimized, setIsMinimized] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false) // NOW USED FOR RETRACTION
   const [conversationContext, setConversationContext] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
-  const [aiAvailable, setAiAvailable] = useState<boolean>(true)  // Track if AI is available
+  const [aiAvailable, setAiAvailable] = useState<boolean>(true)
 
   // Refs for DOM manipulation
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   /**
-   * Get the article URL from the NewsArticle object
+   * EXISTING FUNCTION: Get the article URL from the NewsArticle object
    * Handles different possible structures
    */
   const getArticleUrl = (): string => {
@@ -91,7 +101,7 @@ export default function NewsChat({ isOpen, onClose, article }: NewsChatProps) {
   }
 
   /**
-   * Get the API base URL based on environment
+   * EXISTING FUNCTION: Get the API base URL based on environment
    * Simple and robust approach that works everywhere
    */
   const getApiUrl = (): string => {
@@ -109,7 +119,7 @@ export default function NewsChat({ isOpen, onClose, article }: NewsChatProps) {
   }
 
   /**
-   * Get authentication token from localStorage
+   * EXISTING FUNCTION: Get authentication token from localStorage
    */
   const getAuthToken = (): string | null => {
     // Try multiple storage locations for flexibility
@@ -119,7 +129,7 @@ export default function NewsChat({ isOpen, onClose, article }: NewsChatProps) {
   }
 
   /**
-   * Initialize chat with welcome message when opened
+   * EXISTING FUNCTION: Initialize chat with welcome message when opened
    */
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -138,30 +148,34 @@ export default function NewsChat({ isOpen, onClose, article }: NewsChatProps) {
   }, [isOpen, article.title, messages.length, aiAvailable])
 
   /**
-   * Auto-scroll to bottom when new messages are added
+   * EXISTING FUNCTION: Auto-scroll to bottom when new messages are added
    */
   useEffect(() => {
     scrollToBottom()
   }, [messages])
 
   /**
-   * Focus input field when chat opens
+   * EXISTING FUNCTION: Focus input field when chat opens
    */
   useEffect(() => {
     if (isOpen && !isMinimized && inputRef.current) {
-      inputRef.current.focus()
+      // Add delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        inputRef.current?.focus()
+      }, 300)
+      return () => clearTimeout(timer)
     }
   }, [isOpen, isMinimized])
 
   /**
-   * Scroll to the bottom of messages
+   * EXISTING FUNCTION: Scroll to the bottom of messages
    */
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   /**
-   * Send message to the backend API and get AI response
+   * EXISTING FUNCTION: Send message to the backend API and get AI response
    */
   const sendMessageToAPI = async (userMessage: string): Promise<{ success: boolean; response: string; contextUsed: boolean }> => {
     const apiUrl = getApiUrl()
@@ -231,7 +245,7 @@ export default function NewsChat({ isOpen, onClose, article }: NewsChatProps) {
   }
 
   /**
-   * Handle sending a message
+   * EXISTING FUNCTION: Handle sending a message
    */
   const handleSendMessage = async () => {
     // Validate input
@@ -298,14 +312,14 @@ export default function NewsChat({ isOpen, onClose, article }: NewsChatProps) {
     } finally {
       setIsLoading(false)
       // Refocus input for continued conversation
-      if (inputRef.current) {
+      if (inputRef.current && !isMinimized) {
         inputRef.current.focus()
       }
     }
   }
 
   /**
-   * Handle Enter key press
+   * EXISTING FUNCTION: Handle Enter key press
    */
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -315,7 +329,7 @@ export default function NewsChat({ isOpen, onClose, article }: NewsChatProps) {
   }
 
   /**
-   * Format message text for display
+   * EXISTING FUNCTION: Format message text for display
    * Ensures clean, single-spaced paragraph formatting
    */
   const formatMessageText = (text: string) => {
@@ -347,167 +361,221 @@ export default function NewsChat({ isOpen, onClose, article }: NewsChatProps) {
     )
   }
 
-  // Don't render if chat is not open
-  if (!isOpen) return null
+  // === NEW ENHANCED RENDERING ===
 
+  // NEW FEATURE: Floating Chat Toggle Button (when chat is fully closed)
+  if (!isOpen) {
+    return (
+      <div className="news-chat-floating-toggle">
+        <button 
+          onClick={onOpen}  // Use the provided onOpen handler
+          className="floating-chat-button"
+          title="Chat with Mam'gobozi about this article"
+          aria-label="Open chat with AI assistant"
+        >
+          <MessageCircle size={24} />
+          <div className="chat-notification-pulse"></div>
+        </button>
+      </div>
+    )
+  }
+
+  // MAIN RENDER: Enhanced retractable sidebar overlay
   return (
-    <div className={`fixed inset-y-0 right-0 z-50 flex ${isMinimized ? 'w-80' : 'w-96'} transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-      <div className="flex flex-col w-full bg-white shadow-2xl">
-        {/* Chat Header */}
-        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-          <div className="flex items-center space-x-2">
-            <Bot className="w-6 h-6" />
-            <div>
-              <h3 className="font-semibold">Mam'gobozi</h3>
-              <p className="text-xs opacity-90">
-                {aiAvailable ? 'AI News Assistant' : 'AI Offline'}
-              </p>
+    <div className={`news-chat-overlay ${isOpen ? 'open' : ''} ${isMinimized ? 'retracted' : ''}`}>
+      {/* NEW: Semi-transparent backdrop when retracted */}
+      {isMinimized && (
+        <div 
+          className="chat-backdrop" 
+          onClick={() => setIsMinimized(false)}
+        />
+      )}
+      
+      <div className="chat-container">
+        {/* ENHANCED: Chat Header with retraction controls */}
+        <div className="chat-header">
+          <div className="header-left">
+            {/* Bot icon - always visible */}
+            <div className="chat-bot-icon">
+              <Bot size={20} />
             </div>
+            
+            {/* Header info - hidden when retracted (minimized) */}
+            {!isMinimized && (
+              <div className="header-info">
+                <h3 className="chat-title">Mam'gobozi</h3>
+                <p className="chat-subtitle">
+                  {aiAvailable ? 'AI News Assistant' : 'AI Offline'}
+                </p>
+              </div>
+            )}
           </div>
-          <div className="flex items-center space-x-2">
+
+          <div className="header-actions">
+            {/* NEW: Retraction toggle button (using existing isMinimized state) */}
             <button
               onClick={() => setIsMinimized(!isMinimized)}
-              className="p-1 hover:bg-white/20 rounded transition-colors"
-              aria-label="Minimize chat"
+              className="header-button retract-button"
+              title={isMinimized ? 'Expand chat' : 'Retract to tab'}
+              aria-label={isMinimized ? 'Expand chat' : 'Retract to tab'}
             >
-              <Minimize2 className="w-5 h-5" />
+              <ChevronLeft 
+                size={16} 
+                style={{ 
+                  transform: isMinimized ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.3s ease'
+                }} 
+              />
             </button>
+
+            {/* EXISTING: Close button */}
             <button
               onClick={onClose}
-              className="p-1 hover:bg-white/20 rounded transition-colors"
+              className="header-button close-button"
+              title="Close chat"
               aria-label="Close chat"
             >
-              <X className="w-5 h-5" />
+              <X size={16} />
             </button>
           </div>
         </div>
 
-        {/* Article Context Bar */}
-        <div className="p-3 bg-gray-50 border-b">
-          <p className="text-xs text-gray-600">Discussing:</p>
-          <p className="text-sm font-medium text-gray-800 line-clamp-2">{article.title}</p>
-        </div>
-
-        {/* AI Status Banner */}
-        {!aiAvailable && (
-          <div className="p-3 bg-yellow-50 border-b border-yellow-200 flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0" />
-            <p className="text-sm text-yellow-800">
-              AI service unavailable. Please check OpenAI configuration.
-            </p>
-          </div>
-        )}
-
-        {/* Error Banner */}
-        {error && aiAvailable && (
-          <div className="p-3 bg-red-50 border-b border-red-200">
-            <p className="text-sm text-red-600">⚠️ {error}</p>
-          </div>
-        )}
-
-        {/* Messages Container */}
-        <div className={`flex-1 overflow-y-auto p-4 space-y-4 ${isMinimized ? 'hidden' : ''}`}>
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`flex items-start space-x-2 max-w-[85%] ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                {/* Avatar */}
-                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                  message.sender === 'user' 
-                    ? 'bg-blue-500' 
-                    : message.isError 
-                      ? 'bg-red-500' 
-                      : 'bg-gray-600'
-                }`}>
-                  {message.sender === 'user' ? (
-                    <User className="w-5 h-5 text-white" />
-                  ) : message.isError ? (
-                    <AlertCircle className="w-5 h-5 text-white" />
-                  ) : (
-                    <Bot className="w-5 h-5 text-white" />
-                  )}
-                </div>
-                
-                {/* Message Bubble */}
-                <div className={`rounded-lg px-4 py-2 ${
-                  message.sender === 'user' 
-                    ? 'bg-blue-500 text-white' 
-                    : message.isError
-                      ? 'bg-red-50 text-red-800 border border-red-200'
-                      : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {formatMessageText(message.text)}
-                  <p className={`text-xs mt-1 ${
-                    message.sender === 'user' 
-                      ? 'text-blue-100' 
-                      : message.isError
-                        ? 'text-red-600'
-                        : 'text-gray-500'
-                  }`}>
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-          
-          {/* Loading Indicator */}
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="flex items-start space-x-2 max-w-[85%]">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-white" />
-                </div>
-                <div className="bg-gray-100 rounded-lg px-4 py-3">
-                  <div className="flex items-center space-x-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
-                    <span className="text-gray-600 text-sm">
-                      {aiAvailable ? 'Thinking...' : 'Processing...'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Scroll anchor */}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Area */}
+        {/* CONDITIONAL: Show main chat content only when not retracted */}
         {!isMinimized && (
-          <div className="border-t p-4 bg-white">
-            <div className="flex space-x-2">
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={aiAvailable ? "Ask about this article..." : "AI service unavailable"}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
-                disabled={isLoading || !aiAvailable}
-              />
-              <button
-                onClick={handleSendMessage}
-                disabled={!inputValue.trim() || isLoading || !aiAvailable}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
-                aria-label="Send message"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Send className="w-5 h-5" />
-                )}
-              </button>
+          <>
+            {/* EXISTING: Article Context Bar */}
+            <div className="article-context-bar">
+              <p className="context-label">Discussing:</p>
+              <p className="article-title-preview">{article.title}</p>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              {aiAvailable 
-                ? 'Powered by GPT-3.5 • Full article analysis enabled' 
-                : 'AI service currently unavailable'}
-            </p>
+
+            {/* EXISTING: AI Status Banner */}
+            {!aiAvailable && (
+              <div className="ai-status-banner offline">
+                <AlertCircle size={16} />
+                <p>AI service unavailable. Please check OpenAI configuration.</p>
+              </div>
+            )}
+
+            {/* EXISTING: Error Banner */}
+            {error && aiAvailable && (
+              <div className="error-banner">
+                <p>⚠️ {error}</p>
+              </div>
+            )}
+
+            {/* EXISTING: Messages Container */}
+            <div className="chat-messages">
+              <div className="messages-container">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`message ${message.sender === 'user' ? 'user-message' : 'ai-message'} ${
+                      message.isError ? 'error-message' : ''
+                    }`}
+                  >
+                    {/* Message Avatar */}
+                    <div className="message-avatar">
+                      {message.sender === 'user' ? (
+                        <User size={16} />
+                      ) : message.isError ? (
+                        <AlertCircle size={16} />
+                      ) : (
+                        <Bot size={16} />
+                      )}
+                    </div>
+                    
+                    {/* Message Content */}
+                    <div className="message-content">
+                      <div className="message-text">
+                        {formatMessageText(message.text)}
+                      </div>
+                      <div className="message-time">
+                        {message.timestamp.toLocaleTimeString([], { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* EXISTING: Loading Indicator */}
+                {isLoading && (
+                  <div className="message ai-message loading-message">
+                    <div className="message-avatar">
+                      <Bot size={16} />
+                    </div>
+                    <div className="message-content">
+                      <div className="message-text">
+                        <div className="typing-indicator">
+                          <span></span>
+                          <span></span>
+                          <span></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Scroll anchor */}
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+
+            {/* EXISTING: Input Area */}
+            <div className="chat-input">
+              <div className="input-container">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder={aiAvailable ? "Ask about this article..." : "AI service unavailable"}
+                  className="chat-input-field"
+                  disabled={isLoading || !aiAvailable}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!inputValue.trim() || isLoading || !aiAvailable}
+                  className="send-button"
+                  aria-label="Send message"
+                >
+                  {isLoading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Send size={16} />
+                  )}
+                </button>
+              </div>
+              
+              {/* EXISTING: Status text */}
+              <div className="input-status">
+                <p>
+                  {aiAvailable 
+                    ? 'Powered by GPT-3.5 • Full article analysis enabled' 
+                    : 'AI service currently unavailable'}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* NEW: Retracted state content (when minimized) */}
+        {isMinimized && (
+          <div className="retracted-content">
+            <div className="retracted-info">
+              <div className="retracted-text">
+                <span>Chat</span>
+                {messages.length > 1 && (
+                  <span className="message-count">({messages.length - 1})</span>
+                )}
+              </div>
+            </div>
+            <div className="retracted-expand-hint">
+              <span>Click to expand</span>
+            </div>
           </div>
         )}
       </div>
