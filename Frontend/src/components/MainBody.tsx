@@ -95,11 +95,11 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
    * Initialize news data by checking cache first, then loading if needed
    */
   const initializeNewsData = async (): Promise<void> => {
-    console.log('🏠 MainBody: Initializing news data with dynamic limits...');
+    console.log(' MainBody: Initializing news data with dynamic limits...');
     
     // Log the article limits being used
     Object.entries(CATEGORY_ARTICLE_LIMITS).forEach(([category, limit]) => {
-      console.log(`📊 ${category}: ${limit} articles`);
+      console.log(` ${category}: ${limit} articles`);
     });
     
     // First, check if we have valid cached data
@@ -115,7 +115,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
     }
 
     // No valid cache, need to load fresh data
-    console.log('📡 Loading fresh news data with dynamic limits...');
+    console.log(' Loading fresh news data with dynamic limits...');
     await loadFreshNewsDataWithDynamicLimits();
   };
 
@@ -150,7 +150,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         'entertainment'  // 10 articles - Standard category
       ];
 
-      console.log(`📰 Loading news for ${categories.length} categories with dynamic limits...`);
+      console.log(` Loading news for ${categories.length} categories with dynamic limits...`);
 
       // Create a fresh data object to build up
       const freshNewsData: Record<string, NewsArticle[]> = {};
@@ -162,11 +162,11 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         const articleLimit = getArticleLimitForCategory(category);
         
         // Update loading message with category-specific info
-        setLoadingMessage(`Loading ${articleLimit} ${category} articles... (${i + 1}/${categories.length})`);
+        setLoadingMessage(`Loading ${category} articles... (${i + 1}/${categories.length})`);
         setLoadingProgress(Math.round((i / categories.length) * 100));
         
         try {
-          console.log(`📡 Fetching ${articleLimit} articles for ${category}...`);
+          console.log(` Fetching articles for ${category}...`);
           
           // Fetch articles for this category with its specific limit
           const articles = await newsApiService.safelyFetchNewsByCategory(category, articleLimit);
@@ -181,7 +181,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
             [category]: articles,
           }));
 
-          console.log(`✅ Loaded ${articles.length}/${articleLimit} articles for ${category}`);
+          console.log(` Loaded ${articles.length}/${articleLimit} articles for ${category}`);
 
           // Update progress based on articles loaded
           const progressPercent = Math.round((totalArticlesLoaded / totalExpectedArticles) * 100);
@@ -191,7 +191,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
           await new Promise((resolve) => setTimeout(resolve, 300));
           
         } catch (error) {
-          console.error(`❌ Failed to load ${category} news:`, error);
+          console.error(` Failed to load ${category} news:`, error);
           // Initialize with empty array if category fails
           freshNewsData[category] = [];
         }
@@ -209,11 +209,11 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
       setLoadingProgress(100);
       setIsLoading(false);
       
-      console.log(`🎉 Finished loading all news data with dynamic limits!`);
-      console.log(`📊 Total articles loaded: ${totalArticlesLoaded}/${totalExpectedArticles}`);
+      console.log(` Finished loading all news data with dynamic limits!`);
+      console.log(` Total articles loaded: ${totalArticlesLoaded}/${totalExpectedArticles}`);
 
     } catch (error) {
-      console.error("❌ Error loading news data with dynamic limits:", error);
+      console.error(" Error loading news data with dynamic limits:", error);
       setError(error instanceof Error ? error.message : 'Unknown error occurred');
       setIsLoading(false);
     }
@@ -223,7 +223,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
    * Handle manual refresh button click
    */
   const handleRefresh = async () => {
-    console.log('🔄 Manual refresh triggered with dynamic limits');
+    console.log(' Manual refresh triggered with dynamic limits');
     setIsLoading(true);
     setLoadingProgress(0);
     
@@ -237,7 +237,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
    * Handle when user wants to read a full story
    */
   const handleReadStory = (articleId: string) => {
-    console.log('📖 Reading story:', articleId);
+    console.log(' Reading story:', articleId);
     // Story reading logic would go here
   };
 
@@ -245,7 +245,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
    * Handle when user wants to save a story
    */
   const handleSaveStory = (articleId: string) => {
-    console.log('💾 Saving story:', articleId);
+    console.log(' Saving story:', articleId);
     // Story saving logic would go here
   };
 
@@ -253,7 +253,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
    * Handle when user wants to play audio for a story
    */
   const handlePlayAudio = (articleId: string) => {
-    console.log('🔊 Playing audio for story:', articleId);
+    console.log(' Playing audio for story:', articleId);
     
     // Update currently playing state
     setCurrentlyPlaying(currentlyPlaying === articleId ? null : articleId);
@@ -328,7 +328,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
               onClick={handleRefresh}
               disabled={isLoading}
             >
-              {isLoading ? 'Retrying...' : '🔄 Try Again'}
+              {isLoading ? 'Retrying...' : ' Try Again'}
             </button>
           </div>
         </div>
@@ -509,7 +509,7 @@ export default function MainBody({ onPlayStory }: MainBodyProps) {
         marginTop: '2rem'
       }}>
         <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: '#666' }}>
-          🔄 Refresh for the latest updates • ⚡ Powered by TeaCup News
+           Refresh for the latest updates • ⚡ Powered by TeaCup News
         </p>
       </div>
     </div>

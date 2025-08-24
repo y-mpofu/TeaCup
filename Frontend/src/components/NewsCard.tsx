@@ -211,9 +211,6 @@ export default function NewsCard({
       <div className="p-4 flex-1">
         {/* Category tag */}
         <div className="mb-2">
-          <span className={`category-tag ${colors.text}`}>
-            {article.category}
-          </span>
         </div>
 
         {/* Title */}

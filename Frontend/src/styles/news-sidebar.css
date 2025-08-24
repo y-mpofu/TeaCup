@@ -277,7 +277,7 @@
 
 /* === CHAT SECTION === */
 .chat-section .section-title {
-  color: #c084fc;
+  color: #ffffff;
 }
 
 .chat-prompt {
@@ -293,7 +293,7 @@
 
 .chat-trigger-button {
   width: 100%;
-  background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #101010 0%, #747675 100%);
   border: none;
   border-radius: 12px;
   padding: 1rem;
@@ -308,8 +308,8 @@
 
 .chat-trigger-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(192, 132, 252, 0.4);
-  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+  background: linear-gradient(135deg, #180661 0%, #1e0784 100%);
 }
 
 .button-content {

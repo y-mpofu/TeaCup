@@ -168,13 +168,13 @@ export default function Welcome() {
     setIsLoading(true);
     
     try {
-      console.log('🔐 Welcome: Attempting login...');
+      console.log(' Welcome: Attempting login...');
       
       // Call the authentication service
       const result = await authService.login(loginForm.username, loginForm.password);
       
       if (result.success) {
-        console.log('✅ Welcome: Login successful - App.tsx will handle redirect');
+        console.log(' Welcome: Login successful - App.tsx will handle redirect');
         // App.tsx will detect the authentication change and redirect automatically
         // We trigger a page reload to ensure App.tsx re-runs its auth check
         window.location.href = '/';
@@ -183,7 +183,7 @@ export default function Welcome() {
         setErrors({ general: result.error.message });
       }
     } catch (error) {
-      console.error('💥 Welcome: Unexpected login error:', error);
+      console.error(' Welcome: Unexpected login error:', error);
       setErrors({ general: 'An unexpected error occurred. Please try again.' });
     } finally {
       setIsLoading(false);
@@ -207,7 +207,7 @@ export default function Welcome() {
     setIsLoading(true);
     
     try {
-      console.log('📝 Welcome: Attempting registration...');
+      console.log(' Welcome: Attempting registration...');
       
       // Prepare registration data with country preference
       const registrationData: RegisterRequest & { country_of_interest: string } = {
@@ -223,7 +223,7 @@ export default function Welcome() {
       const result = await authService.register(registrationData);
       
       if (result.success) {
-        console.log('✅ Welcome: Registration successful');
+        console.log(' Welcome: Registration successful');
         
         // Show success message and switch to login mode
         alert(`Registration successful! Welcome to TeaCup. You can now log in with your credentials.`);
@@ -250,7 +250,7 @@ export default function Welcome() {
         setErrors({ general: result.error.message });
       }
     } catch (error) {
-      console.error('💥 Welcome: Unexpected registration error:', error);
+      console.error(' Welcome: Unexpected registration error:', error);
       setErrors({ general: 'An unexpected error occurred. Please try again.' });
     } finally {
       setIsLoading(false);
@@ -299,7 +299,7 @@ export default function Welcome() {
     <div className="welcome-container">
       {/* Background decoration */}
       <div className="welcome-bg">
-        <div className="teacup-pattern">🫖</div>
+        <div className="teacup-pattern"></div>
       </div>
 
       {/* Main content */}
@@ -603,7 +603,7 @@ export default function Welcome() {
 
         {/* Footer */}
         <div className="welcome-footer">
-          <p>🌍 Serving news from across Africa</p>
+          <p>Serving news from across Africa</p>
           <p>Stay informed with TeaCup's personalized news experience</p>
         </div>
       </div>

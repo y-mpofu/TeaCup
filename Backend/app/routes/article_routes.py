@@ -160,8 +160,6 @@ def is_cache_valid(cache_entry: Dict[str, Any]) -> bool:
 async def call_openai_api(
     system_prompt: str,
     user_prompt: str,
-    temperature: float = 0.7,
-    max_tokens: int = 800,
     json_response: bool = False
 ) -> str:
     """
@@ -184,8 +182,6 @@ async def call_openai_api(
                 lambda: client.chat.completions.create(
                     model="gpt-5",
                     messages=messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens
                 )
             )
             return response.choices[0].message.content
@@ -196,10 +192,8 @@ async def call_openai_api(
             response = await asyncio.get_event_loop().run_in_executor(
                 None,
                 lambda: openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens
+                    model="gpt-5",
+                    messages=messages
                 )
             )
             return response.choices[0].message.content
@@ -317,12 +311,7 @@ Your role is to summarize and explain news articles in a way that feels like "sp
 ### 🎙️ Voice & Style
 
 * Speak like a **mamgobhozi**: animated, conversational, dramatic, full of urgency, as if you can't wait to tell people what just happened.
-* Use **African-style exclamations** and rhetorical flair:
-
-  * "Hawu! Can you believe this?"
-  * "Chei! The drama is too much!"
-  * "Eish, my people, listen carefully…"
-  * "Yoh! This one will shock you!"
+* Use **African-style exclamations** and rhetorical flair.
 * Paint vivid imagery — make the audience *see and feel* the story.
 * Keep it **engaging but clear** — the listener must understand the story quickly.
 * **Balance drama with wisdom**: educate while you entertain.
@@ -340,7 +329,7 @@ Your role is to summarize and explain news articles in a way that feels like "sp
 ---
 
 
-Do not say 'my people', use pigin english or slang, use african exclamations only,like 'Hawu', 'Chei', 'Eish', 'Yoh', etc(think of other ones)
+Do not say 'my people', use pigin english or slang, use african exclamations only.
 """
 
         user_prompt = f"""Please analyze this article and provide an enhanced summary:
@@ -366,8 +355,6 @@ Make the summary engaging and easy to understand while capturing the main story,
             ai_response_text = await call_openai_api(
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
-                temperature=0.7,
-                max_tokens=800,
                 json_response=True
             )
             
@@ -395,7 +382,7 @@ Make the summary engaging and easy to understand while capturing the main story,
                 "content_source": content_source,
                 "processing_time_seconds": round(processing_time, 2),
                 "scraped_content_length": len(article_content),
-                "ai_model_used": "gpt-3.5-turbo",
+                "ai_model_used": "gp-5",
                 "cache_used": "cached" in content_source,
                 "timestamp": datetime.now().isoformat()
             }
@@ -420,6 +407,15 @@ Make the summary engaging and easy to understand while capturing the main story,
         logger.error(f"❌ Unexpected error enhancing article {request.article_id}: {str(e)}")
         return create_fallback_response(request, f"System error: {str(e)}")
 
+# Updated ChatMessage model to include article snippet
+class ChatMessage(BaseModel):
+    """Chat message model with enhanced validation"""
+    article_id: str = Field(..., min_length=1)
+    article_url: str = Field(default="")  # Make optional with default
+    article_snippet: str = Field(default="", max_length=2000)  # NEW: Add snippet fallback
+    message: str = Field(..., min_length=1, max_length=2000)
+    context: Optional[str] = Field(default=None, max_length=5000)
+
 
 @router.post("/article/chat", response_model=ChatResponse)
 async def chat_about_article(message: ChatMessage):
@@ -429,6 +425,7 @@ async def chat_about_article(message: ChatMessage):
     
     Features:
     - Uses full article content when available
+    - ENHANCED: Falls back to article snippet when full content unavailable
     - Intelligent context management
     - Fallback responses
     - Conversation continuity
@@ -451,44 +448,52 @@ async def chat_about_article(message: ChatMessage):
         
         if cached_result and is_cache_valid(cached_result) and cached_result.get('content'):
             article_content = cached_result['content']
-            content_available = True
+            content_source = "cached_full_article"
             logger.info(f"♻️ Using cached content for chat context")
         elif scraper_service and message.article_url:
             logger.info(f"🔍 Scraping article for chat context: {message.article_url}")
             scrape_result = await scraper_service.scrape_article(message.article_url)
             if scrape_result.get('success') and scrape_result.get('content'):
                 article_content = scrape_result['content']
-                content_available = True
+                content_source = "scraped_full_article"
                 # Cache for future use
                 scrape_result['timestamp'] = datetime.now().isoformat()
                 SCRAPE_CACHE[cache_key] = scrape_result
             else:
-                article_content = "Article content not available"
-                content_available = False
-                logger.warning("⚠️ Failed to scrape article for chat context")
+                # ENHANCED: Use article snippet as fallback
+                if message.article_snippet:
+                    article_content = message.article_snippet
+                    content_source = "snippet_fallback"
+                    logger.info(f"⚠️ Scraping failed, using article snippet fallback: {len(article_content)} chars")
+                else:
+                    article_content = "Article content not available"
+                    content_source = "no_content"
+                    logger.warning("⚠️ Failed to scrape article and no snippet provided")
         else:
-            article_content = "Article content not available"
-            content_available = False
-            logger.warning("⚠️ No article content available for chat context")
+            # ENHANCED: Use article snippet as fallback when scraper unavailable
+            if message.article_snippet:
+                article_content = message.article_snippet
+                content_source = "snippet_fallback"
+                logger.info(f"📝 Using article snippet for chat context: {len(article_content)} chars")
+            else:
+                article_content = "Article content not available"
+                content_source = "no_content"
+                logger.warning("⚠️ No article content or snippet available for chat context")
+        
+        # Determine if we have meaningful content
+        content_available = content_source != "no_content"
         
         # Prepare chat prompts
         system_prompt = """You are **Umamgobhozi**, the ultimate storyteller who mixes the passion of street gossip with the professionalism of a news anchor.
 
-Your role is to answer questions about the article content in the context given to you. Talk in a way that feels like "spilling tea" — energetic, urgent, and dramatic — but always **truthful, accurate, and responsible**.
+Your role is to explain and dialogue with the user about news articles in a way that feels like "spilling tea" — energetic, urgent, and dramatic — but always **truthful, accurate, and responsible**.
 
 ---
 
 ### 🎙️ Voice & Style
 
 * Speak like a **mamgobhozi**: animated, conversational, dramatic, full of urgency, as if you can't wait to tell people what just happened.
-* Use **African-style exclamations** and rhetorical flair:
-
-  * "Hawu! Can you believe this?"
-  * "Chei! The drama is too much!"
-  * "Eish, my people, listen carefully…"
-  * "Yoh! This one will shock you!"
-* Paint vivid imagery — make the audience *see and feel* the story.
-* Keep it **engaging but clear** — the listener must understand the story quickly.
+* Use **African-style exclamations** and rhetorical flair
 * **Balance drama with wisdom**: educate while you entertain.
 
 ---
@@ -497,26 +502,45 @@ Your role is to answer questions about the article content in the context given 
 
 1. **Accuracy first**: only summarize from the provided article or source.
 2. **No invented gossip** — you "spill tea" but only the *verified truth*.
-3. Research on the broader context of the article question, and dialogue in context with the user
+3. Keep summaries **short, punchy, and memorable**.
 4. Add **context** if needed, so people not only hear the tea but also understand the whole pot.
 
 ---
 ---
 
 
-Do not say 'my people', use pigin english or slang, use african exclamations only,like 'Hawu', 'Chei', 'Eish', 'Yoh', etc(think of other ones)
+Do not say 'my people', use pigin english or slang, use african exclamations only.
 """
         
-        context_info = f"""Article Context Available: {content_available}
+        # Enhanced context info with snippet handling
+        if content_available:
+            content_type = {
+                "cached_full_article": "full article content from cache",
+                "scraped_full_article": "full article content from web scraping",
+                "snippet_fallback": "article summary/snippet"
+            }.get(content_source, "article content")
+            
+            context_info = f"""Article Context Available: Yes ({content_type})
 
-{f"ARTICLE CONTENT: {article_content[:6000]}" if content_available else "No article content available - provide general assistance."}
+ARTICLE CONTENT: {article_content[:6000]}
 
 Previous Context: {message.context if message.context else 'None'}
 
 User Question: {message.message}
 
-Please provide a helpful, informative response based on the available context. 
-If you don't have article content, acknowledge this and offer to help in other ways.
+Please provide a helpful, informative response based on the available article content. 
+Keep your response conversational and under 300 words."""
+        else:
+            context_info = f"""Article Context Available: No
+
+Previous Context: {message.context if message.context else 'None'}
+
+User Question: {message.message}
+
+I don't have access to the article content right now. Please acknowledge this limitation and offer to help in other ways, such as:
+- Providing general information about the topic
+- Explaining news concepts
+- Suggesting questions to explore
 Keep your response conversational and under 300 words."""
 
         try:
@@ -524,8 +548,6 @@ Keep your response conversational and under 300 words."""
             ai_response = await call_openai_api(
                 system_prompt=system_prompt,
                 user_prompt=context_info,
-                temperature=0.8,
-                max_tokens=400,
                 json_response=False
             )
             
@@ -533,13 +555,14 @@ Keep your response conversational and under 300 words."""
             ai_response = ai_response.strip()
             ai_response = re.sub(r'\n{3,}', '\n\n', ai_response)
             
-            logger.info("✅ Chat response generated successfully")
+            logger.info(f"✅ Chat response generated successfully using {content_source}")
             
             return ChatResponse(
                 success=True,
                 response=ai_response,
                 context_used=content_available,
                 metadata={
+                    "content_source": content_source,
                     "article_content_available": content_available,
                     "response_length": len(ai_response),
                     "timestamp": datetime.now().isoformat()
@@ -563,8 +586,6 @@ Keep your response conversational and under 300 words."""
             context_used=False,
             error=str(e)
         )
-
-
 @router.get("/article/health")
 async def article_service_health():
     """

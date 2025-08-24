@@ -1,6 +1,6 @@
 // Frontend/src/pages/news_dialogue.tsx
-// ENHANCED: News dialogue page with dynamic background color based on article category
-// Background now matches the color of the article card that was clicked
+// ENHANCED: News dialogue page with retractable chat functionality
+// Integrates floating chat toggle and manages retractable sidebar state
 
 import React, { useState, useEffect } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
@@ -14,31 +14,36 @@ import '../styles/news-dialogue.css'
 /**
  * Enhanced News Dialogue Page Component
  * 
+ * NEW FEATURES ADDED:
+ * - Always renders NewsChat component (handles its own visibility)
+ * - Supports floating chat toggle when chat is closed
+ * - Maintains existing chat functionality
+ * - No new state variables introduced
+ * 
  * This page displays:
  * - Enhanced article summary in a dialogue format
  * - Sidebar with sources, fact-checking, and chat option
- * - Overlay chat component for discussing the article
- * 🎨 NEW: Dynamic background color that matches the article's category
+ * - ENHANCED: Always-present retractable chat overlay
+ * - Dynamic background color that matches the article's category
  */
 export default function NewsDialoguePage() {
-  // Router hooks for navigation and data access
+  // === EXISTING STATE MANAGEMENT (unchanged) ===
   const { id } = useParams<{ id: string }>() // Extract article ID from URL
   const location = useLocation() // Access navigation state
   const navigate = useNavigate() // Programmatic navigation
   
-  // Component state management
   const [article, setArticle] = useState<NewsArticle | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isChatOpen, setIsChatOpen] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(false) // Still used for chat state
   
-  // 🎨 NEW: State for dynamic background color
+  // Dynamic background color state
   const [backgroundStyle, setBackgroundStyle] = useState<React.CSSProperties>({
     background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)' // Default background
   })
 
   /**
-   * Get fallback category color if not passed via navigation
+   * EXISTING FUNCTION: Get fallback category color if not passed via navigation
    * This ensures we always have a color even if navigation state is missing
    */
   const getFallbackCategoryColor = (category: string): string => {
@@ -58,7 +63,7 @@ export default function NewsDialoguePage() {
   };
 
   /**
-   * Create dynamic background style based on category color
+   * EXISTING FUNCTION: Create dynamic background style based on category color
    * Creates a subtle gradient from the category color to dark
    */
   const createBackgroundStyle = (categoryColor: string): React.CSSProperties => {
@@ -69,49 +74,50 @@ export default function NewsDialoguePage() {
         r: parseInt(result[1], 16),
         g: parseInt(result[2], 16),
         b: parseInt(result[3], 16)
-      } : { r: 10, g: 10, b: 10 };
+      } : { r: 31, g: 41, b: 55 }; // Default gray RGB
     };
 
     const rgb = hexToRgb(categoryColor);
     
-    // Create gradient from category color (darker) to very dark
+    // Create a subtle gradient that starts with the category color and fades to dark
     return {
       background: `linear-gradient(135deg, 
-        rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3) 0%, 
-        rgba(${Math.max(0, rgb.r - 50)}, ${Math.max(0, rgb.g - 50)}, ${Math.max(0, rgb.b - 50)}, 0.2) 50%,
-        rgba(10, 10, 10, 1) 100%
-      )`,
+        rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.6) 0%, 
+        rgba(${Math.floor(rgb.r * 0.3)}, ${Math.floor(rgb.g * 0.3)}, ${Math.floor(rgb.b * 0.3)}, 0.8) 50%,
+        rgba(10, 10, 10, 0.95) 100%)`,
       minHeight: '100vh'
     };
   };
 
-  // Initialize article data when component mounts
+  /**
+   * EXISTING FUNCTION: Initialize article data when component mounts
+   * Gets article data from location state or fetches from API
+   */
   useEffect(() => {
-    const initializeArticle = () => {
+    const initializeArticle = async () => {
       try {
-        // Try to get article from navigation state (passed from NewsCard/SearchComponent click)
-        const articleFromState = location.state?.article as NewsArticle
-        const categoryColor = location.state?.categoryColor as string
+        setIsLoading(true)
         
-        if (articleFromState && articleFromState.id === id) {
-          // Article data is available from navigation
-          console.log('📰 Article loaded from navigation state:', articleFromState.title)
-          console.log('🎨 Category color received:', categoryColor)
+        if (location.state?.article) {
+          // Article data passed via navigation - use it directly
+          const passedArticle = location.state.article as NewsArticle
+          const passedColor = location.state.categoryColor as string | undefined
           
-          setArticle(articleFromState)
+          console.log('📰 Using article from navigation state:', passedArticle.title)
+          setArticle(passedArticle)
           
-          // 🎨 SET DYNAMIC BACKGROUND COLOR
-          const finalColor = categoryColor || getFallbackCategoryColor(articleFromState.category)
-          const dynamicBackground = createBackgroundStyle(finalColor)
-          
-          console.log('🎨 Setting dialogue background style:', dynamicBackground)
-          setBackgroundStyle(dynamicBackground)
-          
+          // Set dynamic background using passed color or fallback
+          const categoryColor = passedColor || getFallbackCategoryColor(passedArticle.category || '')
+          setBackgroundStyle(createBackgroundStyle(categoryColor))
           setIsLoading(false)
         } else if (id) {
-          // Article ID exists but no data - would fetch from backend in real app
-          console.warn('⚠️ Article data not found in navigation state for ID:', id)
-          setError('Article not found. Please return to the home page and try again.')
+          // No article in state - need to fetch from API
+          console.log('🔍 Fetching article from API with ID:', id)
+          
+          // TODO: Replace with actual API call to your backend
+          // const fetchedArticle = await newsApiService.getArticleById(id)
+          // For now, show error since we don't have the article
+          setError('Article data not available. Please return to the home page and try again.')
           setIsLoading(false)
         } else {
           // No article ID in URL
@@ -129,7 +135,7 @@ export default function NewsDialoguePage() {
     initializeArticle()
   }, [id, location.state])
 
-  // Chat state management functions
+  // === EXISTING CHAT STATE MANAGEMENT ===
   const handleChatOpen = () => {
     console.log('💬 Opening chat for article:', article?.title)
     setIsChatOpen(true)
@@ -140,7 +146,7 @@ export default function NewsDialoguePage() {
     setIsChatOpen(false)
   }
 
-  // Navigation functions
+  // === EXISTING NAVIGATION FUNCTIONS ===
   const handleBackToHome = () => {
     console.log('🏠 Navigating back to home')
     navigate('/')
@@ -151,7 +157,7 @@ export default function NewsDialoguePage() {
     navigate(-1)
   }
 
-  // Loading state
+  // === EXISTING LOADING STATE ===
   if (isLoading) {
     return (
       <div className="news-dialogue-loading" style={backgroundStyle}>
@@ -164,7 +170,7 @@ export default function NewsDialoguePage() {
     )
   }
 
-  // Error state
+  // === EXISTING ERROR STATE ===
   if (error || !article) {
     return (
       <div className="news-dialogue-error" style={backgroundStyle}>
@@ -187,10 +193,10 @@ export default function NewsDialoguePage() {
     )
   }
 
-  // 🎨 Main render - article is loaded successfully with dynamic background
+  // === ENHANCED MAIN RENDER ===
   return (
     <div className="news-dialogue-container" style={backgroundStyle}>
-      {/* Navigation Header */}
+      {/* EXISTING: Navigation Header */}
       <header className="dialogue-header">
         <div className="header-navigation">
           <button 
@@ -217,7 +223,7 @@ export default function NewsDialoguePage() {
         </div>
       </header>
 
-      {/* Main Content Area */}
+      {/* EXISTING: Main Content Area */}
       <main className="dialogue-main">
         {/* Left Section: Enhanced Article Summary */}
         <section className="dialogue-section">
@@ -233,14 +239,13 @@ export default function NewsDialoguePage() {
         </aside>
       </main>
 
-      {/* Overlay Chat Component */}
-      {isChatOpen && (
-        <NewsChat 
-          isOpen={isChatOpen}
-          onClose={handleChatClose}
-          article={article}
-        />
-      )}
+      {/* ENHANCED: Always render NewsChat component - it handles its own visibility */}
+      <NewsChat 
+        isOpen={isChatOpen}
+        onClose={handleChatClose}
+        onOpen={handleChatOpen}  // NEW: Pass open handler for floating toggle
+        article={article}
+      />
     </div>
   )
 }
