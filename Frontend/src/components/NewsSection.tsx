@@ -4,7 +4,7 @@
 import React, { useRef } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import NewsCard from './NewsCard'
-import type { NewsArticle } from '../data/mockNews'
+import type { NewsArticle } from '../services/newsApiService'
 
 // Define the props this component expects
 interface NewsSectionProps {
