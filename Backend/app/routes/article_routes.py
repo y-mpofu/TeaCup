@@ -343,7 +343,7 @@ ARTICLE CONTENT:
 
 Please provide your response as JSON with this exact structure:
 {{
-    "summary": "Your enhanced summary here (2-3 paragraphs, 200-300 words). Write in a conversational yet informative tone. Format as clean paragraphs.",
+    "summary": "Your enhanced summary here (2-3 paragraphs, 150-250 words). Write in a conversational yet informative tone. Format as clean paragraphs.",
     "key_points": ["Point 1", "Point 2", "Point 3", "Point 4", "Point 5"],
     "reading_time": "X-Y min read"
 }}
@@ -529,7 +529,7 @@ Previous Context: {message.context if message.context else 'None'}
 User Question: {message.message}
 
 Please provide a helpful, informative response based on the available article content. 
-Keep your response conversational and under 300 words."""
+Keep your response conversational and under 250 words."""
         else:
             context_info = f"""Article Context Available: No
 
